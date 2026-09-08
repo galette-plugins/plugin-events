@@ -1,6 +1,6 @@
 ---
 title: Documentation
-description: Event and booking management
+description: Gestion d'évènements et des réservations
 ---
 
 Ce plugin fournit :
@@ -13,10 +13,10 @@ Ce plugin fournit :
 
 Tout d'abord, téléchargez le plugin :
 
-* [Get latest Events
-  plugin!](https://github.com/galette-plugins/plugin-events/releases/latest)
-* [Get Events plugin nightly
-  build!](https://github.com/galette-plugins/plugin-events/releases/tag/nightly)
+* [Obtenir le dernier plugin Events
+  !](https://github.com/galette-plugins/plugin-events/releases/latest)
+* [Obtenir la nightly du plugin Events
+  !](https://github.com/galette-plugins/plugin-events/releases/tag/nightly)
 
 Extrayez l'archive téléchargée dans le dossier `plugins` de Galette. Par
 exemple, sous linux (en remplaçant `{url}` et `{version}` par les valeurs
@@ -49,21 +49,21 @@ Vous pouvez définir autant d'activités que vous le souhaitez, et les associer 
 un évènement. Une activité peut être un voyage organisé, un repas, une sortie,
 un hébergement, ...
 
-![The list of activities](images/list_activities.png)
+![La liste des activités](images/list_activities.png)
 
 Una activité se compose d'un nom, d'un statut et éventuellement d'un
 commentaire.
 
 Pour ajouter une nouvelle activité, cliquez sur le lien « Nouvelle activité » :
 
-![The form of a new activity](images/new_activity.png)
+![La forme d'une nouvelle activité](images/new_activity.png)
 
 ### Évènements
 
 Les évènements sont le cœur du plugin. Vous pouvez définir diverses
 informations, comme un nom, des dates de début et de fin, un lieu, ...
 
-![The form of a new event](images/new_event.png)
+![La forme d'un nouvel événement](images/new_event.png)
 
 Les nom, date de début et ville sont requis. Toutes les autres informations sont
 optionnelles.
@@ -81,9 +81,9 @@ Vous pouvez attacher une ou plusieurs activités à chaque évènement, et pour
 chacune d'entre elles si elle est disponible, non disponible ou encore
 obligatoire. Choisissez l'activité à ajouter et cliquez sur le bouton.
 
-![The activities attached to an event](images/event_activities.png)
+![Les activités liées à un événement](images/event_activities.png)
 
-> **Warning**
+> **Attention**
 > 
 > Ajouter ou supprimer une activité d'un évènement rechargera la page et vous
 > demandera d'enregistrer les informations requises. Néanmoins (et c'est précisé
@@ -95,7 +95,7 @@ obligatoire. Choisissez l'activité à ajouter et cliquez sur le bouton.
 Depuis la liste des évènements, vous pouvez modifier ou supprimer des entrées,
 accéder à la liste des réservations ou exporter ces dernières en CSV.
 
-![The list of events](images/events_list.png)
+![La liste des événements](images/events_list.png)
 
 ### Réservations
 
@@ -107,7 +107,7 @@ pas restreints à un groupe.
 Ajouter une nouvelle réservation se fait depuis l'entrée de menu « Nouvelle
 réservation » ou depuis la liste des réservations.
 
-![The form of a new booking](images/new_booking.png)
+![Le formulaire de nouvelle réservation](images/new_booking.png)
 
 Les réservations sont closes dès que l'évènement est marqué comme fermé, ou si
 la date de début est dépassée. Les administrateurs et membres du bureau peuvent
@@ -116,7 +116,7 @@ toujours ajouter de nouvelles réservations.
 La liste des activités est récupérée depuis l'évènement ; celles qui sont
 obligatoires doivent bien sur être cochées lors de la réservation.
 
-![The list of bookings](images/bookings_list.png)
+![La liste des réservations](images/bookings_list.png)
 
 Vous pouvez filtrer la liste des évènements par évènement, type ou statut de
 paiement. Vous pouvez envoyer des mailings aux membres qui ont réservé, en
