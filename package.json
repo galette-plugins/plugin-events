@@ -19,7 +19,7 @@
   "author": "Johan Cwiklinski <johan AT x-tnd DOT be>",
   "license": "GPL-3.0-or-later",
   "dependencies": {
-    "fullcalendar": "^7.0.2",
+    "fullcalendar": "^7.1.0",
     "temporal-polyfill": "^1.0.4"
   },
   "devDependencies": {
