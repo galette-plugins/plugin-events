@@ -35,7 +35,7 @@ Galette](https://doc.galette.eu/en/master/plugins/index.html#plugins-managment).
 
 In to je končano; vtičnik Events je nameščen :)
 
-## Plugin usage
+## Uporaba vtičnika
 
 Ko je vtičnik nameščen, se v meni Galette, ko je uporabnik prijavljen, doda
 skupina »Dogodki«. Na voljo so različne možnosti, ki se spreminjajo glede na
