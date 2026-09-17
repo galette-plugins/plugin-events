@@ -37,9 +37,9 @@ In to je končano; vtičnik Events je nameščen :)
 
 ## Uporaba vtičnika
 
-Ko je vtičnik nameščen, se v meni Galette, ko je uporabnik prijavljen, doda
-skupina »Dogodki«. Na voljo so različne možnosti, ki se spreminjajo glede na
-uporabniški profil (preprost član, upravitelj skupine, skrbnik ...).
+Ko je vtičnik nameščen, se skupina `Dogodki` doda v meni Galette, ko je
+uporabnik prijavljen. Obstajajo različne možnosti, ki se spreminjajo glede na
+profil uporabnika (preprost član, vodja skupine, administrator, ...).
 
 ### Dejavnosti
 
