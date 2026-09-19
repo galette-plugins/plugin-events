@@ -1,6 +1,6 @@
 ---
 title: Dokumentacija
-description: Event and booking management
+description: Upravljanje dogodkov in rezervacij
 ---
 
 Ta vtičnik ponuja:
@@ -13,10 +13,10 @@ Ta vtičnik ponuja:
 
 Najprej prenesite vtičnik:
 
-* [Get latest Events
-  plugin!](https://github.com/galette-plugins/plugin-events/releases/latest)
-* [Get Events plugin nightly
-  build!](https://github.com/galette-plugins/plugin-events/releases/tag/nightly)
+* [Pridobite najnovejši vtičnik za
+  dogodke!](https://github.com/galette-plugins/plugin-events/releases/latest)
+* [Pridobite nočno gradnjo vtičnika za
+  dogodke!](https://github.com/galette-plugins/plugin-events/releases/tag/nightly)
 
 Razširite prenesen arhiv v imenik Galette `plugins`. Na primer v Linuxu
 (zamenjajte `{url}` in `{version}` s pravilnimi vrednostmi):
@@ -46,27 +46,27 @@ profil uporabnika (preprost član, vodja skupine, administrator, ...).
 Določite lahko poljubno število aktivnosti in jih povežete z dogodkom. Aktivnost
 je lahko organiziran izlet, obrok, nastanitev, ...
 
-![The list of activities](images/list_activities.png)
+![Seznam dejavnosti](images/list_activities.png)
 
 Dejavnost je sestavljena iz imena, stanja in neobveznega komentarja.
 
 Če želite dodati novo dejavnost, preprosto kliknite povezavo »Nova dejavnost«:
 
-![The form of a new activity](images/new_activity.png)
+![Oblika nove dejavnosti](images/new_activity.png)
 
 ### Dogodki
 
 Dogodki so glavni cilj vtičnika. Določite lahko več informacij, kot so ime,
 začetni in končni datum, lokacija, ...
 
-![The form of a new event](images/new_event.png)
+![Oblika novega dogodka](images/new_event.png)
 
 Ime, datum začetka in kraj so obvezni. Vsi drugi podatki so popolnoma neobvezni.
 
 Dogodki, ki niso povezani s skupino, bodo na voljo vsem članom. Če je skupina
 nastavljena, bodo imeli dostop le člani in upravitelji te skupine.
 
-> **Note**
+> **Opomba**
 > 
 > Ko upravitelj skupine ustvari nov dogodek, mora izbrati eno od skupin, katerih
 > lastnik je!
@@ -75,9 +75,9 @@ Vsakemu dogodku lahko dodate eno ali več dejavnosti in za vsako nastavite, ali
 je na voljo, ni na voljo ali je celo obvezna. Izberite dejavnost, ki jo želite
 dodati, in kliknite gumb.
 
-![The activities attached to an event](images/event_activities.png)
+![Dejavnosti, priložene dogodku](images/event_activities.png)
 
-> **Warning**
+> **Opozorilo**
 > 
 > Če dodate ali odstranite aktivnost iz dogodka, se stran ponovno naloži in vas
 > pozove, da izpolnite obvezne podatke. Kljub temu (in to je vsakič določeno)
@@ -88,7 +88,7 @@ dodati, in kliknite gumb.
 Na seznamu dogodkov lahko urejate ali odstranjujete vnose, dostopate do seznama
 rezervacij ali izvozite rezervacije kot CSV.
 
-![The list of events](images/events_list.png)
+![Seznam dogodkov](images/events_list.png)
 
 ### Rezervacije
 
@@ -99,7 +99,7 @@ oziroma na dogodke, ki niso omejeni na skupino.
 Novo rezervacijo lahko dodate v meniju »Nova rezervacija« ali na seznamu
 rezervacij dogodkov.
 
-![The form of a new booking](images/new_booking.png)
+![Obrazec nove rezervacije](images/new_booking.png)
 
 Rezervacije so zaprte, ko je dogodek označen kot zaprt ali ko je datum začetka
 potekel. Administratorji in člani osebja lahko vedno dodajo nove rezervacije.
@@ -107,7 +107,7 @@ potekel. Administratorji in člani osebja lahko vedno dodajo nove rezervacije.
 Seznam aktivnosti je pridobljen z dogodka; obvezne aktivnosti je seveda treba
 preveriti med rezervacijo.
 
-![The list of bookings](images/bookings_list.png)
+![Seznam rezervacij](images/bookings_list.png)
 
 Seznam rezervacij lahko filtrirate po dogodku, vrsti plačila ali statusu
 plačila. Nato lahko rezerviranim članom pošljete pošto z uporabo standardnega
