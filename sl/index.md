@@ -1,6 +1,6 @@
 ---
 title: Galette Dogodki
-description: Event and booking management
+description: Upravljanje dogodkov in rezervacij
 ---
 
 Vtičnik [Galette](https://galette.eu) za upravljanje dogodkov, dejavnosti,
@@ -14,7 +14,7 @@ Ta vtičnik ponuja:
 
 * [dokumentacija](documentation.html)
 * [hrošči in funkcije](https://bugs.galette.eu/projects/evenements)
-* [source code](https://github.com/galette-plugins/plugin-events)
+* [izvorna koda](https://github.com/galette-plugins/plugin-events)
 * poštni seznami:
   [uporabniki](https://lists.mailman3.com/postorius/lists/galette-users.mailman3.com/),
   [razvijalci](https://lists.mailman3.com/postorius/lists/galette-devel.mailman3.com/)
