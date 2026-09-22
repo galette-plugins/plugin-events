@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: translations@galette.eu\n"
 "POT-Creation-Date: 2025-08-17 08:54+0200\n"
-"PO-Revision-Date: 2026-09-16 10:51+0000\n"
+"PO-Revision-Date: 2026-09-22 17:09+0000\n"
 "Last-Translator: Jože Felicijan <joze@felicijan.com>\n"
 "Language-Team: Slovenian <https://hosted.weblate.org/projects/galette/events-"
 "plugin/sl/>\n"
@@ -554,7 +554,7 @@ msgstr "%1$s: uredi podatke"
 #: ../tempcache/activities.html.twig:227 ../tempcache/events.html.twig:286
 #, php-format
 msgid "%1$s: remove from database"
-msgstr "%1$s: odstraniti iz baze podatkov"
+msgstr "%1$s: odstrani iz zbirke podatkov"
 
 #: ../tempcache/activities.html.twig:264
 msgid "No activity has been found"
