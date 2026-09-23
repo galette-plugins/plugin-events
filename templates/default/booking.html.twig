@@ -43,21 +43,13 @@
                 {% endif %}
 
                 {% if (login.isAdmin() or login.isStaff()) or login.isGroupManager() %}
-                <div class="field required">
-                    <label for="member">{{ _T("Member") }}</label>
-                    <div id="member" class="jsonly search-dropdown ui input nochosen paginated">
-                        <input id="member_input" type="hidden" name="member" value="{{ booking.getMemberId() }}" placeholder="{{ _T("Member") }}">
-                        <i class="jsonly displaynone dropdown icon"></i>
-                        <span class="ui mini compact icon disabled button prev-results"><i class="jsonly displaynone chevron circle left icon disabled button tooltip" title="{{ _T("Load previous members...") }}"></i></span>
-                        <span class="ui mini compact icon disabled button next-results"><i class="jsonly displaynone chevron circle right icon disabled button tooltip" title="{{ _T("Load following members...") }}"></i></span>
-                        <div class="jsonly displaynone default text">{{ _T("Search for name or ID and pick member") }}</div>
-                        <div class="jsonly displaynone menu">
-                            {% for k, v in members.list %}
-                                <div class="item" data-value="{{ k }}">{{ v }}</div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                </div>
+                {% include 'components/forms/member_dropdown.html.twig' with {
+                    'required': true,
+                    'component_id': 'member_elt',
+                    'id': 'member',
+                    'label': _T("Member"),
+                    'value': booking.getMemberId()
+                } %}
                 {% elseif booking.getMemberId() %}
                     <div class="inline field">
                         <label class="required">{{ _T("Member") }}</label>
