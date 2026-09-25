@@ -8,8 +8,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"Report-Msgid-Bugs-To: translations@galette.eu\n"
-"POT-Creation-Date: 2025-08-17 08:54+0200\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-09-25 04:15+0200\n"
 "PO-Revision-Date: 2026-09-03 11:00+0000\n"
 "Last-Translator: Johan Cwiklinski <trasher@x-tnd.be>\n"
 "Language-Team: Tamil <https://hosted.weblate.org/projects/galette/events-"
@@ -21,603 +21,630 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 "X-Generator: Weblate 2026.9\n"
 
-#: ../lib/GaletteEvents/Booking.php:192
-msgid "Event is mandatory"
-msgstr "நிகழ்வு கட்டாயமாகும்"
+#: ../lib/GaletteEvents/Event.php:188
+msgid "Begin date is mandatory"
+msgstr "தொடக்க தேதி கட்டாயமாகும்"
 
-#. TRANS: %1$s is activity name
-#: ../lib/GaletteEvents/Booking.php:204
-#, php-format
-msgid "%1$s is mandatory for this event!"
-msgstr "இந்த நிகழ்வுக்கு %1$s கட்டாயமாகும்!"
+#: ../lib/GaletteEvents/Event.php:212 ../templates/default/event.html.twig:40
+msgid "Begin date"
+msgstr "தொடக்க தேதி"
 
-#: ../lib/GaletteEvents/Booking.php:239
-msgid "Please specify amount if booking has been paid ;)"
-msgstr "முன்பதிவு செய்யப்பட்டிருந்தால் தொகையை குறிப்பிடவும்;)"
+#: ../lib/GaletteEvents/Event.php:214 ../templates/default/event.html.twig:46
+msgid "End date"
+msgstr "முடிவு தேதி"
 
-#: ../lib/GaletteEvents/Booking.php:262
-msgid "Member is mandatory"
-msgstr "உறுப்பினர் கட்டாயமாகும்"
+#: ../lib/GaletteEvents/Event.php:232
+msgid "End date must be later or equal to begin date"
+msgstr "இறுதி தேதி பின்னர் அல்லது தொடக்க தேதிக்கு சமமாக இருக்க வேண்டும்"
 
-#: ../lib/GaletteEvents/Booking.php:274
-msgid "There must be at least one person"
-msgstr "குறைந்தது ஒரு நபராவது இருக்க வேண்டும்"
+#: ../lib/GaletteEvents/Event.php:238 ../lib/GaletteEvents/Activity.php:155
+msgid "Name is mandatory"
+msgstr "பெயர் கட்டாயமாகும்"
 
-#: ../lib/GaletteEvents/Booking.php:283
-msgid "Booking date is mandatory!"
-msgstr "முன்பதிவு தேதி கட்டாயமாகும்!"
+#: ../lib/GaletteEvents/Event.php:254
+msgid "Please select a group you own!"
+msgstr "உங்களுக்குச் சொந்தமான குழுவைத் தேர்ந்தெடுக்கவும்!"
 
-#: ../lib/GaletteEvents/Booking.php:307
-msgid "booking date"
-msgstr "முன்பதிவு தேதி"
+#: ../lib/GaletteEvents/Event.php:261
+msgid "Town is mandatory"
+msgstr "நகரம் கட்டாயமாகும்"
 
-#. TRANS: first replacement is member name, second is event name
-#: ../lib/GaletteEvents/Booking.php:329
-#, php-format
-msgid "A booking already exists for %1$s in %2$s"
-msgstr "%2$s இல் %1$s க்கு ஏற்கனவே ஒரு முன்பதிவு உள்ளது"
+#: ../lib/GaletteEvents/Event.php:388
+msgid "Event added"
+msgstr "நிகழ்வு சேர்க்கப்பட்டது"
 
-#: ../lib/GaletteEvents/Booking.php:397
-msgid "Booking added"
-msgstr "முன்பதிவு சேர்க்கப்பட்டது"
+#: ../lib/GaletteEvents/Event.php:392
+msgid "Fail to add new event."
+msgstr "புதிய நிகழ்வைச் சேர்க்கத் தவறியது."
 
-#: ../lib/GaletteEvents/Booking.php:401
-msgid "Fail to add new booking."
-msgstr "புதிய முன்பதிவைச் சேர்க்கத் தவறிவிட்டது."
+#: ../lib/GaletteEvents/Event.php:411
+msgid "Event updated"
+msgstr "நிகழ்வு புதுப்பிக்கப்பட்டது"
 
-#: ../lib/GaletteEvents/Booking.php:420
-msgid "Booking updated"
-msgstr "முன்பதிவு புதுப்பிக்கப்பட்டது"
-
-#: ../lib/GaletteEvents/Controllers/Crud/BookingsController.php:163
-msgid "Bookings management"
-msgstr "முன்பதிவு மேலாண்மை"
-
-#: ../lib/GaletteEvents/Controllers/Crud/BookingsController.php:335
-msgid "No action was matching."
-msgstr "எந்த நடவடிக்கையும் பொருந்தவில்லை."
-
-#: ../lib/GaletteEvents/Controllers/Crud/BookingsController.php:340
-msgid "No booking was selected, please check at least one."
-msgstr ""
-"முன்பதிவு எதுவும் தேர்ந்தெடுக்கப்படவில்லை, தயவுசெய்து குறைந்தபட்சம் ஒன்றைச் சரிபார்க்கவும்."
-
-#: ../lib/GaletteEvents/Controllers/Crud/BookingsController.php:380
-msgid "Booking"
-msgstr "முன்பதிவு"
-
-#: ../lib/GaletteEvents/Controllers/Crud/BookingsController.php:509
-msgid "New booking has been successfully added."
-msgstr "புதிய முன்பதிவு வெற்றிகரமாக சேர்க்கப்பட்டுள்ளது."
-
-#: ../lib/GaletteEvents/Controllers/Crud/BookingsController.php:511
-msgid "Booking has been modified."
-msgstr "முன்பதிவு மாற்றப்பட்டுள்ளது."
-
-#: ../lib/GaletteEvents/Controllers/Crud/BookingsController.php:515
-msgid "An error occurred while storing the booking."
-msgstr "முன்பதிவை சேமிக்கும் போது பிழை ஏற்பட்டது."
-
-#: ../lib/GaletteEvents/Controllers/Crud/BookingsController.php:523
-msgid "Do not forget to store the booking"
-msgstr "முன்பதிவை சேமிக்க மறக்காதீர்கள்"
-
-#. TRANS: %1$s is the member name, %2$s the event name.
-#: ../lib/GaletteEvents/Controllers/Crud/BookingsController.php:626
-#, php-format
-msgid "Remove booking for %1$s on %2$s"
-msgstr "%2$s இல் %1$s க்கான முன்பதிவை அகற்று"
-
-#: ../lib/GaletteEvents/Controllers/Crud/ActivitiesController.php:121
-msgid "Activities management"
-msgstr "செயல்பாடுகள் மேலாண்மை"
-
-#: ../lib/GaletteEvents/Controllers/Crud/ActivitiesController.php:192
-msgid "Activity"
-msgstr "செய்கைப்பாடு"
-
-#: ../lib/GaletteEvents/Controllers/Crud/ActivitiesController.php:253
-msgid "New activity has been successfully added."
-msgstr "புதிய செயல்பாடு வெற்றிகரமாக சேர்க்கப்பட்டுள்ளது."
-
-#: ../lib/GaletteEvents/Controllers/Crud/ActivitiesController.php:255
-msgid "Activity has been modified."
-msgstr "செயல்பாடு மாற்றியமைக்கப்பட்டுள்ளது."
-
-#: ../lib/GaletteEvents/Controllers/Crud/ActivitiesController.php:259
-msgid "An error occurred while storing the activity."
-msgstr "செயல்பாட்டை சேமிக்கும் போது பிழை ஏற்பட்டது."
-
-#. TRANS %1$s is activity name
-#: ../lib/GaletteEvents/Controllers/Crud/ActivitiesController.php:344
-#, php-format
-msgid "Remove activity %1$s"
-msgstr "செயல்பாட்டை அகற்று %1$s"
-
-#: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:130
-msgid "Events management"
-msgstr "நிகழ்வுகள் மேலாண்மை"
-
-#: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:185
-msgid "Javascript libraries has not been built!"
-msgstr "சாவாகைஉரை நூலகங்கள் கட்டப்படவில்லை!"
-
-#: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:194
-#: ../lib/GaletteEvents/PluginGaletteEvents.php:137
-msgid "Events calendar"
-msgstr "நிகழ்வுகள் நாட்காட்டி"
-
-#: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:303
-#: ../lib/GaletteEvents/Controllers/CsvController.php:71
-#: ../tempcache/booking.html.twig:107 ../tempcache/booking.html.twig:115
-#: ../tempcache/bookings.html.twig:154 ../tempcache/bookings.html.twig:179
+#: ../lib/GaletteEvents/Controllers/CsvController.php:54
+#: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:257
+#: ../templates/default/booking.html.twig:33
+#: ../templates/default/booking.html.twig:39
+#: ../templates/default/bookings.html.twig:49
+#: ../templates/default/bookings.html.twig:77
 msgid "Event"
 msgstr "நிகழ்வு"
 
-#: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:386
-msgid "Activity has been attached to event."
-msgstr "நிகழ்வில் செயல்பாடு இணைக்கப்பட்டுள்ளது."
-
-#: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:387
-msgid "Do not forget to store the event"
-msgstr "நிகழ்வை சேமிக்க மறக்காதீர்கள்"
-
-#: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:389
-msgid "Activity has been detached from event."
-msgstr "நிகழ்விலிருந்து செயல்பாடு பிரிக்கப்பட்டுள்ளது."
-
-#: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:398
-msgid "New event has been successfully added."
-msgstr "புதிய நிகழ்வு வெற்றிகரமாக சேர்க்கப்பட்டுள்ளது."
-
-#: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:400
-msgid "Event has been modified."
-msgstr "நிகழ்வு மாற்றியமைக்கப்பட்டுள்ளது."
-
-#: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:404
-msgid "An error occurred while storing the event."
-msgstr "நிகழ்வை சேமிக்கும் போது பிழை ஏற்பட்டது."
-
-#. TRANS: %1$s is the event name
-#: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:504
-#, php-format
-msgid "Remove event '%1$s'\""
-msgstr "நிகழ்வை '%1$s' '"
-
-#: ../lib/GaletteEvents/Controllers/CsvController.php:75
-#: ../tempcache/event.html.twig:158
+#: ../lib/GaletteEvents/Controllers/CsvController.php:58
+#: ../templates/default/event.html.twig:86
 msgid "Zip code"
 msgstr "சிப் குறியீடு"
 
-#: ../lib/GaletteEvents/Controllers/CsvController.php:81
-#: ../tempcache/booking.html.twig:205
+#: ../lib/GaletteEvents/Controllers/CsvController.php:64
+#: ../templates/default/booking.html.twig:63
 msgid "Number of persons"
 msgstr "நபர்களின் எண்ணிக்கை"
 
-#: ../lib/GaletteEvents/Controllers/CsvController.php:96
-#: ../tempcache/booking.html.twig:308
+#: ../lib/GaletteEvents/Controllers/CsvController.php:79
+#: ../templates/default/booking.html.twig:115
 msgid "Amount"
 msgstr "தொகை"
 
-#: ../lib/GaletteEvents/Controllers/CsvController.php:98
-#: ../tempcache/booking.html.twig:320
+#: ../lib/GaletteEvents/Controllers/CsvController.php:81
+#: ../templates/default/booking.html.twig:127
 msgid "Bank name"
 msgstr "வங்கி பெயர்"
 
 #. TRANS: Bank check number
-#: ../lib/GaletteEvents/Controllers/CsvController.php:100
-#: ../tempcache/booking.html.twig:326
+#: ../lib/GaletteEvents/Controllers/CsvController.php:83
+#: ../templates/default/booking.html.twig:133
 msgid "Check number"
 msgstr "காசோலை எண்"
 
 #. TRANS: this is a filename: all lowercase, no special character, no space.
-#: ../lib/GaletteEvents/Controllers/CsvController.php:155
+#: ../lib/GaletteEvents/Controllers/CsvController.php:138
 msgid "bookingslist"
 msgstr "முன்பதிவு பட்டியல்"
 
-#: ../lib/GaletteEvents/Repository/Events.php:209
+#: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:102
+msgid "Events management"
+msgstr "நிகழ்வுகள் மேலாண்மை"
+
+#: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:153
+msgid "Javascript libraries has not been built!"
+msgstr "சாவாகைஉரை நூலகங்கள் கட்டப்படவில்லை!"
+
+#: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:162
+#: ../lib/GaletteEvents/PluginGaletteEvents.php:139
+msgid "Events calendar"
+msgstr "நிகழ்வுகள் நாட்காட்டி"
+
+#: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:336
+msgid "Activity has been attached to event."
+msgstr "நிகழ்வில் செயல்பாடு இணைக்கப்பட்டுள்ளது."
+
+#: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:337
+msgid "Do not forget to store the event"
+msgstr "நிகழ்வை சேமிக்க மறக்காதீர்கள்"
+
+#: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:339
+msgid "Activity has been detached from event."
+msgstr "நிகழ்விலிருந்து செயல்பாடு பிரிக்கப்பட்டுள்ளது."
+
+#: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:348
+msgid "New event has been successfully added."
+msgstr "புதிய நிகழ்வு வெற்றிகரமாக சேர்க்கப்பட்டுள்ளது."
+
+#: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:350
+msgid "Event has been modified."
+msgstr "நிகழ்வு மாற்றியமைக்கப்பட்டுள்ளது."
+
+#: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:354
+msgid "An error occurred while storing the event."
+msgstr "நிகழ்வை சேமிக்கும் போது பிழை ஏற்பட்டது."
+
+#. TRANS: %1$s is the event name
+#: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:448
+#, php-format
+msgid "Remove event '%1$s'\""
+msgstr "நிகழ்வை '%1$s' '"
+
+#: ../lib/GaletteEvents/Controllers/Crud/BookingsController.php:133
+msgid "Bookings management"
+msgstr "முன்பதிவு மேலாண்மை"
+
+#: ../lib/GaletteEvents/Controllers/Crud/BookingsController.php:291
+msgid "No action was matching."
+msgstr "எந்த நடவடிக்கையும் பொருந்தவில்லை."
+
+#: ../lib/GaletteEvents/Controllers/Crud/BookingsController.php:296
+msgid "No booking was selected, please check at least one."
+msgstr ""
+"முன்பதிவு எதுவும் தேர்ந்தெடுக்கப்படவில்லை, தயவுசெய்து குறைந்தபட்சம் ஒன்றைச் சரிபார்க்கவும்."
+
+#: ../lib/GaletteEvents/Controllers/Crud/BookingsController.php:332
+msgid "Booking"
+msgstr "முன்பதிவு"
+
+#: ../lib/GaletteEvents/Controllers/Crud/BookingsController.php:457
+msgid "New booking has been successfully added."
+msgstr "புதிய முன்பதிவு வெற்றிகரமாக சேர்க்கப்பட்டுள்ளது."
+
+#: ../lib/GaletteEvents/Controllers/Crud/BookingsController.php:459
+msgid "Booking has been modified."
+msgstr "முன்பதிவு மாற்றப்பட்டுள்ளது."
+
+#: ../lib/GaletteEvents/Controllers/Crud/BookingsController.php:463
+msgid "An error occurred while storing the booking."
+msgstr "முன்பதிவை சேமிக்கும் போது பிழை ஏற்பட்டது."
+
+#: ../lib/GaletteEvents/Controllers/Crud/BookingsController.php:471
+msgid "Do not forget to store the booking"
+msgstr "முன்பதிவை சேமிக்க மறக்காதீர்கள்"
+
+#. TRANS: %1$s is the member name, %2$s the event name.
+#: ../lib/GaletteEvents/Controllers/Crud/BookingsController.php:568
+#, php-format
+msgid "Remove booking for %1$s on %2$s"
+msgstr "%2$s இல் %1$s க்கான முன்பதிவை அகற்று"
+
+#: ../lib/GaletteEvents/Controllers/Crud/ActivitiesController.php:94
+msgid "Activities management"
+msgstr "செயல்பாடுகள் மேலாண்மை"
+
+#: ../lib/GaletteEvents/Controllers/Crud/ActivitiesController.php:156
+msgid "Activity"
+msgstr "செய்கைப்பாடு"
+
+#: ../lib/GaletteEvents/Controllers/Crud/ActivitiesController.php:212
+msgid "New activity has been successfully added."
+msgstr "புதிய செயல்பாடு வெற்றிகரமாக சேர்க்கப்பட்டுள்ளது."
+
+#: ../lib/GaletteEvents/Controllers/Crud/ActivitiesController.php:214
+msgid "Activity has been modified."
+msgstr "செயல்பாடு மாற்றியமைக்கப்பட்டுள்ளது."
+
+#: ../lib/GaletteEvents/Controllers/Crud/ActivitiesController.php:218
+msgid "An error occurred while storing the activity."
+msgstr "செயல்பாட்டை சேமிக்கும் போது பிழை ஏற்பட்டது."
+
+#. TRANS %1$s is activity name
+#: ../lib/GaletteEvents/Controllers/Crud/ActivitiesController.php:297
+#, php-format
+msgid "Remove activity %1$s"
+msgstr "செயல்பாட்டை அகற்று %1$s"
+
+#: ../lib/GaletteEvents/Booking.php:175
+msgid "Event is mandatory"
+msgstr "நிகழ்வு கட்டாயமாகும்"
+
+#. TRANS: %1$s is activity name
+#: ../lib/GaletteEvents/Booking.php:187
+#, php-format
+msgid "%1$s is mandatory for this event!"
+msgstr "இந்த நிகழ்வுக்கு %1$s கட்டாயமாகும்!"
+
+#: ../lib/GaletteEvents/Booking.php:222
+msgid "Please specify amount if booking has been paid ;)"
+msgstr "முன்பதிவு செய்யப்பட்டிருந்தால் தொகையை குறிப்பிடவும்;)"
+
+#: ../lib/GaletteEvents/Booking.php:245
+msgid "Member is mandatory"
+msgstr "உறுப்பினர் கட்டாயமாகும்"
+
+#: ../lib/GaletteEvents/Booking.php:257
+msgid "There must be at least one person"
+msgstr "குறைந்தது ஒரு நபராவது இருக்க வேண்டும்"
+
+#: ../lib/GaletteEvents/Booking.php:266
+msgid "Booking date is mandatory!"
+msgstr "முன்பதிவு தேதி கட்டாயமாகும்!"
+
+#: ../lib/GaletteEvents/Booking.php:290
+msgid "booking date"
+msgstr "முன்பதிவு தேதி"
+
+#. TRANS: first replacement is member name, second is event name
+#: ../lib/GaletteEvents/Booking.php:312
+#, php-format
+msgid "A booking already exists for %1$s in %2$s"
+msgstr "%2$s இல் %1$s க்கு ஏற்கனவே ஒரு முன்பதிவு உள்ளது"
+
+#: ../lib/GaletteEvents/Booking.php:378
+msgid "Booking added"
+msgstr "முன்பதிவு சேர்க்கப்பட்டது"
+
+#: ../lib/GaletteEvents/Booking.php:382
+msgid "Fail to add new booking."
+msgstr "புதிய முன்பதிவைச் சேர்க்கத் தவறிவிட்டது."
+
+#: ../lib/GaletteEvents/Booking.php:401
+msgid "Booking updated"
+msgstr "முன்பதிவு புதுப்பிக்கப்பட்டது"
+
+#: ../lib/GaletteEvents/Activity.php:221
+msgid "Activity added"
+msgstr "செயல்பாடு சேர்க்கப்பட்டது"
+
+#: ../lib/GaletteEvents/Activity.php:226
+msgid "Fail to add new activity."
+msgstr "புதிய செயல்பாட்டைச் சேர்க்கத் தவறியது."
+
+#: ../lib/GaletteEvents/Activity.php:245
+msgid "Activity updated"
+msgstr "செயல்பாடு புதுப்பிக்கப்பட்டது"
+
+#: ../lib/GaletteEvents/Repository/Events.php:196
 msgid "Event information"
 msgstr "நிகழ்வு செய்தி"
 
-#: ../lib/GaletteEvents/Repository/Events.php:213
+#: ../lib/GaletteEvents/Repository/Events.php:200
 msgid "Start date:"
 msgstr "தொடக்க தேதி:"
 
-#: ../lib/GaletteEvents/Repository/Events.php:214
+#: ../lib/GaletteEvents/Repository/Events.php:201
 msgid "End date:"
 msgstr "இறுதி தேதி:"
 
-#: ../lib/GaletteEvents/Repository/Events.php:215
+#: ../lib/GaletteEvents/Repository/Events.php:202
 msgid "Location:"
 msgstr "இடம்:"
 
-#: ../lib/GaletteEvents/Repository/Events.php:217
+#: ../lib/GaletteEvents/Repository/Events.php:204
 msgid "Comment:"
 msgstr "கருத்து:"
 
 #. TRANS: %1$s is the number of paid attendees
-#: ../lib/GaletteEvents/Repository/Events.php:234
+#: ../lib/GaletteEvents/Repository/Events.php:221
 #, php-format
 msgid "%1$s paid"
 msgstr "%1$s செலுத்தப்பட்டது"
 
-#: ../lib/GaletteEvents/Repository/Events.php:239
+#: ../lib/GaletteEvents/Repository/Events.php:226
 msgid "Attendees:"
 msgstr "பங்கேற்பாளர்கள்:"
 
-#: ../lib/GaletteEvents/Repository/Events.php:247
-#: ../lib/GaletteEvents/PluginGaletteEvents.php:104
-#: ../tempcache/event.html.twig:180 ../tempcache/booking.html.twig:221
+#: ../lib/GaletteEvents/Repository/Events.php:234
+#: ../lib/GaletteEvents/PluginGaletteEvents.php:96
+#: ../templates/default/booking.html.twig:78
+#: ../templates/default/event.html.twig:108
 msgid "Activities"
 msgstr "செயல்பாடுகள்"
 
-#: ../lib/GaletteEvents/Event.php:205
-msgid "Begin date is mandatory"
-msgstr "தொடக்க தேதி கட்டாயமாகும்"
-
-#: ../lib/GaletteEvents/Event.php:229 ../tempcache/event.html.twig:97
-msgid "Begin date"
-msgstr "தொடக்க தேதி"
-
-#: ../lib/GaletteEvents/Event.php:231 ../tempcache/event.html.twig:103
-msgid "End date"
-msgstr "முடிவு தேதி"
-
-#: ../lib/GaletteEvents/Event.php:249
-msgid "End date must be later or equal to begin date"
-msgstr "இறுதி தேதி பின்னர் அல்லது தொடக்க தேதிக்கு சமமாக இருக்க வேண்டும்"
-
-#: ../lib/GaletteEvents/Event.php:255 ../lib/GaletteEvents/Activity.php:174
-msgid "Name is mandatory"
-msgstr "பெயர் கட்டாயமாகும்"
-
-#: ../lib/GaletteEvents/Event.php:271
-msgid "Please select a group you own!"
-msgstr "உங்களுக்குச் சொந்தமான குழுவைத் தேர்ந்தெடுக்கவும்!"
-
-#: ../lib/GaletteEvents/Event.php:278
-msgid "Town is mandatory"
-msgstr "நகரம் கட்டாயமாகும்"
-
-#: ../lib/GaletteEvents/Event.php:407
-msgid "Event added"
-msgstr "நிகழ்வு சேர்க்கப்பட்டது"
-
-#: ../lib/GaletteEvents/Event.php:411
-msgid "Fail to add new event."
-msgstr "புதிய நிகழ்வைச் சேர்க்கத் தவறியது."
-
-#: ../lib/GaletteEvents/Event.php:430
-msgid "Event updated"
-msgstr "நிகழ்வு புதுப்பிக்கப்பட்டது"
-
-#: ../lib/GaletteEvents/PluginGaletteEvents.php:63
-#: ../lib/GaletteEvents/PluginGaletteEvents.php:67
-#: ../tempcache/activities.html.twig:117 ../tempcache/activities.html.twig:181
+#: ../lib/GaletteEvents/PluginGaletteEvents.php:55
+#: ../lib/GaletteEvents/PluginGaletteEvents.php:59
+#: ../templates/default/activities.html.twig:41
+#: ../templates/default/activities.html.twig:74
 msgid "Events"
 msgstr "நிகழ்வுகள்"
 
-#: ../lib/GaletteEvents/PluginGaletteEvents.php:74
-#: ../lib/GaletteEvents/PluginGaletteEvents.php:136
+#: ../lib/GaletteEvents/PluginGaletteEvents.php:66
+#: ../lib/GaletteEvents/PluginGaletteEvents.php:138
 msgid "Calendar"
 msgstr "நாட்காட்டி"
 
-#: ../lib/GaletteEvents/PluginGaletteEvents.php:87
+#: ../lib/GaletteEvents/PluginGaletteEvents.php:79
 msgid "Bookings"
 msgstr "முன்பதிவுகள்"
 
-#: ../lib/GaletteEvents/PluginGaletteEvents.php:157
+#: ../lib/GaletteEvents/PluginGaletteEvents.php:159
 msgid "New event booking"
 msgstr "புதிய நிகழ்வு முன்பதிவு"
 
-#: ../lib/GaletteEvents/PluginGaletteEvents.php:225
+#: ../lib/GaletteEvents/PluginGaletteEvents.php:215
 msgid "Upcoming events"
 msgstr "வரவிருக்கும் நிகழ்வுகள்"
 
-#: ../lib/GaletteEvents/Activity.php:242
-msgid "Activity added"
-msgstr "செயல்பாடு சேர்க்கப்பட்டது"
-
-#: ../lib/GaletteEvents/Activity.php:247
-msgid "Fail to add new activity."
-msgstr "புதிய செயல்பாட்டைச் சேர்க்கத் தவறியது."
-
-#: ../lib/GaletteEvents/Activity.php:266
-msgid "Activity updated"
-msgstr "செயல்பாடு புதுப்பிக்கப்பட்டது"
-
-#: ../tempcache/event.html.twig:71 ../tempcache/activity.html.twig:71
-msgid "General information"
-msgstr "பொது செய்தி"
-
-#: ../tempcache/event.html.twig:78
-msgid "Is open"
-msgstr "திறந்திருக்கும்"
-
-#: ../tempcache/event.html.twig:85 ../tempcache/activities.html.twig:117
-#: ../tempcache/events.html.twig:117 ../tempcache/activity.html.twig:85
-msgid "Name"
-msgstr "பெயர்"
-
-#: ../tempcache/event.html.twig:91
-msgid "Color"
-msgstr "நிறம்"
-
-#: ../tempcache/event.html.twig:129
-msgid "Limit to group"
-msgstr "குழுவிற்கு வரம்பு"
-
-#: ../tempcache/event.html.twig:129
-msgid "Restrict event to selected group (and its subgroups)."
-msgstr ""
-"தேர்ந்தெடுக்கப்பட்ட குழுவிற்கு (மற்றும் அதன் துணைக்குழுக்கள்) நிகழ்வைக் கட்டுப்படுத்துங்கள்."
-
-#: ../tempcache/event.html.twig:135 ../tempcache/booking.html.twig:211
-#: ../tempcache/activity.html.twig:91
-msgid "Comment"
-msgstr "கருத்து"
-
-#: ../tempcache/event.html.twig:145
-msgid "Location"
-msgstr "இடம்"
-
-#: ../tempcache/event.html.twig:152
-msgid "Address"
-msgstr "முகவரி"
-
-#: ../tempcache/event.html.twig:164 ../tempcache/events.html.twig:117
-#: ../tempcache/events.html.twig:197
-msgid "Town"
-msgstr "நகரம்"
-
-#: ../tempcache/event.html.twig:170
-msgid "Country"
-msgstr "நாடு"
-
-#: ../tempcache/event.html.twig:204
-msgid "Choose an activity to add"
-msgstr "சேர்க்க ஒரு செயல்பாட்டைத் தேர்வுசெய்க"
-
-#: ../tempcache/event.html.twig:228
-msgid "Add selected activity to event"
-msgstr "நிகழ்வில் தேர்ந்தெடுக்கப்பட்ட செயல்பாட்டைச் சேர்க்கவும்"
-
-#: ../tempcache/event.html.twig:240
-msgid "Choose an activity to remove"
-msgstr "அகற்ற ஒரு செயல்பாட்டைத் தேர்வுசெய்க"
-
-#: ../tempcache/event.html.twig:267
-msgid "Remove selected activity from event"
-msgstr "நிகழ்விலிருந்து தேர்ந்தெடுக்கப்பட்ட செயல்பாட்டை அகற்று"
-
-#: ../tempcache/event.html.twig:327
-msgid "Required"
-msgstr "தேவை"
-
-#: ../tempcache/event.html.twig:344
-msgid "No activity available in the database."
-msgstr "தரவுத்தளத்தில் எந்த செயல்பாடும் கிடைக்கவில்லை."
-
-#: ../tempcache/event.html.twig:389
-msgid "Please choose an activity to add"
-msgstr "சேர்க்க ஒரு செயல்பாட்டைத் தேர்வுசெய்க"
-
-#: ../tempcache/event.html.twig:399
-msgid "Please choose an activity to remove"
-msgstr "அகற்ற ஒரு செயல்பாட்டைத் தேர்வுசெய்க"
-
-#: ../tempcache/booking.html.twig:71
+#: ../templates/default/booking.html.twig:14
 msgid "Booking information"
 msgstr "முன்பதிவு செய்தி"
 
-#: ../tempcache/booking.html.twig:78 ../tempcache/bookings.html.twig:154
-#: ../tempcache/bookings.html.twig:448
+#: ../templates/default/booking.html.twig:19
+#: ../templates/default/bookings.html.twig:49
+#: ../templates/default/bookings.html.twig:176
 msgid "Booking date"
 msgstr "முன்பதிவு தேதி"
 
-#: ../tempcache/booking.html.twig:86
+#: ../templates/default/booking.html.twig:25
 msgid "Select an event"
 msgstr "ஒரு நிகழ்வைத் தேர்ந்தெடுக்கவும்"
 
-#: ../tempcache/booking.html.twig:271
+#: ../templates/default/booking.html.twig:69
+#: ../templates/default/activity.html.twig:32
+#: ../templates/default/event.html.twig:66
+msgid "Comment"
+msgstr "கருத்து"
+
+#: ../templates/default/booking.html.twig:93
 msgid "No activity for selected event"
 msgstr "தேர்ந்தெடுக்கப்பட்ட நிகழ்வுக்கு எந்த நடவடிக்கையும் இல்லை"
 
-#: ../tempcache/booking.html.twig:294
+#: ../templates/default/booking.html.twig:103
 msgid "Financial information"
 msgstr "பொருள் செய்தி"
 
-#: ../tempcache/booking.html.twig:301 ../tempcache/bookings.html.twig:154
-#: ../tempcache/bookings.html.twig:288 ../tempcache/bookings.html.twig:457
-#: ../tempcache/bookings.html.twig:469 ../tempcache/bookings.html.twig:480
+#: ../templates/default/booking.html.twig:108
+#: ../templates/default/bookings.html.twig:49
+#: ../templates/default/bookings.html.twig:116
+#: ../templates/default/bookings.html.twig:177
+#: ../templates/default/bookings.html.twig:178
+#: ../templates/default/bookings.html.twig:181
 msgid "Paid"
 msgstr "பணம் செலுத்தப்பட்டது"
 
-#: ../tempcache/bookings.html.twig:65
-msgid "No booking selected"
-msgstr "முன்பதிவு எதுவும் தேர்ந்தெடுக்கப்படவில்லை"
+#: ../templates/default/calendar.html.twig:19
+msgid "Daily list"
+msgstr "நாள்தோறும் பட்டியல்"
 
-#: ../tempcache/bookings.html.twig:65
-msgid ""
-"Please make sure to select at least one booking from the list to perform "
-"this action."
-msgstr ""
-"இந்த செயலைச் செய்ய பட்டியலிலிருந்து குறைந்தது ஒரு முன்பதிவையாவது தேர்ந்தெடுக்கவும்."
+#: ../templates/default/calendar.html.twig:20
+msgid "Weekly list"
+msgstr "வாராந்திர பட்டியல்"
 
-#: ../tempcache/bookings.html.twig:80
-msgid "Members as CSV"
-msgstr "காபிம ஆக உறுப்பினர்கள்"
+#: ../templates/default/calendar.html.twig:21
+msgid "Monthly list"
+msgstr "மாதாந்திர பட்டியல்"
 
-#: ../tempcache/bookings.html.twig:80
-msgid "Export selected reservation members as CSV"
-msgstr ""
-"தேர்ந்தெடுக்கப்பட்ட இட ஒதுக்கீடு உறுப்பினர்களை காபிம ஆக ஏற்றுமதி செய்யுங்கள்"
+#: ../templates/default/calendar.html.twig:22
+msgid "Month calendar"
+msgstr "மாத நாட்காட்டி"
 
-#: ../tempcache/bookings.html.twig:80
-msgid "Bookings as CSV"
-msgstr "காபிம ஆக முன்பதிவு"
+#: ../templates/default/calendar.html.twig:23
+msgid "Today"
+msgstr "இன்று"
 
-#: ../tempcache/bookings.html.twig:80
-msgid "Export selected reservations as CSV"
-msgstr "தேர்ந்தெடுக்கப்பட்ட முன்பதிவுகளை காபிம ஆக ஏற்றுமதி செய்யுங்கள்"
-
-#: ../tempcache/bookings.html.twig:98
-#, php-format
-msgid "%1$s booking"
-msgid_plural "%1$s bookings"
-msgstr[0] "%1$s முன்பதிவு"
-msgstr[1] "%1$s முன்பதிவுகள்"
-
-#: ../tempcache/bookings.html.twig:130 ../tempcache/calendar.html.twig:131
+#: ../templates/default/calendar.html.twig:36
+#: ../templates/default/bookings.html.twig:43
 msgid "New booking"
 msgstr "புதிய முன்பதிவு"
 
-#: ../tempcache/bookings.html.twig:136
-msgid "current event"
-msgstr "தற்போதைய நிகழ்வு"
-
-#: ../tempcache/bookings.html.twig:154 ../tempcache/bookings.html.twig:497
-msgid "Attendees"
-msgstr "பங்கேற்பாளர்கள்"
-
-#: ../tempcache/bookings.html.twig:184
-msgid "Select..."
-msgstr "தேர்ந்தெடுக்கவும் ..."
-
-#: ../tempcache/bookings.html.twig:214
-msgid "All payment types"
-msgstr "அனைத்து கட்டண வகைகளும்"
-
-#: ../tempcache/bookings.html.twig:220 ../tempcache/bookings.html.twig:222
-#: ../tempcache/events.html.twig:117 ../tempcache/events.html.twig:203
-msgid "Group"
-msgstr "குழு"
-
-#: ../tempcache/bookings.html.twig:258
-msgid "Paid bookings:"
-msgstr "கட்டண முன்பதிவு:"
-
-#: ../tempcache/bookings.html.twig:304 ../tempcache/bookings.html.twig:459
-#: ../tempcache/bookings.html.twig:471 ../tempcache/bookings.html.twig:486
-msgid "Not paid"
-msgstr "செலுத்தப்படவில்லை"
-
-#: ../tempcache/bookings.html.twig:359
-#, php-format
-msgid "Found bookings total %f"
-msgstr "முன்பதிவு மொத்தம் %f"
-
-#: ../tempcache/bookings.html.twig:516
-msgid "Edit booking"
-msgstr "முன்பதிவைத் திருத்து"
-
-#: ../tempcache/bookings.html.twig:528
-msgid "Remove from database"
-msgstr "தரவுத்தளத்திலிருந்து அகற்று"
-
-#: ../tempcache/bookings.html.twig:562
-msgid "No booking has been found"
-msgstr "முன்பதிவு எதுவும் கிடைக்கவில்லை"
-
-#: ../tempcache/activities.html.twig:69
-#, php-format
-msgid "%1$s activity"
-msgid_plural "%1$s activities"
-msgstr[0] "%1$s செயல்பாடு"
-msgstr[1] "%1$s செயல்பாடுகள்"
-
-#: ../tempcache/activities.html.twig:100
-msgid "New activity"
-msgstr "புதிய செயல்பாடு"
-
-#: ../tempcache/activities.html.twig:117 ../tempcache/activities.html.twig:175
-msgid "Creation date"
-msgstr "உருவாக்கும் தேதி"
-
-#: ../tempcache/activities.html.twig:117 ../tempcache/activities.html.twig:187
-#: ../tempcache/activity.html.twig:78
-msgid "Is active"
-msgstr "செயலில் உள்ளது"
-
-#: ../tempcache/activities.html.twig:198 ../tempcache/activities.html.twig:209
-msgid "Active"
-msgstr "செயலில்"
-
-#: ../tempcache/activities.html.twig:200 ../tempcache/activities.html.twig:215
-msgid "Inactive"
-msgstr "செயலற்றது"
-
-#: ../tempcache/activities.html.twig:225 ../tempcache/events.html.twig:273
-#, php-format
-msgid "%1$s: edit information"
-msgstr "%1$s: தகவலைத் திருத்தவும்"
-
-#: ../tempcache/activities.html.twig:227 ../tempcache/events.html.twig:286
-#, php-format
-msgid "%1$s: remove from database"
-msgstr "%1$s: தரவுத்தளத்திலிருந்து அகற்று"
-
-#: ../tempcache/activities.html.twig:264
-msgid "No activity has been found"
-msgstr "எந்த நடவடிக்கையும் கிடைக்கவில்லை"
-
-#: ../tempcache/events.html.twig:69
+#: ../templates/default/events.html.twig:19
 #, php-format
 msgid "%1$s event"
 msgid_plural "%1$s events"
 msgstr[0] "%1$s நிகழ்வு"
 msgstr[1] "%1$s நிகழ்வுகள்"
 
-#: ../tempcache/events.html.twig:100
+#: ../templates/default/events.html.twig:35
 msgid "New event"
 msgstr "புதிய நிகழ்வு"
 
-#: ../tempcache/events.html.twig:117 ../tempcache/events.html.twig:191
+#: ../templates/default/events.html.twig:41
+#: ../templates/default/activity.html.twig:26
+#: ../templates/default/activities.html.twig:41
+#: ../templates/default/event.html.twig:26
+msgid "Name"
+msgstr "பெயர்"
+
+#: ../templates/default/events.html.twig:41
+#: ../templates/default/events.html.twig:77
 msgid "Date"
 msgstr "திகதி"
 
-#: ../tempcache/events.html.twig:117 ../tempcache/events.html.twig:209
+#: ../templates/default/events.html.twig:41
+#: ../templates/default/events.html.twig:78
+#: ../templates/default/event.html.twig:92
+msgid "Town"
+msgstr "நகரம்"
+
+#: ../templates/default/events.html.twig:41
+#: ../templates/default/events.html.twig:79
+#: ../templates/default/bookings.html.twig:94
+msgid "Group"
+msgstr "குழு"
+
+#: ../templates/default/events.html.twig:41
+#: ../templates/default/events.html.twig:80
 msgid "Open"
 msgstr "திற"
 
-#: ../tempcache/events.html.twig:220 ../tempcache/events.html.twig:231
+#: ../templates/default/events.html.twig:81
+#: ../templates/default/events.html.twig:84
 msgid "Event is open"
 msgstr "நிகழ்வு திறந்திருக்கும்"
 
-#: ../tempcache/events.html.twig:222 ../tempcache/events.html.twig:237
+#: ../templates/default/events.html.twig:81
+#: ../templates/default/events.html.twig:86
 msgid "Event is closed"
 msgstr "நிகழ்வு மூடப்பட்டுள்ளது"
 
-#: ../tempcache/events.html.twig:253
+#: ../templates/default/events.html.twig:93
 #, php-format
 msgid "%1$s: export bookings as CSV"
 msgstr "%1$s: காபிம ஆக ஏற்றுமதி முன்பதிவு"
 
-#: ../tempcache/events.html.twig:263
+#: ../templates/default/events.html.twig:106
 #, php-format
 msgid "%1$s: show bookings"
 msgstr "%1$s: முன்பதிவுகளைக் காட்டு"
 
-#: ../tempcache/events.html.twig:331
+#: ../templates/default/events.html.twig:118
+#: ../templates/default/activities.html.twig:86
+#, php-format
+msgid "%1$s: edit information"
+msgstr "%1$s: தகவலைத் திருத்தவும்"
+
+#: ../templates/default/events.html.twig:131
+#: ../templates/default/activities.html.twig:91
+#, php-format
+msgid "%1$s: remove from database"
+msgstr "%1$s: தரவுத்தளத்திலிருந்து அகற்று"
+
+#: ../templates/default/events.html.twig:152
 msgid "No event has been found"
 msgstr "எந்த நிகழ்வும் கிடைக்கவில்லை"
 
-#: ../tempcache/calendar.html.twig:88
-msgid "Daily list"
-msgstr "நாள்தோறும் பட்டியல்"
+#: ../templates/default/bookings.html.twig:232
+msgid "No booking selected"
+msgstr "முன்பதிவு எதுவும் தேர்ந்தெடுக்கப்படவில்லை"
 
-#: ../tempcache/calendar.html.twig:92
-msgid "Weekly list"
-msgstr "வாராந்திர பட்டியல்"
+#: ../templates/default/bookings.html.twig:232
+msgid ""
+"Please make sure to select at least one booking from the list to perform "
+"this action."
+msgstr ""
+"இந்த செயலைச் செய்ய பட்டியலிலிருந்து குறைந்தது ஒரு முன்பதிவையாவது தேர்ந்தெடுக்கவும்."
 
-#: ../tempcache/calendar.html.twig:96
-msgid "Monthly list"
-msgstr "மாதாந்திர பட்டியல்"
+#: ../templates/default/bookings.html.twig:257
+msgid "Members as CSV"
+msgstr "காபிம ஆக உறுப்பினர்கள்"
 
-#: ../tempcache/calendar.html.twig:100
-msgid "Month calendar"
-msgstr "மாத நாட்காட்டி"
+#: ../templates/default/bookings.html.twig:257
+msgid "Export selected reservation members as CSV"
+msgstr "தேர்ந்தெடுக்கப்பட்ட இட ஒதுக்கீடு உறுப்பினர்களை காபிம ஆக ஏற்றுமதி செய்யுங்கள்"
 
-#: ../tempcache/calendar.html.twig:104
-msgid "Today"
-msgstr "இன்று"
+#: ../templates/default/bookings.html.twig:257
+msgid "Bookings as CSV"
+msgstr "காபிம ஆக முன்பதிவு"
+
+#: ../templates/default/bookings.html.twig:257
+msgid "Export selected reservations as CSV"
+msgstr "தேர்ந்தெடுக்கப்பட்ட முன்பதிவுகளை காபிம ஆக ஏற்றுமதி செய்யுங்கள்"
+
+#: ../templates/default/bookings.html.twig:25
+#, php-format
+msgid "%1$s booking"
+msgid_plural "%1$s bookings"
+msgstr[0] "%1$s முன்பதிவு"
+msgstr[1] "%1$s முன்பதிவுகள்"
+
+#: ../templates/default/bookings.html.twig:44
+msgid "current event"
+msgstr "தற்போதைய நிகழ்வு"
+
+#: ../templates/default/bookings.html.twig:49
+#: ../templates/default/bookings.html.twig:187
+msgid "Attendees"
+msgstr "பங்கேற்பாளர்கள்"
+
+#: ../templates/default/bookings.html.twig:79
+msgid "Select..."
+msgstr "தேர்ந்தெடுக்கவும் ..."
+
+#: ../templates/default/bookings.html.twig:88
+msgid "All payment types"
+msgstr "அனைத்து கட்டண வகைகளும்"
+
+#: ../templates/default/bookings.html.twig:106
+msgid "Paid bookings:"
+msgstr "கட்டண முன்பதிவு:"
+
+#: ../templates/default/bookings.html.twig:122
+#: ../templates/default/bookings.html.twig:177
+#: ../templates/default/bookings.html.twig:178
+#: ../templates/default/bookings.html.twig:183
+msgid "Not paid"
+msgstr "செலுத்தப்படவில்லை"
+
+#: ../templates/default/bookings.html.twig:147
+#, php-format
+msgid "Found bookings total %f"
+msgstr "முன்பதிவு மொத்தம் %f"
+
+#: ../templates/default/bookings.html.twig:192
+msgid "Edit booking"
+msgstr "முன்பதிவைத் திருத்து"
+
+#: ../templates/default/bookings.html.twig:206
+msgid "Remove from database"
+msgstr "தரவுத்தளத்திலிருந்து அகற்று"
+
+#: ../templates/default/bookings.html.twig:226
+msgid "No booking has been found"
+msgstr "முன்பதிவு எதுவும் கிடைக்கவில்லை"
+
+#: ../templates/default/activity.html.twig:14
+#: ../templates/default/event.html.twig:14
+msgid "General information"
+msgstr "பொது செய்தி"
+
+#: ../templates/default/activity.html.twig:19
+#: ../templates/default/activities.html.twig:41
+#: ../templates/default/activities.html.twig:75
+msgid "Is active"
+msgstr "செயலில் உள்ளது"
+
+#: ../templates/default/activities.html.twig:19
+#, php-format
+msgid "%1$s activity"
+msgid_plural "%1$s activities"
+msgstr[0] "%1$s செயல்பாடு"
+msgstr[1] "%1$s செயல்பாடுகள்"
+
+#: ../templates/default/activities.html.twig:35
+msgid "New activity"
+msgstr "புதிய செயல்பாடு"
+
+#: ../templates/default/activities.html.twig:41
+#: ../templates/default/activities.html.twig:73
+msgid "Creation date"
+msgstr "உருவாக்கும் தேதி"
+
+#: ../templates/default/activities.html.twig:76
+#: ../templates/default/activities.html.twig:79
+msgid "Active"
+msgstr "செயலில்"
+
+#: ../templates/default/activities.html.twig:76
+#: ../templates/default/activities.html.twig:81
+msgid "Inactive"
+msgstr "செயலற்றது"
+
+#: ../templates/default/activities.html.twig:113
+msgid "No activity has been found"
+msgstr "எந்த நடவடிக்கையும் கிடைக்கவில்லை"
+
+#: ../templates/default/event.html.twig:19
+msgid "Is open"
+msgstr "திறந்திருக்கும்"
+
+#: ../templates/default/event.html.twig:33
+msgid "Color"
+msgstr "நிறம்"
+
+#: ../templates/default/event.html.twig:58
+msgid "Limit to group"
+msgstr "குழுவிற்கு வரம்பு"
+
+#: ../templates/default/event.html.twig:58
+msgid "Restrict event to selected group (and its subgroups)."
+msgstr ""
+"தேர்ந்தெடுக்கப்பட்ட குழுவிற்கு (மற்றும் அதன் துணைக்குழுக்கள்) நிகழ்வைக் கட்டுப்படுத்துங்கள்."
+
+#: ../templates/default/event.html.twig:75
+msgid "Location"
+msgstr "இடம்"
+
+#: ../templates/default/event.html.twig:80
+msgid "Address"
+msgstr "முகவரி"
+
+#: ../templates/default/event.html.twig:99
+msgid "Country"
+msgstr "நாடு"
+
+#: ../templates/default/event.html.twig:119
+msgid "Choose an activity to add"
+msgstr "சேர்க்க ஒரு செயல்பாட்டைத் தேர்வுசெய்க"
+
+#: ../templates/default/event.html.twig:126
+msgid "Add selected activity to event"
+msgstr "நிகழ்வில் தேர்ந்தெடுக்கப்பட்ட செயல்பாட்டைச் சேர்க்கவும்"
+
+#: ../templates/default/event.html.twig:131
+msgid "Choose an activity to remove"
+msgstr "அகற்ற ஒரு செயல்பாட்டைத் தேர்வுசெய்க"
+
+#: ../templates/default/event.html.twig:139
+msgid "Remove selected activity from event"
+msgstr "நிகழ்விலிருந்து தேர்ந்தெடுக்கப்பட்ட செயல்பாட்டை அகற்று"
+
+#: ../templates/default/event.html.twig:152
+msgid "Required"
+msgstr "தேவை"
+
+#: ../templates/default/event.html.twig:158
+msgid "No activity available in the database."
+msgstr "தரவுத்தளத்தில் எந்த செயல்பாடும் கிடைக்கவில்லை."
+
+#: ../templates/default/event.html.twig:179
+msgid "Please choose an activity to add"
+msgstr "சேர்க்க ஒரு செயல்பாட்டைத் தேர்வுசெய்க"
+
+#: ../templates/default/event.html.twig:186
+msgid "Please choose an activity to remove"
+msgstr "அகற்ற ஒரு செயல்பாட்டைத் தேர்வுசெய்க"

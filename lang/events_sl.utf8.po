@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"Report-Msgid-Bugs-To: translations@galette.eu\n"
-"POT-Creation-Date: 2025-08-17 08:54+0200\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-09-25 04:15+0200\n"
 "PO-Revision-Date: 2026-09-25 22:08+0000\n"
 "Last-Translator: Jože Felicijan <joze@felicijan.com>\n"
 "Language-Team: Slovenian <https://hosted.weblate.org/projects/galette/events-"
@@ -20,547 +20,377 @@ msgstr ""
 "n%100==4 ? 2 : 3;\n"
 "X-Generator: Weblate 2026.10.dev0\n"
 
-#: ../lib/GaletteEvents/Booking.php:192
-msgid "Event is mandatory"
-msgstr "Dogodek je obvezen"
+#: ../lib/GaletteEvents/Event.php:188
+msgid "Begin date is mandatory"
+msgstr "Začetni datum je obvezen"
 
-#. TRANS: %1$s is activity name
-#: ../lib/GaletteEvents/Booking.php:204
-#, php-format
-msgid "%1$s is mandatory for this event!"
-msgstr "%1$s je obvezen za ta dogodek!"
+#: ../lib/GaletteEvents/Event.php:212 ../templates/default/event.html.twig:40
+msgid "Begin date"
+msgstr "Začetni datum"
 
-#: ../lib/GaletteEvents/Booking.php:239
-msgid "Please specify amount if booking has been paid ;)"
-msgstr "Če je bila rezervacija plačana, navedite znesek ;)"
+#: ../lib/GaletteEvents/Event.php:214 ../templates/default/event.html.twig:46
+msgid "End date"
+msgstr "Končni datum"
 
-#: ../lib/GaletteEvents/Booking.php:262
-msgid "Member is mandatory"
-msgstr "Članstvo je obvezno"
+#: ../lib/GaletteEvents/Event.php:232
+msgid "End date must be later or equal to begin date"
+msgstr "Končni datum mora biti poznejši ali enak začetnemu datumu"
 
-#: ../lib/GaletteEvents/Booking.php:274
-msgid "There must be at least one person"
-msgstr "Prisotna mora biti vsaj ena oseba"
+#: ../lib/GaletteEvents/Event.php:238 ../lib/GaletteEvents/Activity.php:155
+msgid "Name is mandatory"
+msgstr "Ime je obvezno"
 
-#: ../lib/GaletteEvents/Booking.php:283
-msgid "Booking date is mandatory!"
-msgstr "Datum rezervacije je obvezen!"
+#: ../lib/GaletteEvents/Event.php:254
+msgid "Please select a group you own!"
+msgstr "Izberite skupino, ki jo imate v lasti!"
 
-#: ../lib/GaletteEvents/Booking.php:307
-msgid "booking date"
-msgstr "datum rezervacije"
+#: ../lib/GaletteEvents/Event.php:261
+msgid "Town is mandatory"
+msgstr "Mesto je obvezno"
 
-#. TRANS: first replacement is member name, second is event name
-#: ../lib/GaletteEvents/Booking.php:329
-#, php-format
-msgid "A booking already exists for %1$s in %2$s"
-msgstr "Rezervacija za %1$s v %2$s že obstaja"
+#: ../lib/GaletteEvents/Event.php:388
+msgid "Event added"
+msgstr "Dogodek je bil dodan"
 
-#: ../lib/GaletteEvents/Booking.php:397
-msgid "Booking added"
-msgstr "Rezervacija dodana"
+#: ../lib/GaletteEvents/Event.php:392
+msgid "Fail to add new event."
+msgstr "Dodajanje novega dogodka ni uspelo."
 
-#: ../lib/GaletteEvents/Booking.php:401
-msgid "Fail to add new booking."
-msgstr "Dodajanje nove rezervacije ni uspelo."
+#: ../lib/GaletteEvents/Event.php:411
+msgid "Event updated"
+msgstr "Dogodek posodobljen"
 
-#: ../lib/GaletteEvents/Booking.php:420
-msgid "Booking updated"
-msgstr "Rezervacija posodobljena"
-
-#: ../lib/GaletteEvents/Controllers/Crud/BookingsController.php:163
-msgid "Bookings management"
-msgstr "Upravljanje rezervacij"
-
-#: ../lib/GaletteEvents/Controllers/Crud/BookingsController.php:335
-msgid "No action was matching."
-msgstr "Nobeno dejanje se ni ujemalo."
-
-#: ../lib/GaletteEvents/Controllers/Crud/BookingsController.php:340
-msgid "No booking was selected, please check at least one."
-msgstr "Izbrana ni bila nobena rezervacija, prosimo, označite vsaj eno."
-
-#: ../lib/GaletteEvents/Controllers/Crud/BookingsController.php:380
-msgid "Booking"
-msgstr "Rezervacija"
-
-#: ../lib/GaletteEvents/Controllers/Crud/BookingsController.php:509
-msgid "New booking has been successfully added."
-msgstr "Nova rezervacija je bila uspešno dodana."
-
-#: ../lib/GaletteEvents/Controllers/Crud/BookingsController.php:511
-msgid "Booking has been modified."
-msgstr "Rezervacija je bila spremenjena."
-
-#: ../lib/GaletteEvents/Controllers/Crud/BookingsController.php:515
-msgid "An error occurred while storing the booking."
-msgstr "Pri shranjevanju rezervacije je prišlo do napake."
-
-#: ../lib/GaletteEvents/Controllers/Crud/BookingsController.php:523
-msgid "Do not forget to store the booking"
-msgstr "Ne pozabite shraniti rezervacije"
-
-#. TRANS: %1$s is the member name, %2$s the event name.
-#: ../lib/GaletteEvents/Controllers/Crud/BookingsController.php:626
-#, php-format
-msgid "Remove booking for %1$s on %2$s"
-msgstr "Odstrani rezervacijo za %1$s na %2$s"
-
-#: ../lib/GaletteEvents/Controllers/Crud/ActivitiesController.php:121
-msgid "Activities management"
-msgstr "Vodenje dejavnosti"
-
-#: ../lib/GaletteEvents/Controllers/Crud/ActivitiesController.php:192
-msgid "Activity"
-msgstr "Dejavnost"
-
-#: ../lib/GaletteEvents/Controllers/Crud/ActivitiesController.php:253
-msgid "New activity has been successfully added."
-msgstr "Nova dejavnost je bila uspešno dodana."
-
-#: ../lib/GaletteEvents/Controllers/Crud/ActivitiesController.php:255
-msgid "Activity has been modified."
-msgstr "Dejavnost je bila spremenjena."
-
-#: ../lib/GaletteEvents/Controllers/Crud/ActivitiesController.php:259
-msgid "An error occurred while storing the activity."
-msgstr "Pri shranjevanju dejavnosti je prišlo do napake."
-
-#. TRANS %1$s is activity name
-#: ../lib/GaletteEvents/Controllers/Crud/ActivitiesController.php:344
-#, php-format
-msgid "Remove activity %1$s"
-msgstr "Odstrani dejavnost %1$s"
-
-#: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:130
-msgid "Events management"
-msgstr "To končnico uporablja eno ali več vozil in ga ni mogoče izbrisati"
-
-#: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:185
-msgid "Javascript libraries has not been built!"
-msgstr "Knjižnice Javascripta še niso bile zgrajene!"
-
-#: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:194
-#: ../lib/GaletteEvents/PluginGaletteEvents.php:137
-msgid "Events calendar"
-msgstr "Koledar dogodkov"
-
-#: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:303
-#: ../lib/GaletteEvents/Controllers/CsvController.php:71
-#: ../tempcache/booking.html.twig:107 ../tempcache/booking.html.twig:115
-#: ../tempcache/bookings.html.twig:154 ../tempcache/bookings.html.twig:179
+#: ../lib/GaletteEvents/Controllers/CsvController.php:54
+#: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:257
+#: ../templates/default/booking.html.twig:33
+#: ../templates/default/booking.html.twig:39
+#: ../templates/default/bookings.html.twig:49
+#: ../templates/default/bookings.html.twig:77
 msgid "Event"
 msgstr "Dogodek"
 
-#: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:386
-msgid "Activity has been attached to event."
-msgstr "Dejavnost je bila priložena dogodku."
-
-#: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:387
-msgid "Do not forget to store the event"
-msgstr "Ne pozabite shraniti dogodka"
-
-#: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:389
-msgid "Activity has been detached from event."
-msgstr "Dejavnost je bila ločena od dogodka."
-
-#: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:398
-msgid "New event has been successfully added."
-msgstr "Nov dogodek je bil uspešno dodan."
-
-#: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:400
-msgid "Event has been modified."
-msgstr "Dogodek je bil spremenjen."
-
-#: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:404
-msgid "An error occurred while storing the event."
-msgstr "Pri shranjevanju dogodka je prišlo do napake."
-
-#. TRANS: %1$s is the event name
-#: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:504
-#, php-format
-msgid "Remove event '%1$s'\""
-msgstr "Odstrani dogodek '%1$s'"
-
-#: ../lib/GaletteEvents/Controllers/CsvController.php:75
-#: ../tempcache/event.html.twig:158
+#: ../lib/GaletteEvents/Controllers/CsvController.php:58
+#: ../templates/default/event.html.twig:86
 msgid "Zip code"
 msgstr "Poštna številka"
 
-#: ../lib/GaletteEvents/Controllers/CsvController.php:81
-#: ../tempcache/booking.html.twig:205
+#: ../lib/GaletteEvents/Controllers/CsvController.php:64
+#: ../templates/default/booking.html.twig:63
 msgid "Number of persons"
 msgstr "Število oseb"
 
-#: ../lib/GaletteEvents/Controllers/CsvController.php:96
-#: ../tempcache/booking.html.twig:308
+#: ../lib/GaletteEvents/Controllers/CsvController.php:79
+#: ../templates/default/booking.html.twig:115
 msgid "Amount"
 msgstr "Znesek"
 
-#: ../lib/GaletteEvents/Controllers/CsvController.php:98
-#: ../tempcache/booking.html.twig:320
+#: ../lib/GaletteEvents/Controllers/CsvController.php:81
+#: ../templates/default/booking.html.twig:127
 msgid "Bank name"
 msgstr "Ime banke"
 
 #. TRANS: Bank check number
-#: ../lib/GaletteEvents/Controllers/CsvController.php:100
-#: ../tempcache/booking.html.twig:326
+#: ../lib/GaletteEvents/Controllers/CsvController.php:83
+#: ../templates/default/booking.html.twig:133
 msgid "Check number"
 msgstr "Preverite številko"
 
 #. TRANS: this is a filename: all lowercase, no special character, no space.
-#: ../lib/GaletteEvents/Controllers/CsvController.php:155
+#: ../lib/GaletteEvents/Controllers/CsvController.php:138
 msgid "bookingslist"
 msgstr "seznam rezervacij"
 
-#: ../lib/GaletteEvents/Repository/Events.php:209
+#: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:102
+msgid "Events management"
+msgstr "To končnico uporablja eno ali več vozil in ga ni mogoče izbrisati"
+
+#: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:153
+msgid "Javascript libraries has not been built!"
+msgstr "Knjižnice Javascripta še niso bile zgrajene!"
+
+#: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:162
+#: ../lib/GaletteEvents/PluginGaletteEvents.php:139
+msgid "Events calendar"
+msgstr "Koledar dogodkov"
+
+#: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:336
+msgid "Activity has been attached to event."
+msgstr "Dejavnost je bila priložena dogodku."
+
+#: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:337
+msgid "Do not forget to store the event"
+msgstr "Ne pozabite shraniti dogodka"
+
+#: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:339
+msgid "Activity has been detached from event."
+msgstr "Dejavnost je bila ločena od dogodka."
+
+#: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:348
+msgid "New event has been successfully added."
+msgstr "Nov dogodek je bil uspešno dodan."
+
+#: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:350
+msgid "Event has been modified."
+msgstr "Dogodek je bil spremenjen."
+
+#: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:354
+msgid "An error occurred while storing the event."
+msgstr "Pri shranjevanju dogodka je prišlo do napake."
+
+#. TRANS: %1$s is the event name
+#: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:448
+#, php-format
+msgid "Remove event '%1$s'\""
+msgstr "Odstrani dogodek '%1$s'"
+
+#: ../lib/GaletteEvents/Controllers/Crud/BookingsController.php:133
+msgid "Bookings management"
+msgstr "Upravljanje rezervacij"
+
+#: ../lib/GaletteEvents/Controllers/Crud/BookingsController.php:291
+msgid "No action was matching."
+msgstr "Nobeno dejanje se ni ujemalo."
+
+#: ../lib/GaletteEvents/Controllers/Crud/BookingsController.php:296
+msgid "No booking was selected, please check at least one."
+msgstr "Izbrana ni bila nobena rezervacija, prosimo, označite vsaj eno."
+
+#: ../lib/GaletteEvents/Controllers/Crud/BookingsController.php:332
+msgid "Booking"
+msgstr "Rezervacija"
+
+#: ../lib/GaletteEvents/Controllers/Crud/BookingsController.php:457
+msgid "New booking has been successfully added."
+msgstr "Nova rezervacija je bila uspešno dodana."
+
+#: ../lib/GaletteEvents/Controllers/Crud/BookingsController.php:459
+msgid "Booking has been modified."
+msgstr "Rezervacija je bila spremenjena."
+
+#: ../lib/GaletteEvents/Controllers/Crud/BookingsController.php:463
+msgid "An error occurred while storing the booking."
+msgstr "Pri shranjevanju rezervacije je prišlo do napake."
+
+#: ../lib/GaletteEvents/Controllers/Crud/BookingsController.php:471
+msgid "Do not forget to store the booking"
+msgstr "Ne pozabite shraniti rezervacije"
+
+#. TRANS: %1$s is the member name, %2$s the event name.
+#: ../lib/GaletteEvents/Controllers/Crud/BookingsController.php:568
+#, php-format
+msgid "Remove booking for %1$s on %2$s"
+msgstr "Odstrani rezervacijo za %1$s na %2$s"
+
+#: ../lib/GaletteEvents/Controllers/Crud/ActivitiesController.php:94
+msgid "Activities management"
+msgstr "Vodenje dejavnosti"
+
+#: ../lib/GaletteEvents/Controllers/Crud/ActivitiesController.php:156
+msgid "Activity"
+msgstr "Dejavnost"
+
+#: ../lib/GaletteEvents/Controllers/Crud/ActivitiesController.php:212
+msgid "New activity has been successfully added."
+msgstr "Nova dejavnost je bila uspešno dodana."
+
+#: ../lib/GaletteEvents/Controllers/Crud/ActivitiesController.php:214
+msgid "Activity has been modified."
+msgstr "Dejavnost je bila spremenjena."
+
+#: ../lib/GaletteEvents/Controllers/Crud/ActivitiesController.php:218
+msgid "An error occurred while storing the activity."
+msgstr "Pri shranjevanju dejavnosti je prišlo do napake."
+
+#. TRANS %1$s is activity name
+#: ../lib/GaletteEvents/Controllers/Crud/ActivitiesController.php:297
+#, php-format
+msgid "Remove activity %1$s"
+msgstr "Odstrani dejavnost %1$s"
+
+#: ../lib/GaletteEvents/Booking.php:175
+msgid "Event is mandatory"
+msgstr "Dogodek je obvezen"
+
+#. TRANS: %1$s is activity name
+#: ../lib/GaletteEvents/Booking.php:187
+#, php-format
+msgid "%1$s is mandatory for this event!"
+msgstr "%1$s je obvezen za ta dogodek!"
+
+#: ../lib/GaletteEvents/Booking.php:222
+msgid "Please specify amount if booking has been paid ;)"
+msgstr "Če je bila rezervacija plačana, navedite znesek ;)"
+
+#: ../lib/GaletteEvents/Booking.php:245
+msgid "Member is mandatory"
+msgstr "Članstvo je obvezno"
+
+#: ../lib/GaletteEvents/Booking.php:257
+msgid "There must be at least one person"
+msgstr "Prisotna mora biti vsaj ena oseba"
+
+#: ../lib/GaletteEvents/Booking.php:266
+msgid "Booking date is mandatory!"
+msgstr "Datum rezervacije je obvezen!"
+
+#: ../lib/GaletteEvents/Booking.php:290
+msgid "booking date"
+msgstr "datum rezervacije"
+
+#. TRANS: first replacement is member name, second is event name
+#: ../lib/GaletteEvents/Booking.php:312
+#, php-format
+msgid "A booking already exists for %1$s in %2$s"
+msgstr "Rezervacija za %1$s v %2$s že obstaja"
+
+#: ../lib/GaletteEvents/Booking.php:378
+msgid "Booking added"
+msgstr "Rezervacija dodana"
+
+#: ../lib/GaletteEvents/Booking.php:382
+msgid "Fail to add new booking."
+msgstr "Dodajanje nove rezervacije ni uspelo."
+
+#: ../lib/GaletteEvents/Booking.php:401
+msgid "Booking updated"
+msgstr "Rezervacija posodobljena"
+
+#: ../lib/GaletteEvents/Activity.php:221
+msgid "Activity added"
+msgstr "Dejavnost je bila dodana"
+
+#: ../lib/GaletteEvents/Activity.php:226
+msgid "Fail to add new activity."
+msgstr "Dodajanje nove dejavnosti ni uspelo."
+
+#: ../lib/GaletteEvents/Activity.php:245
+msgid "Activity updated"
+msgstr "Dejavnost posodobljena"
+
+#: ../lib/GaletteEvents/Repository/Events.php:196
 msgid "Event information"
 msgstr "Informacije o dogodku"
 
-#: ../lib/GaletteEvents/Repository/Events.php:213
+#: ../lib/GaletteEvents/Repository/Events.php:200
 msgid "Start date:"
 msgstr "Začetni datum:"
 
-#: ../lib/GaletteEvents/Repository/Events.php:214
+#: ../lib/GaletteEvents/Repository/Events.php:201
 msgid "End date:"
 msgstr "Končni datum:"
 
-#: ../lib/GaletteEvents/Repository/Events.php:215
+#: ../lib/GaletteEvents/Repository/Events.php:202
 msgid "Location:"
 msgstr "Lokacija:"
 
-#: ../lib/GaletteEvents/Repository/Events.php:217
+#: ../lib/GaletteEvents/Repository/Events.php:204
 msgid "Comment:"
 msgstr "Komentar:"
 
 #. TRANS: %1$s is the number of paid attendees
-#: ../lib/GaletteEvents/Repository/Events.php:234
+#: ../lib/GaletteEvents/Repository/Events.php:221
 #, php-format
 msgid "%1$s paid"
 msgstr "Plačano %1$s"
 
-#: ../lib/GaletteEvents/Repository/Events.php:239
+#: ../lib/GaletteEvents/Repository/Events.php:226
 msgid "Attendees:"
 msgstr "Udeleženci:"
 
-#: ../lib/GaletteEvents/Repository/Events.php:247
-#: ../lib/GaletteEvents/PluginGaletteEvents.php:104
-#: ../tempcache/event.html.twig:180 ../tempcache/booking.html.twig:221
+#: ../lib/GaletteEvents/Repository/Events.php:234
+#: ../lib/GaletteEvents/PluginGaletteEvents.php:96
+#: ../templates/default/booking.html.twig:78
+#: ../templates/default/event.html.twig:108
 msgid "Activities"
 msgstr "Dejavnosti"
 
-#: ../lib/GaletteEvents/Event.php:205
-msgid "Begin date is mandatory"
-msgstr "Začetni datum je obvezen"
-
-#: ../lib/GaletteEvents/Event.php:229 ../tempcache/event.html.twig:97
-msgid "Begin date"
-msgstr "Začetni datum"
-
-#: ../lib/GaletteEvents/Event.php:231 ../tempcache/event.html.twig:103
-msgid "End date"
-msgstr "Končni datum"
-
-#: ../lib/GaletteEvents/Event.php:249
-msgid "End date must be later or equal to begin date"
-msgstr "Končni datum mora biti poznejši ali enak začetnemu datumu"
-
-#: ../lib/GaletteEvents/Event.php:255 ../lib/GaletteEvents/Activity.php:174
-msgid "Name is mandatory"
-msgstr "Ime je obvezno"
-
-#: ../lib/GaletteEvents/Event.php:271
-msgid "Please select a group you own!"
-msgstr "Izberite skupino, ki jo imate v lasti!"
-
-#: ../lib/GaletteEvents/Event.php:278
-msgid "Town is mandatory"
-msgstr "Mesto je obvezno"
-
-#: ../lib/GaletteEvents/Event.php:407
-msgid "Event added"
-msgstr "Dogodek je bil dodan"
-
-#: ../lib/GaletteEvents/Event.php:411
-msgid "Fail to add new event."
-msgstr "Dodajanje novega dogodka ni uspelo."
-
-#: ../lib/GaletteEvents/Event.php:430
-msgid "Event updated"
-msgstr "Dogodek posodobljen"
-
-#: ../lib/GaletteEvents/PluginGaletteEvents.php:63
-#: ../lib/GaletteEvents/PluginGaletteEvents.php:67
-#: ../tempcache/activities.html.twig:117 ../tempcache/activities.html.twig:181
+#: ../lib/GaletteEvents/PluginGaletteEvents.php:55
+#: ../lib/GaletteEvents/PluginGaletteEvents.php:59
+#: ../templates/default/activities.html.twig:41
+#: ../templates/default/activities.html.twig:74
 msgid "Events"
 msgstr "Dogodki"
 
-#: ../lib/GaletteEvents/PluginGaletteEvents.php:74
-#: ../lib/GaletteEvents/PluginGaletteEvents.php:136
+#: ../lib/GaletteEvents/PluginGaletteEvents.php:66
+#: ../lib/GaletteEvents/PluginGaletteEvents.php:138
 msgid "Calendar"
 msgstr "Koledar"
 
-#: ../lib/GaletteEvents/PluginGaletteEvents.php:87
+#: ../lib/GaletteEvents/PluginGaletteEvents.php:79
 msgid "Bookings"
 msgstr "Rezervacije"
 
-#: ../lib/GaletteEvents/PluginGaletteEvents.php:157
+#: ../lib/GaletteEvents/PluginGaletteEvents.php:159
 msgid "New event booking"
 msgstr "Rezervacija novega dogodka"
 
-#: ../lib/GaletteEvents/PluginGaletteEvents.php:225
+#: ../lib/GaletteEvents/PluginGaletteEvents.php:215
 msgid "Upcoming events"
 msgstr "Prihajajoči dogodki"
 
-#: ../lib/GaletteEvents/Activity.php:242
-msgid "Activity added"
-msgstr "Dejavnost je bila dodana"
-
-#: ../lib/GaletteEvents/Activity.php:247
-msgid "Fail to add new activity."
-msgstr "Dodajanje nove dejavnosti ni uspelo."
-
-#: ../lib/GaletteEvents/Activity.php:266
-msgid "Activity updated"
-msgstr "Dejavnost posodobljena"
-
-#: ../tempcache/event.html.twig:71 ../tempcache/activity.html.twig:71
-msgid "General information"
-msgstr "Splošne informacije"
-
-#: ../tempcache/event.html.twig:78
-msgid "Is open"
-msgstr "Je odprto"
-
-#: ../tempcache/event.html.twig:85 ../tempcache/activities.html.twig:117
-#: ../tempcache/events.html.twig:117 ../tempcache/activity.html.twig:85
-msgid "Name"
-msgstr "Ime"
-
-#: ../tempcache/event.html.twig:91
-msgid "Color"
-msgstr "Barva"
-
-#: ../tempcache/event.html.twig:129
-msgid "Limit to group"
-msgstr "Omeji na skupino"
-
-#: ../tempcache/event.html.twig:129
-msgid "Restrict event to selected group (and its subgroups)."
-msgstr "Omeji dogodek na izbrano skupino (in njene podskupine)."
-
-#: ../tempcache/event.html.twig:135 ../tempcache/booking.html.twig:211
-#: ../tempcache/activity.html.twig:91
-msgid "Comment"
-msgstr "Komentar"
-
-#: ../tempcache/event.html.twig:145
-msgid "Location"
-msgstr "Lokacija"
-
-#: ../tempcache/event.html.twig:152
-msgid "Address"
-msgstr "Naslov"
-
-#: ../tempcache/event.html.twig:164 ../tempcache/events.html.twig:117
-#: ../tempcache/events.html.twig:197
-msgid "Town"
-msgstr "Mesto"
-
-#: ../tempcache/event.html.twig:170
-msgid "Country"
-msgstr "Država"
-
-#: ../tempcache/event.html.twig:204
-msgid "Choose an activity to add"
-msgstr "Izberite dejavnost, ki jo želite dodati"
-
-#: ../tempcache/event.html.twig:228
-msgid "Add selected activity to event"
-msgstr "Izberite dejavnost, ki jo želite dodati"
-
-#: ../tempcache/event.html.twig:240
-msgid "Choose an activity to remove"
-msgstr "Izberite dejavnost, ki jo želite odstraniti"
-
-#: ../tempcache/event.html.twig:267
-msgid "Remove selected activity from event"
-msgstr "Odstrani izbrano dejavnost iz dogodka"
-
-#: ../tempcache/event.html.twig:327
-msgid "Required"
-msgstr "Zahtevano"
-
-#: ../tempcache/event.html.twig:344
-msgid "No activity available in the database."
-msgstr "V bazi podatkov ni na voljo nobene aktivnosti."
-
-#: ../tempcache/event.html.twig:389
-msgid "Please choose an activity to add"
-msgstr "Izberite dejavnost, ki jo želite dodati"
-
-#: ../tempcache/event.html.twig:399
-msgid "Please choose an activity to remove"
-msgstr "Izberite dejavnost, ki jo želite odstraniti"
-
-#: ../tempcache/booking.html.twig:71
+#: ../templates/default/booking.html.twig:14
 msgid "Booking information"
 msgstr "Informacije o rezervaciji"
 
-#: ../tempcache/booking.html.twig:78 ../tempcache/bookings.html.twig:154
-#: ../tempcache/bookings.html.twig:448
+#: ../templates/default/booking.html.twig:19
+#: ../templates/default/bookings.html.twig:49
+#: ../templates/default/bookings.html.twig:176
 msgid "Booking date"
 msgstr "Datum rezervacije"
 
-#: ../tempcache/booking.html.twig:86
+#: ../templates/default/booking.html.twig:25
 msgid "Select an event"
 msgstr "Izberite dogodek"
 
-#: ../tempcache/booking.html.twig:271
+#: ../templates/default/booking.html.twig:69
+#: ../templates/default/activity.html.twig:32
+#: ../templates/default/event.html.twig:66
+msgid "Comment"
+msgstr "Komentar"
+
+#: ../templates/default/booking.html.twig:93
 msgid "No activity for selected event"
 msgstr "Za izbrani dogodek ni aktivnosti"
 
-#: ../tempcache/booking.html.twig:294
+#: ../templates/default/booking.html.twig:103
 msgid "Financial information"
 msgstr "Finančne informacije"
 
-#: ../tempcache/booking.html.twig:301 ../tempcache/bookings.html.twig:154
-#: ../tempcache/bookings.html.twig:288 ../tempcache/bookings.html.twig:457
-#: ../tempcache/bookings.html.twig:469 ../tempcache/bookings.html.twig:480
+#: ../templates/default/booking.html.twig:108
+#: ../templates/default/bookings.html.twig:49
+#: ../templates/default/bookings.html.twig:116
+#: ../templates/default/bookings.html.twig:177
+#: ../templates/default/bookings.html.twig:178
+#: ../templates/default/bookings.html.twig:181
 msgid "Paid"
 msgstr "Plačano"
 
-#: ../tempcache/bookings.html.twig:65
-msgid "No booking selected"
-msgstr "Ni izbrane rezervacije"
+#: ../templates/default/calendar.html.twig:19
+msgid "Daily list"
+msgstr "Dnevni seznam"
 
-#: ../tempcache/bookings.html.twig:65
-msgid ""
-"Please make sure to select at least one booking from the list to perform "
-"this action."
-msgstr "Za izvedbo tega dejanja izberite vsaj eno rezervacijo s seznama."
+#: ../templates/default/calendar.html.twig:20
+msgid "Weekly list"
+msgstr "Tedenski seznam"
 
-#: ../tempcache/bookings.html.twig:80
-msgid "Members as CSV"
-msgstr "Člani kot CSV"
+#: ../templates/default/calendar.html.twig:21
+msgid "Monthly list"
+msgstr "Mesečni seznam"
 
-#: ../tempcache/bookings.html.twig:80
-msgid "Export selected reservation members as CSV"
-msgstr "Izvozi izbrane člane rezervacije kot CSV"
+#: ../templates/default/calendar.html.twig:22
+msgid "Month calendar"
+msgstr "Mesečni koledar"
 
-#: ../tempcache/bookings.html.twig:80
-msgid "Bookings as CSV"
-msgstr "Rezervacije kot CSV"
+#: ../templates/default/calendar.html.twig:23
+msgid "Today"
+msgstr "Danes"
 
-#: ../tempcache/bookings.html.twig:80
-msgid "Export selected reservations as CSV"
-msgstr "Izvozi izbrane rezervacije kot CSV"
-
-#: ../tempcache/bookings.html.twig:98
-#, php-format
-msgid "%1$s booking"
-msgid_plural "%1$s bookings"
-msgstr[0] "Rezervacija %1$s"
-msgstr[1] "Rezervaciji %1$s"
-msgstr[2] "Število rezervacij: %1$s"
-msgstr[3] "Število rezervacij: %1$s"
-
-#: ../tempcache/bookings.html.twig:130 ../tempcache/calendar.html.twig:131
+#: ../templates/default/calendar.html.twig:36
+#: ../templates/default/bookings.html.twig:43
 msgid "New booking"
 msgstr "Nova rezervacija"
 
-#: ../tempcache/bookings.html.twig:136
-msgid "current event"
-msgstr "trenutni dogodek"
-
-#: ../tempcache/bookings.html.twig:154 ../tempcache/bookings.html.twig:497
-msgid "Attendees"
-msgstr "Udeleženci"
-
-#: ../tempcache/bookings.html.twig:184
-msgid "Select..."
-msgstr "Izberite ..."
-
-#: ../tempcache/bookings.html.twig:214
-msgid "All payment types"
-msgstr "Vse vrste plačil"
-
-#: ../tempcache/bookings.html.twig:220 ../tempcache/bookings.html.twig:222
-#: ../tempcache/events.html.twig:117 ../tempcache/events.html.twig:203
-msgid "Group"
-msgstr "Skupina"
-
-#: ../tempcache/bookings.html.twig:258
-msgid "Paid bookings:"
-msgstr "Plačane rezervacije:"
-
-#: ../tempcache/bookings.html.twig:304 ../tempcache/bookings.html.twig:459
-#: ../tempcache/bookings.html.twig:471 ../tempcache/bookings.html.twig:486
-msgid "Not paid"
-msgstr "Ni plačano"
-
-#: ../tempcache/bookings.html.twig:359
-#, php-format
-msgid "Found bookings total %f"
-msgstr "Skupaj najdenih rezervacij %f"
-
-#: ../tempcache/bookings.html.twig:516
-msgid "Edit booking"
-msgstr "Uredi rezervacijo"
-
-#: ../tempcache/bookings.html.twig:528
-msgid "Remove from database"
-msgstr "Odstrani iz baze podatkov"
-
-#: ../tempcache/bookings.html.twig:562
-msgid "No booking has been found"
-msgstr "Ni najdene rezervacije"
-
-#: ../tempcache/activities.html.twig:69
-#, php-format
-msgid "%1$s activity"
-msgid_plural "%1$s activities"
-msgstr[0] "%1$s aktivnost"
-msgstr[1] "%1$s aktivnosti"
-msgstr[2] "%1$s dejavnosti"
-msgstr[3] "%1$s dejavnosti"
-
-#: ../tempcache/activities.html.twig:100
-msgid "New activity"
-msgstr "Nova dejavnost"
-
-#: ../tempcache/activities.html.twig:117 ../tempcache/activities.html.twig:175
-msgid "Creation date"
-msgstr "Datum vpisa"
-
-#: ../tempcache/activities.html.twig:117 ../tempcache/activities.html.twig:187
-#: ../tempcache/activity.html.twig:78
-msgid "Is active"
-msgstr "Je aktiven"
-
-#: ../tempcache/activities.html.twig:198 ../tempcache/activities.html.twig:209
-msgid "Active"
-msgstr "Aktivno"
-
-#: ../tempcache/activities.html.twig:200 ../tempcache/activities.html.twig:215
-msgid "Inactive"
-msgstr "Neaktivno"
-
-#: ../tempcache/activities.html.twig:225 ../tempcache/events.html.twig:273
-#, php-format
-msgid "%1$s: edit information"
-msgstr "%1$s: uredi podatke"
-
-#: ../tempcache/activities.html.twig:227 ../tempcache/events.html.twig:286
-#, php-format
-msgid "%1$s: remove from database"
-msgstr "%1$s: odstrani iz zbirke podatkov"
-
-#: ../tempcache/activities.html.twig:264
-msgid "No activity has been found"
-msgstr "Ni najdene nobene aktivnosti"
-
-#: ../tempcache/events.html.twig:69
+#: ../templates/default/events.html.twig:19
 #, php-format
 msgid "%1$s event"
 msgid_plural "%1$s events"
@@ -569,56 +399,254 @@ msgstr[1] "Dogodka %1$s"
 msgstr[2] "%1$s dogodkov"
 msgstr[3] "%1$s dogodkov"
 
-#: ../tempcache/events.html.twig:100
+#: ../templates/default/events.html.twig:35
 msgid "New event"
 msgstr "Nov dogodek"
 
-#: ../tempcache/events.html.twig:117 ../tempcache/events.html.twig:191
+#: ../templates/default/events.html.twig:41
+#: ../templates/default/activity.html.twig:26
+#: ../templates/default/activities.html.twig:41
+#: ../templates/default/event.html.twig:26
+msgid "Name"
+msgstr "Ime"
+
+#: ../templates/default/events.html.twig:41
+#: ../templates/default/events.html.twig:77
 msgid "Date"
 msgstr "Datum"
 
-#: ../tempcache/events.html.twig:117 ../tempcache/events.html.twig:209
+#: ../templates/default/events.html.twig:41
+#: ../templates/default/events.html.twig:78
+#: ../templates/default/event.html.twig:92
+msgid "Town"
+msgstr "Mesto"
+
+#: ../templates/default/events.html.twig:41
+#: ../templates/default/events.html.twig:79
+#: ../templates/default/bookings.html.twig:94
+msgid "Group"
+msgstr "Skupina"
+
+#: ../templates/default/events.html.twig:41
+#: ../templates/default/events.html.twig:80
 msgid "Open"
 msgstr "Odprto"
 
-#: ../tempcache/events.html.twig:220 ../tempcache/events.html.twig:231
+#: ../templates/default/events.html.twig:81
+#: ../templates/default/events.html.twig:84
 msgid "Event is open"
 msgstr "Dogodek je odprt"
 
-#: ../tempcache/events.html.twig:222 ../tempcache/events.html.twig:237
+#: ../templates/default/events.html.twig:81
+#: ../templates/default/events.html.twig:86
 msgid "Event is closed"
 msgstr "Dogodek je zaprt"
 
-#: ../tempcache/events.html.twig:253
+#: ../templates/default/events.html.twig:93
 #, php-format
 msgid "%1$s: export bookings as CSV"
 msgstr "%1$s: izvozi rezervacije kot CSV"
 
-#: ../tempcache/events.html.twig:263
+#: ../templates/default/events.html.twig:106
 #, php-format
 msgid "%1$s: show bookings"
 msgstr "%1$s: prikaži rezervacije"
 
-#: ../tempcache/events.html.twig:331
+#: ../templates/default/events.html.twig:118
+#: ../templates/default/activities.html.twig:86
+#, php-format
+msgid "%1$s: edit information"
+msgstr "%1$s: uredi podatke"
+
+#: ../templates/default/events.html.twig:131
+#: ../templates/default/activities.html.twig:91
+#, php-format
+msgid "%1$s: remove from database"
+msgstr "%1$s: odstrani iz zbirke podatkov"
+
+#: ../templates/default/events.html.twig:152
 msgid "No event has been found"
 msgstr "Ni najdenega dogodka"
 
-#: ../tempcache/calendar.html.twig:88
-msgid "Daily list"
-msgstr "Dnevni seznam"
+#: ../templates/default/bookings.html.twig:232
+msgid "No booking selected"
+msgstr "Ni izbrane rezervacije"
 
-#: ../tempcache/calendar.html.twig:92
-msgid "Weekly list"
-msgstr "Tedenski seznam"
+#: ../templates/default/bookings.html.twig:232
+msgid ""
+"Please make sure to select at least one booking from the list to perform "
+"this action."
+msgstr "Za izvedbo tega dejanja izberite vsaj eno rezervacijo s seznama."
 
-#: ../tempcache/calendar.html.twig:96
-msgid "Monthly list"
-msgstr "Mesečni seznam"
+#: ../templates/default/bookings.html.twig:257
+msgid "Members as CSV"
+msgstr "Člani kot CSV"
 
-#: ../tempcache/calendar.html.twig:100
-msgid "Month calendar"
-msgstr "Mesečni koledar"
+#: ../templates/default/bookings.html.twig:257
+msgid "Export selected reservation members as CSV"
+msgstr "Izvozi izbrane člane rezervacije kot CSV"
 
-#: ../tempcache/calendar.html.twig:104
-msgid "Today"
-msgstr "Danes"
+#: ../templates/default/bookings.html.twig:257
+msgid "Bookings as CSV"
+msgstr "Rezervacije kot CSV"
+
+#: ../templates/default/bookings.html.twig:257
+msgid "Export selected reservations as CSV"
+msgstr "Izvozi izbrane rezervacije kot CSV"
+
+#: ../templates/default/bookings.html.twig:25
+#, php-format
+msgid "%1$s booking"
+msgid_plural "%1$s bookings"
+msgstr[0] "Rezervacija %1$s"
+msgstr[1] "Rezervaciji %1$s"
+msgstr[2] "Število rezervacij: %1$s"
+msgstr[3] "Število rezervacij: %1$s"
+
+#: ../templates/default/bookings.html.twig:44
+msgid "current event"
+msgstr "trenutni dogodek"
+
+#: ../templates/default/bookings.html.twig:49
+#: ../templates/default/bookings.html.twig:187
+msgid "Attendees"
+msgstr "Udeleženci"
+
+#: ../templates/default/bookings.html.twig:79
+msgid "Select..."
+msgstr "Izberite ..."
+
+#: ../templates/default/bookings.html.twig:88
+msgid "All payment types"
+msgstr "Vse vrste plačil"
+
+#: ../templates/default/bookings.html.twig:106
+msgid "Paid bookings:"
+msgstr "Plačane rezervacije:"
+
+#: ../templates/default/bookings.html.twig:122
+#: ../templates/default/bookings.html.twig:177
+#: ../templates/default/bookings.html.twig:178
+#: ../templates/default/bookings.html.twig:183
+msgid "Not paid"
+msgstr "Ni plačano"
+
+#: ../templates/default/bookings.html.twig:147
+#, php-format
+msgid "Found bookings total %f"
+msgstr "Skupaj najdenih rezervacij %f"
+
+#: ../templates/default/bookings.html.twig:192
+msgid "Edit booking"
+msgstr "Uredi rezervacijo"
+
+#: ../templates/default/bookings.html.twig:206
+msgid "Remove from database"
+msgstr "Odstrani iz baze podatkov"
+
+#: ../templates/default/bookings.html.twig:226
+msgid "No booking has been found"
+msgstr "Ni najdene rezervacije"
+
+#: ../templates/default/activity.html.twig:14
+#: ../templates/default/event.html.twig:14
+msgid "General information"
+msgstr "Splošne informacije"
+
+#: ../templates/default/activity.html.twig:19
+#: ../templates/default/activities.html.twig:41
+#: ../templates/default/activities.html.twig:75
+msgid "Is active"
+msgstr "Je aktiven"
+
+#: ../templates/default/activities.html.twig:19
+#, php-format
+msgid "%1$s activity"
+msgid_plural "%1$s activities"
+msgstr[0] "%1$s aktivnost"
+msgstr[1] "%1$s aktivnosti"
+msgstr[2] "%1$s dejavnosti"
+msgstr[3] "%1$s dejavnosti"
+
+#: ../templates/default/activities.html.twig:35
+msgid "New activity"
+msgstr "Nova dejavnost"
+
+#: ../templates/default/activities.html.twig:41
+#: ../templates/default/activities.html.twig:73
+msgid "Creation date"
+msgstr "Datum vpisa"
+
+#: ../templates/default/activities.html.twig:76
+#: ../templates/default/activities.html.twig:79
+msgid "Active"
+msgstr "Aktivno"
+
+#: ../templates/default/activities.html.twig:76
+#: ../templates/default/activities.html.twig:81
+msgid "Inactive"
+msgstr "Neaktivno"
+
+#: ../templates/default/activities.html.twig:113
+msgid "No activity has been found"
+msgstr "Ni najdene nobene aktivnosti"
+
+#: ../templates/default/event.html.twig:19
+msgid "Is open"
+msgstr "Je odprto"
+
+#: ../templates/default/event.html.twig:33
+msgid "Color"
+msgstr "Barva"
+
+#: ../templates/default/event.html.twig:58
+msgid "Limit to group"
+msgstr "Omeji na skupino"
+
+#: ../templates/default/event.html.twig:58
+msgid "Restrict event to selected group (and its subgroups)."
+msgstr "Omeji dogodek na izbrano skupino (in njene podskupine)."
+
+#: ../templates/default/event.html.twig:75
+msgid "Location"
+msgstr "Lokacija"
+
+#: ../templates/default/event.html.twig:80
+msgid "Address"
+msgstr "Naslov"
+
+#: ../templates/default/event.html.twig:99
+msgid "Country"
+msgstr "Država"
+
+#: ../templates/default/event.html.twig:119
+msgid "Choose an activity to add"
+msgstr "Izberite dejavnost, ki jo želite dodati"
+
+#: ../templates/default/event.html.twig:126
+msgid "Add selected activity to event"
+msgstr "Izberite dejavnost, ki jo želite dodati"
+
+#: ../templates/default/event.html.twig:131
+msgid "Choose an activity to remove"
+msgstr "Izberite dejavnost, ki jo želite odstraniti"
+
+#: ../templates/default/event.html.twig:139
+msgid "Remove selected activity from event"
+msgstr "Odstrani izbrano dejavnost iz dogodka"
+
+#: ../templates/default/event.html.twig:152
+msgid "Required"
+msgstr "Zahtevano"
+
+#: ../templates/default/event.html.twig:158
+msgid "No activity available in the database."
+msgstr "V bazi podatkov ni na voljo nobene aktivnosti."
+
+#: ../templates/default/event.html.twig:179
+msgid "Please choose an activity to add"
+msgstr "Izberite dejavnost, ki jo želite dodati"
+
+#: ../templates/default/event.html.twig:186
+msgid "Please choose an activity to remove"
+msgstr "Izberite dejavnost, ki jo želite odstraniti"
