@@ -274,48 +274,46 @@ class Event
             }
         }
 
-        if (
-            isset($values['add_activity'])
-            && !empty($values['attach_activity'])
-        ) {
-            $activity = new Activity($this->zdb, $this->login, (int)$values['attach_activity']);
-            if ($activity->getId() !== null && $activity->isActive()) {
-                $this->activities[$activity->getId()] = [
-                    'activity'  => $activity,
-                    'status'    => Activity::YES
-                ];
-            }
-        }
-
+        //the form posts every linked activity: posted list replaces the current one
         $detached = null;
         if (
             isset($values['remove_activity'])
             && !empty($values['detach_activity'])
         ) {
             $detached = (int)$values['detach_activity'];
-            unset($this->activities[$detached]);
         }
 
-        if (isset($values['activities_ids'])) {
-            foreach ($values['activities_ids'] as $row => $activity_id) {
-                $activity_id = (int)$activity_id;
-                $status = (int)($values['activities_status'][$row] ?? Activity::YES);
-                if ($activity_id === $detached || !in_array($status, [Activity::NO, Activity::YES, Activity::REQUIRED], true)) {
-                    continue;
-                }
-                if (isset($this->activities[$activity_id])) {
-                    $this->activities[$activity_id]['status'] = $status;
-                } else {
-                    $activity = new Activity($this->zdb, $this->login, $activity_id);
-                    if ($activity->getId() !== null && $activity->isActive()) {
-                        $this->activities[$activity_id] = [
-                            'activity'  => $activity,
-                            'status'    => $status
-                        ];
-                    }
-                }
+        $activities = [];
+        foreach ($values['activities_ids'] ?? [] as $row => $activity_id) {
+            $activity_id = (int)$activity_id;
+            $status = (int)($values['activities_status'][$row] ?? Activity::YES);
+            if ($activity_id === $detached || !in_array($status, [Activity::NO, Activity::YES, Activity::REQUIRED], true)) {
+                continue;
+            }
+            //already linked activities stay, even if they have been deactivated since
+            $activity = $this->activities[$activity_id]['activity'] ?? $this->getActiveActivity($activity_id);
+            if ($activity !== null) {
+                $activities[$activity_id] = [
+                    'activity'  => $activity,
+                    'status'    => $status
+                ];
             }
         }
+
+        if (
+            isset($values['add_activity'])
+            && !empty($values['attach_activity'])
+            && !isset($activities[(int)$values['attach_activity']])
+        ) {
+            $activity = $this->getActiveActivity((int)$values['attach_activity']);
+            if ($activity !== null) {
+                $activities[(int)$values['attach_activity']] = [
+                    'activity'  => $activity,
+                    'status'    => Activity::YES
+                ];
+            }
+        }
+        $this->activities = $activities;
 
         if (isset($values['open'])) {
             $this->open = true;
@@ -425,6 +423,17 @@ class Event
             );
             throw $e;
         }
+    }
+
+    /**
+     * Get an activity that can be attached to the event
+     *
+     * @param int $id Activity ID
+     */
+    private function getActiveActivity(int $id): ?Activity
+    {
+        $activity = new Activity($this->zdb, $this->login, $id);
+        return $activity->getId() !== null && $activity->isActive() ? $activity : null;
     }
 
     /**

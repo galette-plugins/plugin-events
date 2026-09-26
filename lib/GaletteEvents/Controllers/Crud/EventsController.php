@@ -241,16 +241,7 @@ class EventsController extends AbstractPluginController
 
         //check if logged-in user can edit event
         if (!$can) {
-            $redirect_url = $this->routeparser->urlFor('events_events');
-            Analog::log(
-                sprintf(
-                    'Member %1$s cannot edit event %2$s',
-                    $this->login->id,
-                    $event->getId()
-                )
-            );
-            return $response
-                ->withHeader('Location', $redirect_url);
+            return $this->redirectForbidden($response, $event);
         }
 
         // template variable declaration
@@ -300,16 +291,7 @@ class EventsController extends AbstractPluginController
 
         //check if logged-in user can edit event
         if (!$can) {
-            $redirect_url = $this->routeparser->urlFor('events_events');
-            Analog::log(
-                sprintf(
-                    'Member %1$s cannot edit event %2$s',
-                    $this->login->id,
-                    $event->getId()
-                )
-            );
-            return $response
-                ->withHeader('Location', $redirect_url);
+            return $this->redirectForbidden($response, $event);
         }
 
         $success_detected = [];
@@ -319,46 +301,35 @@ class EventsController extends AbstractPluginController
 
         // Validation
         $valid = $event->check($post);
-        if ($valid !== true) {
-            $error_detected = array_merge($error_detected, $valid);
-        }
 
-        if (count($error_detected) == 0) {
-            //all goes well, we can proceed
-            $new = false;
-            if ($event->getId() == '') {
-                $new = true;
-            }
-
-            if (isset($post['add_activity']) || isset($post['remove_activity'])) {
-                $this->session->event = $event;
-                if (isset($post['add_activity'])) {
+        if (isset($post['add_activity']) || isset($post['remove_activity'])) {
+            //activities are changed on a form that may not be complete yet, event is stored later
+            $goto_list = false;
+            if (isset($post['add_activity'])) {
+                if (isset($event->getActivities()[(int)($post['attach_activity'] ?? 0)])) {
                     $success_detected[] = _T("Activity has been attached to event.", "events");
                     $warning_detected[] = _T('Do not forget to store the event', 'events');
                 } else {
-                    $success_detected[] = _T("Activity has been detached from event.", "events");
+                    $error_detected[] = _T("Please choose an activity to add", "events");
                 }
-                $goto_list = false;
+            } else {
+                $success_detected[] = _T("Activity has been detached from event.", "events");
+                $warning_detected[] = _T('Do not forget to store the event', 'events');
             }
-            if (isset($post['save']) || isset($post['remove_activity'])) {
-                $store = $event->store();
-                if ($store === true) {
-                    //member has been stored :)
-                    if ($new) {
-                        $success_detected[] = _T("New event has been successfully added.", "events");
-                    } else {
-                        $success_detected[] = _T("Event has been modified.", "events");
-                    }
+        } elseif ($valid !== true) {
+            $error_detected = array_merge($error_detected, $valid);
+        } elseif (isset($post['save'])) {
+            $new = $event->getId() === null;
+            if ($event->store() === true) {
+                if ($new) {
+                    $success_detected[] = _T("New event has been successfully added.", "events");
                 } else {
-                    //something went wrong :'(
-                    $error_detected[] = _T("An error occurred while storing the event.", "events");
+                    $success_detected[] = _T("Event has been modified.", "events");
                 }
+            } else {
+                $error_detected[] = _T("An error occurred while storing the event.", "events");
             }
-        }
-
-        if (!isset($post['save'])) {
-            $this->session->event = $event;
-            $error_detected = [];
+        } else {
             $goto_list = false;
         }
 
@@ -407,6 +378,26 @@ class EventsController extends AbstractPluginController
         return $response
             ->withStatus(301)
             ->withHeader('Location', $redirect_url);
+    }
+
+    /**
+     * Redirect when current logged-in user cannot edit an event
+     *
+     * @param Event $event Event
+     */
+    private function redirectForbidden(Response $response, Event $event): Response
+    {
+        Analog::log(
+            'Logged in member ' . $this->login->login
+            . ' has tried to edit event #' . $event->getId()
+            . ' without the right to do so.',
+            Analog::WARNING
+        );
+        return $this->redirectWithErrors(
+            response: $response,
+            errors: [_T("You do not have permission for requested URL.")],
+            redirect_url: $this->routeparser->urlFor('events_events')
+        );
     }
 
     // /CRUD - Update
