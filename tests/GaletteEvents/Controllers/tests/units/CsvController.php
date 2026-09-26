@@ -123,4 +123,18 @@ class CsvController extends GaletteRoutingTestCase
         $this->assertSame(200, $test_response->getStatusCode());
         $this->assertSame(['text/csv'], $test_response->getHeader('Content-Type'));
     }
+
+    /**
+     * Bookings without a known payment method are exported
+     */
+    public function testExportUnknownPaymentMethod(): void
+    {
+        $member_one = $this->getMemberOne();
+        $event = $this->insertEvent('Event');
+        $this->insertBooking($event, $member_one->id, ['payment_method' => 0]);
+
+        $this->logSuperAdmin();
+        $this->assertStringContainsString($member_one->email, $this->exportEvent($event));
+        $this->expectNoLogEntry();
+    }
 }

@@ -638,8 +638,14 @@ class Booking
      */
     public function getPaymentMethodName(): string
     {
-        $pt = new PaymentType($this->zdb, (int)$this->payment_method);
-        return $pt->getname();
+        //payment method may be missing: 0 is the column default, and types can be removed
+        $select = $this->zdb->select(PaymentType::TABLE);
+        $select->where([PaymentType::PK => $this->payment_method]);
+        if ($this->zdb->execute($select)->count() === 0) {
+            return '';
+        }
+        $pt = new PaymentType($this->zdb, $this->payment_method);
+        return $pt->getName();
     }
 
     /**
