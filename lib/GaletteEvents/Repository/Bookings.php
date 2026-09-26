@@ -121,17 +121,19 @@ class Bookings
             $select = $this->zdb->select(EVENTS_PREFIX . Booking::TABLE, 'b');
             $select->columns($fieldsList);
 
+            //joined tables are used for filtering and ordering only, their columns would override bookings ones
             $select->join(
                 ['a' => PREFIX_DB . Adherent::TABLE],
-                'b.' . Adherent::PK . '= a.' . Adherent::PK
+                'b.' . Adherent::PK . '= a.' . Adherent::PK,
+                []
             );
             $select->join(
                 ['e' => PREFIX_DB . EVENTS_PREFIX . Event::TABLE],
-                'b.' . Event::PK . '= e.' . Event::PK
+                'b.' . Event::PK . '= e.' . Event::PK,
+                []
             );
 
             $this->buildWhereClause($select);
-            $select->order(self::buildOrderClause());
 
             $this->calculateSum($select);
 
@@ -142,7 +144,7 @@ class Bookings
             return $select;
         } catch (\Exception $e) {
             Analog::log(
-                'Cannot build SELECT clause for contributions | ' . $e->getMessage(),
+                'Cannot build SELECT clause for bookings | ' . $e->getMessage(),
                 Analog::WARNING
             );
             throw $e;
@@ -150,7 +152,7 @@ class Bookings
     }
 
     /**
-     * Calculate sum of all selected contributions
+     * Calculate sum of all selected bookings
      *
      * @param Select $select Original select
      */
@@ -323,7 +325,7 @@ class Bookings
                 }
                 break;
             case self::ORDERBY_PAID:
-                if ($this->canOrderBy('id_paid', $fields)) {
+                if ($this->canOrderBy('is_paid', $fields)) {
                     $order[] = 'is_paid ' . $this->filters->getDirection();
                 }
                 break;

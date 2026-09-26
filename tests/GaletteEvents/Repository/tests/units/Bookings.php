@@ -89,4 +89,20 @@ class Bookings extends GaletteTestCase
             $this->getVisibleBookings()
         );
     }
+
+    /**
+     * Listed bookings keep their own values, not the ones of their event
+     */
+    public function testListKeepsBookingValues(): void
+    {
+        $member_one = $this->getMemberOne();
+        $event = $this->insertEvent('Event', ['comment' => 'Event comment', 'creation_date' => '2026-01-01']);
+        $this->insertBooking($event, $member_one->id, ['comment' => 'Booking comment', 'creation_date' => '2026-02-01']);
+
+        $this->logSuperAdmin();
+        $list = (new \GaletteEvents\Repository\Bookings($this->zdb, $this->login))->getList();
+        $this->assertCount(1, $list);
+        $this->assertSame('Booking comment', $list[0]->getComment());
+        $this->assertSame('2026-02-01', $list[0]->getCreationDate(false));
+    }
 }
