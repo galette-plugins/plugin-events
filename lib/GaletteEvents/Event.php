@@ -784,12 +784,7 @@ class Event
             return false;
         }
 
-        if ($this->group) {
-            $groups = $this->login->getManagedGroups();
-            return (in_array($this->group, $groups));
-        }
-
-        return false;
+        return $this->group !== null && $login->isGroupManager($this->group);
     }
 
     /**

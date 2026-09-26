@@ -194,4 +194,26 @@ class Event extends GaletteTestCase
         ])));
         $this->assertSame([], $event->getActivities());
     }
+
+    /**
+     * Edition rights are checked for given login, not for the one the event has been loaded with
+     */
+    public function testCanEditChecksGivenLogin(): void
+    {
+        $member_one = $this->getMemberOne();
+        $member_two = $this->getMemberTwo();
+        $managed = $this->createGroup('Managed group', [$member_two]);
+        $other = $this->createGroup('Other group', [$member_one]);
+        $managed_event = $this->insertEvent('Managed event', ['id_group' => $managed->getId()]);
+        $other_event = $this->insertEvent('Other event', ['id_group' => $other->getId()]);
+
+        //events are loaded with member one logged in
+        $this->logMember($this->dataAdherentOne());
+        $manager = new \Galette\Core\Login($this->zdb, $this->i18n);
+        $this->assertTrue($manager->login($this->dataAdherentTwo()['login_adh'], $this->dataAdherentTwo()['mdp_adh']));
+
+        $this->assertTrue((new \GaletteEvents\Event($this->zdb, $this->login, $managed_event))->canEdit($manager));
+        $this->assertFalse((new \GaletteEvents\Event($this->zdb, $this->login, $other_event))->canEdit($manager));
+        $this->assertFalse((new \GaletteEvents\Event($this->zdb, $this->login, $this->insertEvent('Public event')))->canEdit($manager));
+    }
 }
