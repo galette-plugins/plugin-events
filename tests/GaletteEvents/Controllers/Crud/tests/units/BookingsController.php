@@ -32,6 +32,8 @@ class BookingsController extends GaletteRoutingTestCase
     public function tearDown(): void
     {
         $this->login->logout();
+        $this->preferences->pref_bool_groupsmanagers_exports = true;
+        $this->preferences->pref_bool_groupsmanagers_mailings = false;
         $this->cleanEvents();
         parent::tearDown();
     }
@@ -419,5 +421,49 @@ class BookingsController extends GaletteRoutingTestCase
         $test_response = $batch([$other_booking, $managed_booking]);
         $this->assertSame(307, $test_response->getStatusCode());
         $this->assertSame([$member_one->id], $this->session->{'plugin-events-members'}->selected);
+    }
+
+    /**
+     * Group managers run exports and mailings as core preferences allow them to
+     */
+    public function testManagerBatchAsCoreAllows(): void
+    {
+        $member_one = $this->getMemberOne();
+        $member_two = $this->getMemberTwo();
+        $managed = $this->createGroup('Managed group', [$member_two], [$member_one]);
+        $booking = $this->insertBooking(
+            $this->insertEvent('Managed event', ['id_group' => $managed->getId()]),
+            $member_one->id
+        );
+        $this->preferences->pref_bool_groupsmanagers_exports = false;
+
+        $this->logMember($this->dataAdherentTwo());
+        $batch = function (string $action) use ($booking): \Psr\Http\Message\ResponseInterface {
+            $request = $this->createRequest('batch-eventslist', [], 'POST')->withParsedBody([
+                'entries_sel'   => [(string)$booking],
+                $action         => '1',
+            ]);
+            return $this->app->handle($request);
+        };
+
+        foreach (['mailing', 'csv', 'csvbooking', 'labels'] as $action) {
+            $test_response = $batch($action);
+            $this->assertSame(
+                ['Location' => [$this->routeparser->urlFor('events_bookings', ['event' => 'all'])]],
+                $test_response->getHeaders(),
+                $action
+            );
+            $this->expectFlashData(['error_detected' => [_T('You do not have permission for requested URL.')]]);
+            $this->expectLogEntry(Analog::WARNING, 'has tried to run "' . $action . '" batch action on bookings');
+            $this->expectNoLogEntry();
+        }
+
+        $this->preferences->pref_bool_groupsmanagers_exports = true;
+        $this->preferences->pref_bool_groupsmanagers_mailings = true;
+        $this->assertSame(
+            [$this->routeparser->urlFor('mailing') . '?mailing_new=true'],
+            $batch('mailing')->getHeader('Location')
+        );
+        $this->assertSame(307, $batch('csv')->getStatusCode());
     }
 }

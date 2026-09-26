@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 namespace GaletteEvents\Controllers\tests\units;
 
+use Analog\Analog;
 use Galette\Tests\GaletteRoutingTestCase;
 use GaletteEvents\tests\EventsFixtures;
 
@@ -31,6 +32,7 @@ class CsvController extends GaletteRoutingTestCase
     public function tearDown(): void
     {
         $this->login->logout();
+        $this->preferences->pref_bool_groupsmanagers_exports = true;
         $this->cleanEvents();
         parent::tearDown();
     }
@@ -72,5 +74,37 @@ class CsvController extends GaletteRoutingTestCase
         $this->assertStringContainsString($member_one->email, $this->exportEvent($managed_event));
         $this->assertStringNotContainsString($member_one->email, $this->exportEvent($other_event));
         $this->assertStringNotContainsString($member_one->email, $this->exportEvent($public_event));
+    }
+
+    /**
+     * Group managers export bookings as core preferences allow them to
+     */
+    public function testManagerExportsAsCoreAllows(): void
+    {
+        $member_one = $this->getMemberOne();
+        $member_two = $this->getMemberTwo();
+        $managed = $this->createGroup('Managed group', [$member_two], [$member_one]);
+        $event = $this->insertEvent('Managed event', ['id_group' => $managed->getId()]);
+        $this->insertBooking($event, $member_one->id);
+        $this->preferences->pref_bool_groupsmanagers_exports = false;
+
+        $this->logMember($this->dataAdherentTwo());
+        foreach (['event_bookings_export' => ['id' => (string)$event], 'events_bookings_export' => []] as $route => $args) {
+            $test_response = $this->app->handle($this->createRequest($route, $args, $args === [] ? 'POST' : 'GET'));
+            $this->assertSame(
+                ['Location' => [$this->routeparser->urlFor('events_bookings', ['event' => 'all'])]],
+                $test_response->getHeaders()
+            );
+            $this->expectFlashData(['error_detected' => [_T('You do not have permission for requested URL.')]]);
+            $this->expectLogEntry(Analog::WARNING, 'has tried to export bookings without the right to do so');
+            $this->expectNoLogEntry();
+        }
+        $this->login->logout();
+
+        //preference is for group managers only
+        $staff = $this->getStaffMember($member_one);
+        $this->logMember($this->dataAdherentOne());
+        $this->assertStringContainsString($member_one->email, $this->exportEvent($event));
+        $this->resetStaffStatus($staff, $member_two);
     }
 }

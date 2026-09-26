@@ -221,6 +221,22 @@ class BookingsController extends AbstractPluginController
     {
         $post = $request->getParsedBody();
 
+        foreach (['mailing', 'csv', 'csvbooking', 'labels'] as $action) {
+            if (isset($post[$action]) && !$this->canBatch($action)) {
+                Analog::log(
+                    'Logged in member ' . $this->login->login
+                    . ' has tried to run "' . $action . '" batch action on bookings'
+                    . ' without the right to do so.',
+                    Analog::WARNING
+                );
+                return $this->redirectWithErrors(
+                    response: $response,
+                    errors: [_T("You do not have permission for requested URL.")],
+                    redirect_url: $this->routeparser->urlFor('events_bookings', ['event' => 'all'])
+                );
+            }
+        }
+
         if (isset($post['entries_sel'])) {
             if (isset($this->session->filter_bookings)) {
                 $filters = clone $this->session->filter_bookings;
@@ -311,6 +327,25 @@ class BookingsController extends AbstractPluginController
         return $response
             ->withStatus(301)
             ->withHeader('Location', $this->routeparser->urlFor('events_events'));
+    }
+
+    /**
+     * Can current logged-in user run a batch action on bookings
+     *
+     * Group managers run exports and mailings as core preferences allow them to.
+     *
+     * @param string $action Batch action
+     */
+    private function canBatch(string $action): bool
+    {
+        if ($this->login->isAdmin() || $this->login->isStaff()) {
+            return true;
+        }
+
+        if ($action === 'mailing') {
+            return (bool)$this->preferences->pref_bool_groupsmanagers_mailings;
+        }
+        return (bool)$this->preferences->pref_bool_groupsmanagers_exports;
     }
 
     // /CRUD - Read

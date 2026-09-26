@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 namespace GaletteEvents\Controllers;
 
+use Analog\Analog;
 use Slim\Psr7\Request;
 use Slim\Psr7\Response;
 use Galette\IO\Csv;
@@ -32,6 +33,23 @@ class CsvController extends \Galette\Controllers\CsvController
      */
     public function bookingsExport(Request $request, Response $response, ?int $id = null): Response
     {
+        if (
+            !$this->login->isAdmin()
+            && !$this->login->isStaff()
+            && !$this->preferences->pref_bool_groupsmanagers_exports
+        ) {
+            Analog::log(
+                'Logged in member ' . $this->login->login
+                . ' has tried to export bookings without the right to do so.',
+                Analog::WARNING
+            );
+            return $this->redirectWithErrors(
+                response: $response,
+                errors: [_T("You do not have permission for requested URL.")],
+                redirect_url: $this->routeparser->urlFor('events_bookings', ['event' => 'all'])
+            );
+        }
+
         $post = $request->getParsedBody();
         $get = $request->getQueryParams();
         $csv = new CsvOut();
