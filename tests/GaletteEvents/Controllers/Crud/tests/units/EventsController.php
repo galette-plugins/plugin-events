@@ -209,4 +209,25 @@ class EventsController extends GaletteRoutingTestCase
         $this->expectLogEntry(Analog::WARNING, 'has tried to edit event #' . $event);
         $this->expectNoLogEntry();
     }
+
+    /**
+     * Past events stay open in their form, so storing them does not close them
+     */
+    public function testPastEventFormKeepsOpenFlag(): void
+    {
+        $this->logSuperAdmin();
+        $event = $this->insertEvent(
+            'Past event',
+            ['begin_date' => date('Y-m-d', strtotime('-2 days')), 'end_date' => date('Y-m-d', strtotime('-1 day'))]
+        );
+
+        $test_response = $this->app->handle($this->createRequest('events_event_edit', ['id' => (string)$event]));
+        $this->assertSame(200, $test_response->getStatusCode());
+        $this->assertSame(
+            1,
+            preg_match('@<input[^>]*id="open"[^>]*>@s', (string)$test_response->getBody(), $matches)
+        );
+        $this->assertStringContainsString(' checked', $matches[0]);
+        $this->assertStringContainsString('value="1"', $matches[0]);
+    }
 }

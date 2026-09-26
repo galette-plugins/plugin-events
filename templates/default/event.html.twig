@@ -16,9 +16,9 @@
             <div class="active content">
                 {% include "components/forms/checkbox.html.twig" with {
                     id: 'open',
-                    value: event.isOpen(),
+                    value: 1,
                     label: _T("Is open", "events"),
-                    checked: event.IsOpen()
+                    checked: event.isOpenFlag()
                 } %}
 
                 {% include "components/forms/text.html.twig" with {

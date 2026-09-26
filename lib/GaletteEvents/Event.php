@@ -631,6 +631,15 @@ class Event
     }
 
     /**
+     * Has event been flagged as open?
+     * Unlike isOpen(), whatever its dates
+     */
+    public function isOpenFlag(): bool
+    {
+        return $this->open;
+    }
+
+    /**
      * Is event open?
      * Will return false once the begin date has been exceeded
      */
