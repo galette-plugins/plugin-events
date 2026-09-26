@@ -107,4 +107,20 @@ class CsvController extends GaletteRoutingTestCase
         $this->assertStringContainsString($member_one->email, $this->exportEvent($event));
         $this->resetStaffStatus($staff, $member_two);
     }
+
+    /**
+     * Export reads bookings filters only from the session
+     */
+    public function testExportReadsBookingsFiltersOnly(): void
+    {
+        $this->logSuperAdmin();
+        $this->session->filter_members = new \Galette\Filters\MembersList();
+
+        $test_response = $this->app->handle(
+            $this->createRequest('events_bookings_export', [], 'POST')
+                ->withParsedBody(['session_var' => 'filter_members'])
+        );
+        $this->assertSame(200, $test_response->getStatusCode());
+        $this->assertSame(['text/csv'], $test_response->getHeader('Content-Type'));
+    }
 }

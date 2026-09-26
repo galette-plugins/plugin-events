@@ -54,8 +54,12 @@ class CsvController extends \Galette\Controllers\CsvController
         $get = $request->getQueryParams();
         $csv = new CsvOut();
 
+        //filters come from bookings list, or from its batch actions
         $session_var = $post['session_var'] ?? $get['session_var'] ?? 'filter_bookings';
-        if (isset($this->session->$session_var) && $id === null) {
+        if (!in_array($session_var, ['filter_bookings', 'plugin-events-bookings'], true)) {
+            $session_var = 'filter_bookings';
+        }
+        if ($id === null && ($this->session->$session_var ?? null) instanceof BookingsList) {
             $filters = $this->session->$session_var;
         } else {
             $filters = new BookingsList();
