@@ -115,12 +115,13 @@ class Booking
         $this->member = (int)$r->id_adh;
         $this->date = $r->booking_date;
         $this->paid = (bool)$r->is_paid;
-        $this->amount = (float)$r->payment_amount;
+        $this->amount = $r->payment_amount === null ? null : (float)$r->payment_amount;
         $this->payment_method = (int)$r->payment_method;
         $this->bank_name = $r->bank_name;
         $this->check_number = $r->check_number;
-        $this->number_people = (int)$r->number_people;
-        $this->comment = $r->comment;
+        $this->number_people = (int)($r->number_people ?? 1);
+        $this->comment = $r->comment ?? '';
+        $this->creation_date = $r->creation_date;
     }
 
     /**
@@ -255,7 +256,7 @@ class Booking
                 && $member !== $this->getMemberId()
             ) {
                 //group managers book for members of the groups they manage, on events of those groups
-                $group = $this->getEvent()?->getGroup() ?: null;
+                $group = $this->getEvent()?->getGroup();
                 if (!(new Adherent($this->zdb, $member))->canShow($this->login)) {
                     $this->errors[] = _T("- Please select a member from a group you manage.");
                 } elseif ($group === null || !$this->login->isGroupManager($group)) {
@@ -768,8 +769,7 @@ class Booking
             return false;
         }
 
-        //public events have no group, loaded as 0
-        $group = $event->getGroup() ?: null;
+        $group = $event->getGroup();
         return $group === null
             || $this->login->isGroupManager($group)
             || in_array($group, array_map('intval', Groups::loadGroups($this->login->id, false, false)), true);
@@ -793,8 +793,7 @@ class Booking
             return true;
         }
 
-        //public events have no group, loaded as 0
-        $group = $this->getEvent()?->getGroup() ?: null;
+        $group = $this->getEvent()?->getGroup();
         return $group !== null && $login->isGroupManager($group);
     }
 

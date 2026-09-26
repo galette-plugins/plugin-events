@@ -39,17 +39,17 @@ class Event
 
     private int $id;
     private string $name;
-    private string $address;
-    private string $zip;
-    private string $town;
-    private ?string $country;
+    private string $address = '';
+    private string $zip = '';
+    private string $town = '';
+    private ?string $country = null;
     private string $begin_date;
     private string $end_date;
     private string $creation_date;
     private bool $open = true;
-    private ?int $group;
+    private ?int $group = null;
     private string $comment = '';
-    private ?string $color;
+    private ?string $color = null;
 
     /** @var array<int, array<string, mixed>> */
     private array $activities = [];
@@ -131,8 +131,8 @@ class Event
         $this->end_date = $r->end_date;
         $this->creation_date = $r->creation_date;
         $this->open = (bool)$r->is_open;
-        $this->group = (int)$r->id_group;
-        $this->comment = $r->comment;
+        $this->group = $r->id_group === null ? null : (int)$r->id_group;
+        $this->comment = $r->comment ?? '';
         $this->color = $r->color;
     }
 

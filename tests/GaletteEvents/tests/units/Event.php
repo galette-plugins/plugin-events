@@ -83,4 +83,37 @@ class Event extends GaletteTestCase
         $event = new \GaletteEvents\Event($this->zdb, $this->login, (int)$event->getId());
         $this->assertSame($managed->getId(), $event->getGroup());
     }
+
+    /**
+     * Events are stored with mandatory values only
+     */
+    public function testStoreMandatoryValuesOnly(): void
+    {
+        $this->logSuperAdmin();
+        $event = new \GaletteEvents\Event($this->zdb, $this->login);
+        $this->assertTrue($event->check([
+            'name'          => 'Event',
+            'town'          => 'Lille',
+            'begin_date'    => date('Y-m-d', strtotime('+10 days')),
+        ]));
+        $this->assertTrue($event->store());
+
+        $event = new \GaletteEvents\Event($this->zdb, $this->login, (int)$event->getId());
+        $this->assertSame('Event', $event->getName());
+        $this->assertSame('', $event->getAddress());
+        $this->assertNull($event->getGroup());
+    }
+
+    /**
+     * Optional values may be NULL in database
+     */
+    public function testLoadNullValues(): void
+    {
+        $id = $this->insertEvent('Event', ['comment' => null, 'country' => null]);
+
+        $event = new \GaletteEvents\Event($this->zdb, $this->login, $id);
+        $this->assertSame('', $event->getComment());
+        $this->assertNull($event->getGroup());
+        $this->assertSame('', $event->getColor());
+    }
 }

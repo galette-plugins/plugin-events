@@ -39,7 +39,7 @@ class Activity
     private string $name;
     private bool $active = false;
     private string $creation_date;
-    private string $comment;
+    private string $comment = '';
 
     /**
      * Default constructor
@@ -102,7 +102,7 @@ class Activity
         $this->name = $r->name;
         $this->active = (bool)$r->is_active;
         $this->creation_date = $r->creation_date;
-        $this->comment = $r->comment;
+        $this->comment = $r->comment ?? '';
     }
 
     /**

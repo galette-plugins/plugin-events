@@ -148,4 +148,22 @@ class Activity extends GaletteTestCase
         $activity = new \GaletteEvents\Activity($this->zdb, $this->login);
         $this->assertFalse($activity->load(999));
     }
+
+    /**
+     * Activities are stored without comment, and loaded with a NULL one
+     */
+    public function testNoComment(): void
+    {
+        $activity = new \GaletteEvents\Activity($this->zdb, $this->login);
+        $this->assertTrue($activity->check(['name' => 'Dinner', 'active' => '1']));
+        $this->assertTrue($activity->store());
+
+        $update = $this->zdb->update(EVENTS_PREFIX . \GaletteEvents\Activity::TABLE);
+        $update->set(['comment' => null])->where([\GaletteEvents\Activity::PK => $activity->getId()]);
+        $this->zdb->execute($update);
+
+        $activity = new \GaletteEvents\Activity($this->zdb, $this->login, (int)$activity->getId());
+        $this->assertSame('Dinner', $activity->getName());
+        $this->assertSame('', $activity->getComment());
+    }
 }
