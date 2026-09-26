@@ -199,9 +199,9 @@ class Events
                     $pattern = '<li><strong>%1$s</strong> %2$s</li>';
                     $description .= sprintf($pattern, _T("Start date:", "events"), $event->getBeginDate());
                     $description .= sprintf($pattern, _T("End date:", "events"), $event->getEndDate());
-                    $description .= sprintf($pattern, _T("Location:", "events"), $event->getTown());
+                    $description .= sprintf($pattern, _T("Location:", "events"), $this->escape($event->getTown()));
                     if ($comment = $event->getComment()) {
-                        $description .= sprintf($pattern, _T("Comment:", "events"), $comment);
+                        $description .= sprintf($pattern, _T("Comment:", "events"), $this->escape($comment));
                     }
 
                     /** @var ResultSet $attendees */
@@ -234,7 +234,7 @@ class Events
                         $description .= '<h4>' . _T('Activities', 'events') . '</h4>';
                         $description .= '<ul class="ui bulleted list">';
                         foreach ($activities as $activity) {
-                            $description .= '<li>' . $activity['activity']->getName() . '</li>';
+                            $description .= '<li>' . $this->escape($activity['activity']->getName()) . '</li>';
                         }
                         $description .= '</ul>';
                     }
@@ -253,6 +253,16 @@ class Events
             );
             throw $e;
         }
+    }
+
+    /**
+     * Escape a value typed by users for the calendar HTML description
+     *
+     * @param string $value Value to escape
+     */
+    private function escape(string $value): string
+    {
+        return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
     }
 
     /**

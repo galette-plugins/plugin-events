@@ -43,7 +43,10 @@ $(function() {
       } else {
         _modal_actions[1].click = _booking_action;
       }
-      var _elt = $('<div class="ui tiny modal"><div class="header">' + _infos.name + ' (' + _infos.begin_date_fmt + ' - ' + _infos.end_date_fmt + ')</div><div class="content">' + _infos.description + '</div></div>');
+      //description is built and escaped server side, other values must be displayed as text
+      var _elt = $('<div class="ui tiny modal"><div class="header"></div><div class="content"></div></div>');
+      _elt.find('.header').text(_infos.name + ' (' + _infos.begin_date_fmt + ' - ' + _infos.end_date_fmt + ')');
+      _elt.find('.content').html(_infos.description);
       _elt.appendTo('body');
       _elt.modal({
         onApprove: function() {
