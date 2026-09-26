@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 namespace GaletteEvents\Controllers\Crud;
 
+use Analog\Analog;
 use Galette\Entity\Adherent;
 use Galette\Repository\Groups;
 use Galette\Repository\Members;
@@ -328,6 +329,10 @@ class BookingsController extends AbstractPluginController
             $booking->load($id);
         }
 
+        if ($booking->getId() !== null && !$booking->canEdit($this->login)) {
+            return $this->redirectForbidden($response, $booking);
+        }
+
         // template variable declaration
         $title = _T("Booking", "events");
         if ($booking->getId() != '') {
@@ -420,6 +425,10 @@ class BookingsController extends AbstractPluginController
         $booking = new Booking($this->zdb, $this->login);
         if (isset($post['id']) && !empty($post['id'])) {
             $booking->load((int)$post['id']);
+        }
+
+        if ($booking->getId() !== null && !$booking->canEdit($this->login)) {
+            return $this->redirectForbidden($response, $booking);
         }
 
         if (isset($post['cancel'])) {
@@ -525,6 +534,26 @@ class BookingsController extends AbstractPluginController
         return $response
             ->withStatus(301)
             ->withHeader('Location', $redirect_url);
+    }
+
+    /**
+     * Redirect when current logged-in user cannot edit a booking
+     *
+     * @param Booking $booking Booking
+     */
+    private function redirectForbidden(Response $response, Booking $booking): Response
+    {
+        Analog::log(
+            'Logged in member ' . $this->login->login
+            . ' has tried to edit booking #' . $booking->getId()
+            . ' without the right to do so.',
+            Analog::WARNING
+        );
+        return $this->redirectWithErrors(
+            response: $response,
+            errors: [_T("You do not have permission for requested URL.")],
+            redirect_url: $this->routeparser->urlFor('events_bookings', ['event' => 'all'])
+        );
     }
 
     // /CRUD - Update

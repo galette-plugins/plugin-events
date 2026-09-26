@@ -736,6 +736,28 @@ class Booking
     }
 
     /**
+     * Can current logged-in user edit booking
+     *
+     * Admins and staff members can edit any booking, members their own ones,
+     * and group managers the ones on events of the groups they manage.
+     *
+     * @param Login $login Login instance
+     */
+    public function canEdit(Login $login): bool
+    {
+        if ($login->isAdmin() || $login->isStaff()) {
+            return true;
+        }
+
+        if ($this->getMemberId() !== null && $this->getMemberId() === $login->id) {
+            return true;
+        }
+
+        $group = $this->getEvent()?->getGroup();
+        return $group !== null && $login->isGroupManager($group);
+    }
+
+    /**
      * Get row class related to current fee status
      *
      * @param bool $public we want the class for public pages
