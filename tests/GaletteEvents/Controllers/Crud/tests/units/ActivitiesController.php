@@ -100,4 +100,23 @@ class ActivitiesController extends GaletteRoutingTestCase
         $this->assertSame(200, $test_response->getStatusCode());
         $this->expectNoLogEntry();
     }
+
+    /**
+     * Activities are removed from the posted id
+     */
+    public function testRemoveActivity(): void
+    {
+        $this->logSuperAdmin();
+        $id = $this->insertActivity('Dinner');
+
+        $request = $this->createRequest('events_do_remove_activity', [], 'POST')
+            ->withParsedBody(['id' => (string)$id, 'confirm' => '1']);
+        $test_response = $this->app->handle($request);
+        $this->assertSame(
+            ['Location' => [$this->routeparser->urlFor('events_activities')]],
+            $test_response->getHeaders()
+        );
+        $this->expectFlashData(['success_detected' => ['Successfully deleted!']]);
+        $this->assertSame(0, $this->countActivities('Dinner'));
+    }
 }
