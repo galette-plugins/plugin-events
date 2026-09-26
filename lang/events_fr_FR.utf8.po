@@ -140,7 +140,7 @@ msgstr "Une erreur est survenue à l'enregistrement de l'évènement."
 #. TRANS: %1$s is the event name
 #: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:448
 #, php-format
-msgid "Remove event '%1$s'\""
+msgid "Remove event '%1$s'"
 msgstr "Supprimer l'évènement «%1$s»"
 
 #: ../lib/GaletteEvents/Controllers/Crud/BookingsController.php:133

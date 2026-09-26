@@ -272,4 +272,18 @@ class EventsController extends GaletteRoutingTestCase
         ksort($can_edit);
         $this->assertSame(['Managed event' => true, 'Public event' => false], $can_edit);
     }
+
+    /**
+     * Removal confirmation page names the event
+     */
+    public function testRemovalTitle(): void
+    {
+        $this->logSuperAdmin();
+        $event = $this->insertEvent('Party');
+
+        $test_response = $this->app->handle($this->createRequest('events_remove_event', ['id' => (string)$event]));
+        $this->assertSame(200, $test_response->getStatusCode());
+        $body = html_entity_decode((string)$test_response->getBody(), ENT_QUOTES);
+        $this->assertStringContainsString("<title>Remove event 'Party' - ", $body);
+    }
 }
