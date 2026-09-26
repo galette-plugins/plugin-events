@@ -510,25 +510,25 @@ class Event
     /**
      * Get event address
      */
-    public function getAddress(): ?string
+    public function getAddress(): string
     {
-        return $this->address ?? null;
+        return $this->address;
     }
 
     /**
      * Get event zip
      */
-    public function getZip(): ?string
+    public function getZip(): string
     {
-        return $this->zip ?? null;
+        return $this->zip;
     }
 
     /**
      * Get event town
      */
-    public function getTown(): ?string
+    public function getTown(): string
     {
-        return $this->town ?? null;
+        return $this->town;
     }
 
     /**

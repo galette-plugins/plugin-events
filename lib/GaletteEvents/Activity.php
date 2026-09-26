@@ -325,7 +325,7 @@ class Activity
      */
     public function getComment(): string
     {
-        return $this->comment ?? '';
+        return $this->comment;
     }
 
     /**
