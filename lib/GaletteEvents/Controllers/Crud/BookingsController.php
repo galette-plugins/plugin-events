@@ -139,7 +139,7 @@ class BookingsController extends AbstractPluginController
                 'eventid'           => $linked_event,
                 'require_dialog'    => true,
                 'filters'           => $filters,
-                'events'            => $events->getList(),
+                'events'            => $events->getList(full: true),
                 'groups'            => $groups_list
             ]
         );

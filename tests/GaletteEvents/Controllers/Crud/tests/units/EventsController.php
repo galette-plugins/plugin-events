@@ -230,4 +230,20 @@ class EventsController extends GaletteRoutingTestCase
         $this->assertStringContainsString(' checked', $matches[0]);
         $this->assertStringContainsString('value="1"', $matches[0]);
     }
+
+    /**
+     * Calendar requires dates
+     */
+    public function testCalendarRequiresDates(): void
+    {
+        $this->getMemberOne();
+        $this->logMember($this->dataAdherentOne());
+
+        foreach ([[], ['start' => 'soon', 'end' => 'later']] as $query) {
+            $test_response = $this->app->handle($this->createRequest('ajax-events_calendar', query_params: $query));
+            $this->assertSame(400, $test_response->getStatusCode());
+            $this->assertSame('[]', (string)$test_response->getBody());
+        }
+        $this->expectNoLogEntry();
+    }
 }

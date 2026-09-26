@@ -63,12 +63,17 @@ class Events
     /**
      * Get events list
      *
-     * @param bool $onlyevents   get events member has booking on
+     * Members get open and upcoming events that are public or restricted to their groups,
+     * and the ones they have booked; group managers also get events of the groups they manage.
+     * In calendar, members get all those events, even past or closed ones, in requested dates.
+     *
+     * @param bool $bookable     get only events current logged-in user can book, not paginated
      * @param bool $fullcalendar get events for fullcalendar display (ie. end date +1 day)
+     * @param bool $full         get full list, not paginated
      *
      * @return array<int|string, Event|array<string, mixed>>
      */
-    public function getList(bool $onlyevents = false, bool $fullcalendar = false): array
+    public function getList(bool $bookable = false, bool $fullcalendar = false, bool $full = false): array
     {
         try {
             $select = $this->zdb->select(EVENTS_PREFIX . Event::TABLE, 'e');
@@ -80,86 +85,53 @@ class Events
                 $select::JOIN_LEFT
             );
 
-            $groups = null;
             if (!$this->login->isAdmin() && !$this->login->isStaff()) {
-                if ($this->login->isGroupManager()) {
-                    $groups = $this->login->managed_groups;
+                $managed = array_map('intval', $this->login->managed_groups);
+                $groups = array_unique(array_merge(
+                    array_map('intval', Groups::loadGroups((int)$this->login->id, false, false)),
+                    $managed
+                ));
+
+                $visible = [new Predicate\IsNull('e.' . Group::PK)];
+                if (count($groups)) {
+                    $visible[] = new Predicate\In('e.' . Group::PK, $groups);
+                }
+                $visible = new PredicateSet($visible, PredicateSet::OP_OR);
+
+                $booked = new Predicate\Operator('b.' . Adherent::PK, '=', $this->login->id);
+
+                if ($this->filters->calendar_filter) {
+                    $set = [$visible, $booked];
+                } else {
                     $set = [new PredicateSet(
                         [
-                            new Predicate\IsNull(Group::PK),
-                            new Predicate\Operator(
-                                'is_open',
-                                '=',
-                                true
-                            ),
-                            new Predicate\Operator(
-                                'begin_date',
-                                '>=',
-                                date('Y-m-d')
-                            )
+                            new Predicate\Operator('e.is_open', '=', true),
+                            new Predicate\Operator('e.begin_date', '>=', date('Y-m-d')),
+                            $visible
                         ]
                     )];
-
-                    if (count($groups)) {
-                        $set[] = new Predicate\In(
-                            Group::PK,
-                            $groups
-                        );
+                    if (!$bookable) {
+                        if (count($managed)) {
+                            //managers get events of their groups, whatever their state
+                            $set[] = new Predicate\In('e.' . Group::PK, $managed);
+                        }
+                        $set[] = $booked;
                     }
+                }
 
-                    if ($onlyevents === false) {
-                        //get events member has booking on
-                        $set[] = new Predicate\Operator(
-                            'b.' . Adherent::PK,
-                            '=',
-                            $this->login->id
-                        );
-                    }
+                $select->where(new PredicateSet($set, PredicateSet::OP_OR));
+            }
 
-                    $select->where(
-                        new PredicateSet(
-                            $set,
-                            PredicateSet::OP_OR
-                        )
-                    );
+            if ($this->filters->raw_start_date_filter !== null) {
+                if ($this->filters->calendar_filter) {
+                    //events overlapping requested dates
+                    $select->where->greaterThanOrEqualTo('e.end_date', $this->filters->raw_start_date_filter);
                 } else {
-                    $select->where(
-                        'is_open',
-                        //@phpstan-ignore-next-line
-                        new Expression('true')
-                    );
-                    $select->where->greaterThanOrEqualTo('begin_date', date('Y-m-d'));
-
-                    $set = [new Predicate\IsNull(Group::PK)];
-                    $groups = Groups::loadGroups($this->login->id, false, false);
-                    if (count($groups)) {
-                        $set[] = new Predicate\In(
-                            Group::PK,
-                            $groups
-                        );
-                    }
-
-                    if ($onlyevents === false) {
-                        //get events member has booking on
-
-                        $set[] = new Predicate\Operator(
-                            'b.' . Adherent::PK,
-                            '=',
-                            $this->login->id
-                        );
-                    }
-
-                    $select->where(
-                        new PredicateSet(
-                            $set,
-                            PredicateSet::OP_OR
-                        )
-                    );
+                    $select->where->greaterThanOrEqualTo('e.begin_date', $this->filters->raw_start_date_filter);
                 }
-            } else {
-                if (isset($this->filters->start_date_filter) && $this->filters->raw_start_date_filter !== null) {
-                    $select->where->greaterThanOrEqualTo('begin_date', $this->filters->raw_start_date_filter);
-                }
+            }
+            if ($this->filters->raw_end_date_filter !== null) {
+                $select->where->lessThanOrEqualTo('e.begin_date', $this->filters->raw_end_date_filter);
             }
 
             $select->group(['e.' . Event::PK]);
@@ -167,7 +139,7 @@ class Events
 
             $this->proceedCount($select);
 
-            if (!$this->filters->calendar_filter) {
+            if (!$this->filters->calendar_filter && !$bookable && !$full) {
                 $this->filters->setLimits($select);
             }
             $results = $this->zdb->execute($select);

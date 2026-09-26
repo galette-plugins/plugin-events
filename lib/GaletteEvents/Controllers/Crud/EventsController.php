@@ -121,31 +121,6 @@ class EventsController extends AbstractPluginController
         ?string $option = null,
         string|int|null $value = null
     ): Response {
-        if (isset($this->session->filter_events_calendar)) {
-            $filters = $this->session->filter_events_calendar;
-        } else {
-            $filters = new EventsList();
-        }
-        $filters->calendar_filter = true;
-
-        if ($option !== null) {
-            switch ($option) {
-                case 'page':
-                    $filters->current_page = (int)$value;
-                    break;
-                case 'order':
-                    $filters->orderby = $value;
-                    break;
-            }
-        }
-
-        $events = new Events($this->zdb, $this->login, $filters);
-
-        //assign pagination variables to the template and add pagination links
-        $filters->setViewPagination($this->routeparser, $this->view, false);
-
-        $this->session->filter_events_calendar = $filters;
-
         //check if JS has been generated
         if (!file_exists(__DIR__ . '/../../../../webroot/js/calendar.bundle.js')) {
             $this->flash->addMessageNow(
@@ -161,9 +136,6 @@ class EventsController extends AbstractPluginController
             [
                 'page_title'            => _T("Events calendar", "events"),
                 'require_dialog'        => true,
-                'events'                => $events->getList(),
-                'nb_events'             => $events->getCount(),
-                'filters'               => $filters,
                 'module_id'             => $this->getModuleId()
             ]
         );
@@ -176,10 +148,16 @@ class EventsController extends AbstractPluginController
     public function ajaxCalendar(Request $request, Response $response): Response
     {
         $get = $request->getQueryParams();
-        $filters = $this->session->filter_events_calendar ?? new EventsList();
+        $start = strtotime((string)($get['start'] ?? ''));
+        $end = strtotime((string)($get['end'] ?? ''));
+        if ($start === false || $end === false) {
+            return $this->withJson($response, [], 400);
+        }
+
+        $filters = new EventsList();
         $filters->calendar_filter = true;
-        $filters->start_date_filter = date(__("Y-m-d"), strtotime($get['start']));
-        $filters->end_date_filter = date(__("Y-m-d"), strtotime($get['end']));
+        $filters->start_date_filter = date(__("Y-m-d"), $start);
+        $filters->end_date_filter = date(__("Y-m-d"), $end);
 
         $events = new Events($this->zdb, $this->login, $filters);
 

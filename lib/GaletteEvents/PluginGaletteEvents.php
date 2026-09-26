@@ -189,7 +189,7 @@ class PluginGaletteEvents extends GalettePlugin implements InstallableInterface,
     {
         $filters = new EventsList();
         $now = new \DateTime();
-        $filters->start_date_filter = $now->format(_T('Y-m-d'));
+        $filters->start_date_filter = $now->format(__('Y-m-d'));
         $events = new Events($this->zdb, $this->login, $filters);
 
         $posts = [];
