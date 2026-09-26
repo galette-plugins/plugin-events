@@ -246,4 +246,30 @@ class EventsController extends GaletteRoutingTestCase
         }
         $this->expectNoLogEntry();
     }
+
+    /**
+     * Calendar tells which events can be edited
+     */
+    public function testCalendarCanEdit(): void
+    {
+        $this->getMemberOne();
+        $member_two = $this->getMemberTwo();
+        $managed = $this->createGroup('Managed group', [$member_two]);
+        $this->insertEvent('Managed event', ['id_group' => $managed->getId()]);
+        $this->insertEvent('Public event');
+        $this->logMember($this->dataAdherentTwo());
+
+        $request = $this->createRequest(
+            'ajax-events_calendar',
+            query_params: [
+                'start' => date('Y-m-d'),
+                'end'   => date('Y-m-d', strtotime('+1 month')),
+            ]
+        );
+        $events = json_decode((string)$this->app->handle($request)->getBody(), true);
+        $this->assertIsArray($events);
+        $can_edit = array_column($events, 'can_edit', 'name');
+        ksort($can_edit);
+        $this->assertSame(['Managed event' => true, 'Public event' => false], $can_edit);
+    }
 }

@@ -35,14 +35,16 @@ $(function() {
       var _infos = JSON.parse(JSON.stringify(info.event.extendedProps));
       _infos.url = _calendar_event_url.replace('PLACEBO', _infos.id_event);
       _infos.booking = _calendar_booking_url.replace('PLACEBO', _infos.id_event);
-      _booking_action = function() {
-          window.location.href = _infos.booking;
-      };
-      if (_modal_actions.length == 2) {
-        _modal_actions[0].click = _booking_action;
-      } else {
-        _modal_actions[1].click = _booking_action;
+      var _actions = [];
+      if (_infos.can_edit) {
+        _actions.push(_edit_action);
       }
+      _actions.push(Object.assign({}, _booking_action, {
+        click: function() {
+          window.location.href = _infos.booking;
+        }
+      }));
+      _actions.push(_close_action);
       //description is built and escaped server side, other values must be displayed as text
       var _elt = $('<div class="ui tiny modal"><div class="header"></div><div class="content"></div></div>');
       _elt.find('.header').text(_infos.name + ' (' + _infos.begin_date_fmt + ' - ' + _infos.end_date_fmt + ')');
@@ -52,7 +54,7 @@ $(function() {
         onApprove: function() {
           window.location.href = _infos.url;
         },
-        actions: _modal_actions
+        actions: _actions
       }).modal('show');
     },
     eventMouseEnter: function(info) {

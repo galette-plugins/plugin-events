@@ -153,6 +153,7 @@ class Events
                 } else {
                     //required entries for fullcalendar
                     $row['title'] = $row['name'];
+                    $row['can_edit'] = $event->canEdit($this->login);
                     $row['start'] = $row['begin_date'];
                     $end_date = new \DateTime($event->getEndDate(false));
                     if ($fullcalendar === true) {

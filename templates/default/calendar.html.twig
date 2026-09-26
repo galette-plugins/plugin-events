@@ -23,15 +23,12 @@
       today: { buttonText: '{{ _T("Today", "events")|e('js') }}' }
     }
     var _fullcalendar_locale = '{{ i18n.getWebID() }}';
-    var _modal_actions = [];
-    {% if login.isAdmin() or login.isStaff() or login.isGroupManager() %}
-      var _edit_action = {
-        text    : '{{ _T("Edit")|e('js') }}',
-        icon    : 'edit',
-        class   : 'icon labeled blue approve'
-      };
-      _modal_actions.push(_edit_action);
-    {% endif %}
+    //edit action is added for events current user can edit
+    var _edit_action = {
+      text    : '{{ _T("Edit")|e('js') }}',
+      icon    : 'edit',
+      class   : 'icon labeled blue approve'
+    };
     var _booking_action = {
       text    : '{{ _T("New booking", "events")|e('js') }}',
       icon    : 'plus circle',
@@ -42,8 +39,6 @@
       icon    : 'times',
       class   : 'icon labeled cancel'
     };
-    _modal_actions.push(_booking_action);
-    _modal_actions.push(_close_action);
 </script>
 <script type="text/javascript" src="{{ url_for("plugin_res", {"plugin": module_id, "path": "js/calendar.bundle.js"}) }}"></script>
 {% endblock %}
