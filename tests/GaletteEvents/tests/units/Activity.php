@@ -11,6 +11,7 @@ declare(strict_types=1);
 namespace GaletteEvents\tests\units;
 
 use Galette\Tests\GaletteTestCase;
+use GaletteEvents\tests\EventsFixtures;
 
 /**
  * Activity entity tests
@@ -19,6 +20,8 @@ use Galette\Tests\GaletteTestCase;
  */
 class Activity extends GaletteTestCase
 {
+    use EventsFixtures;
+
     protected int $seed = 20240517203521;
 
     /**
@@ -26,8 +29,7 @@ class Activity extends GaletteTestCase
      */
     public function tearDown(): void
     {
-        $delete = $this->zdb->delete(EVENTS_PREFIX . \GaletteEvents\Activity::TABLE);
-        $this->zdb->execute($delete);
+        $this->cleanEvents();
         parent::tearDown();
     }
 
@@ -129,5 +131,24 @@ class Activity extends GaletteTestCase
         $activity = new \GaletteEvents\Activity($this->zdb, $this->login, (int)$activity->getId());
         $this->assertSame('Dinner', $activity->getName());
         $this->assertSame('', $activity->getComment());
+    }
+
+    /**
+     * Activities count their events, and are removed with their links
+     */
+    public function testCountAndRemove(): void
+    {
+        $id = $this->insertActivity('Dinner');
+        $this->linkActivity($this->insertEvent('First event'), $id);
+        $this->linkActivity($this->insertEvent('Second event'), $id);
+
+        $activity = new \GaletteEvents\Activity($this->zdb, $this->login, $id);
+        $this->assertSame(2, $activity->countEvents());
+        $this->assertTrue($activity->remove());
+        $this->assertFalse((new \GaletteEvents\Activity($this->zdb, $this->login))->load($id));
+
+        $select = $this->zdb->select(EVENTS_PREFIX . 'activitiesevents');
+        $select->where([\GaletteEvents\Activity::PK => $id]);
+        $this->assertSame(0, $this->zdb->execute($select)->count());
     }
 }

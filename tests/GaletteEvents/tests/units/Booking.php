@@ -132,4 +132,95 @@ class Booking extends GaletteTestCase
         );
         $this->expectLogEntry(\Analog\Analog::ERROR, 'Some errors has been threw attempting to edit/store a booking');
     }
+
+    /**
+     * Get values posted from booking form
+     *
+     * @param array<string,mixed> $values Values to override
+     *
+     * @return array<string,mixed>
+     */
+    private function getFormValues(array $values = []): array
+    {
+        return $values + [
+            'booking_date'  => date('Y-m-d'),
+            'number_people' => '1',
+            'comment'       => '',
+        ];
+    }
+
+    /**
+     * Posted values are checked
+     */
+    public function testCheck(): void
+    {
+        $this->logSuperAdmin();
+        $member_one = $this->getMemberOne();
+        $event = $this->insertEvent('Event');
+        $this->insertBooking($event, $member_one->id);
+
+        $booking = new \GaletteEvents\Booking($this->zdb, $this->login);
+        $this->assertSame(
+            ['Event is mandatory', 'Member is mandatory', 'Booking date is mandatory!'],
+            $booking->check(['number_people' => '1'])
+        );
+        $this->assertSame(
+            ['There must be at least one person', '- Wrong date format (Y-m-d) for booking date!'],
+            $booking->check($this->getFormValues([
+                'event'         => (string)$event,
+                'member'        => (string)$member_one->id,
+                'number_people' => '0',
+                'booking_date'  => 'today',
+            ]))
+        );
+        $this->assertSame(
+            [sprintf('A booking already exists for %1$s in %2$s', $member_one->sfullname, 'Event')],
+            $booking->check($this->getFormValues(['event' => (string)$event, 'member' => (string)$member_one->id]))
+        );
+        $this->expectLogEntry(\Analog\Analog::ERROR, 'Some errors has been threw attempting to edit/store a booking');
+    }
+
+    /**
+     * Members cannot set financial information
+     */
+    public function testMemberFinancialValues(): void
+    {
+        $member_one = $this->getMemberOne();
+        $event = $this->insertEvent('Event');
+        $this->logMember($this->dataAdherentOne());
+
+        $booking = new \GaletteEvents\Booking($this->zdb, $this->login);
+        $this->assertTrue($booking->check($this->getFormValues([
+            'event'             => (string)$event,
+            'paid'              => '1',
+            'amount'            => '10',
+            'bank_name'         => 'Bank',
+            'check_number'      => '123',
+        ])));
+        $this->assertFalse($booking->isPaid());
+        $this->assertNull($booking->getAmount());
+        $this->assertNull($booking->getBankName());
+        $this->assertNull($booking->getCheckNumber());
+        $this->assertSame($member_one->id, $booking->getMemberId());
+    }
+
+    /**
+     * Bookings are removed with their activities
+     */
+    public function testRemove(): void
+    {
+        $member_one = $this->getMemberOne();
+        $event = $this->insertEvent('Event');
+        $dinner = $this->insertActivity('Dinner');
+        $this->linkActivity($event, $dinner);
+        $id = $this->insertBooking($event, $member_one->id);
+        $insert = $this->zdb->insert(EVENTS_PREFIX . 'activitiesbookings');
+        $insert->values([\GaletteEvents\Activity::PK => $dinner, \GaletteEvents\Booking::PK => $id]);
+        $this->zdb->execute($insert);
+
+        $booking = new \GaletteEvents\Booking($this->zdb, $this->login, $id);
+        $this->assertTrue($booking->remove());
+        $this->assertSame(0, $this->countBookings($event));
+        $this->assertSame([], $this->getBookingActivities($id));
+    }
 }

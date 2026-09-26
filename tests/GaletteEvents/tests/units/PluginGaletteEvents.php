@@ -11,6 +11,7 @@ declare(strict_types=1);
 namespace GaletteEvents\tests\units;
 
 use Galette\Tests\GaletteTestCase;
+use GaletteEvents\tests\EventsFixtures;
 
 /**
  * Plugin class tests
@@ -19,6 +20,8 @@ use Galette\Tests\GaletteTestCase;
  */
 class PluginGaletteEvents extends GaletteTestCase
 {
+    use EventsFixtures;
+
     protected int $seed = 20260926101512;
 
     /**
@@ -27,6 +30,7 @@ class PluginGaletteEvents extends GaletteTestCase
     public function tearDown(): void
     {
         $this->login->logout();
+        $this->cleanEvents();
         parent::tearDown();
     }
 
@@ -78,5 +82,68 @@ class PluginGaletteEvents extends GaletteTestCase
             ['plugin_events' => ['events_events', 'events_calendar', 'events_bookings', 'events_activities']],
             $this->getMenusRoutes($plugin->getMenus())
         );
+    }
+
+    /**
+     * Dashboards and actions
+     */
+    public function testDashboardsAndActions(): void
+    {
+        $plugin = $this->getPlugin();
+        $this->assertSame([], $plugin->getPublicMenus());
+        $this->assertSame([], $plugin->getMyDashboards());
+        $this->assertSame([], $plugin->getBatchActions());
+
+        $dashboards = $plugin->getDashboards();
+        $this->assertCount(1, $dashboards);
+        $this->assertSame(['name' => 'events_calendar'], $dashboards[0]['route']);
+
+        $member = $this->getMemberOne();
+        $expected = [
+            'name' => 'events_booking_add',
+            'args' => ['id_adh' => $member->id]
+        ];
+        $actions = $plugin->getListActions($member);
+        $this->assertCount(1, $actions);
+        $this->assertSame($expected, $actions[0]['route']);
+        $this->assertSame($actions, $plugin->getDetailedActions($member));
+    }
+
+    /**
+     * News list upcoming events current user can see
+     */
+    public function testNews(): void
+    {
+        $plugin = $this->getPlugin();
+        $member_one = $this->getMemberOne();
+        $member_two = $this->getMemberTwo();
+        $other = $this->createGroup('Other group', [], [$member_two]);
+
+        $this->logMember($this->dataAdherentOne());
+        $this->assertNull($plugin->getNews());
+
+        $this->insertEvent('Upcoming event', ['begin_date' => date('Y-m-d', strtotime('+2 days'))]);
+        $this->insertEvent('Closed event', ['is_open' => false]);
+        $this->insertEvent('Other group event', ['id_group' => $other->getId()]);
+        $this->insertEvent(
+            'Past event',
+            ['begin_date' => date('Y-m-d', strtotime('-2 days')), 'end_date' => date('Y-m-d', strtotime('-1 day'))]
+        );
+
+        $news = $plugin->getNews();
+        $this->assertInstanceOf(\Galette\IO\News\Entry::class, $news);
+        $this->assertSame('Upcoming events', $news->getTitle());
+        $this->assertSame(
+            [['Upcoming event', date('Y-m-d', strtotime('+2 days'))]],
+            array_map(fn(\Galette\IO\News\Post $post): array => [$post->getTitle(), $post->getDate()], $news->getPosts())
+        );
+    }
+
+    /**
+     * Plugin is installed once its tables exist
+     */
+    public function testIsInstalled(): void
+    {
+        $this->assertTrue($this->getPlugin()->isInstalled());
     }
 }

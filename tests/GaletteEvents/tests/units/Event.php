@@ -216,4 +216,64 @@ class Event extends GaletteTestCase
         $this->assertFalse((new \GaletteEvents\Event($this->zdb, $this->login, $other_event))->canEdit($manager));
         $this->assertFalse((new \GaletteEvents\Event($this->zdb, $this->login, $this->insertEvent('Public event')))->canEdit($manager));
     }
+
+    /**
+     * Posted values are checked
+     */
+    public function testCheck(): void
+    {
+        $this->logSuperAdmin();
+        $event = new \GaletteEvents\Event($this->zdb, $this->login);
+
+        $this->assertSame(
+            ['Begin date is mandatory', 'Name is mandatory', 'Town is mandatory'],
+            $event->check(['begin_date' => ''])
+        );
+        $this->assertSame(
+            ['- Wrong date format (Y-m-d) for Begin date!'],
+            $event->check($this->getFormValues(['begin_date' => 'tomorrow']))
+        );
+        $this->assertSame(
+            ['End date must be later or equal to begin date'],
+            $event->check($this->getFormValues(['begin_date' => '2026-10-10', 'end_date' => '2026-10-09']))
+        );
+        $this->expectLogEntry(\Analog\Analog::ERROR, 'Some errors has been threw attempting to edit/store an event');
+
+        //end date defaults to begin date
+        $values = $this->getFormValues(['begin_date' => '2026-10-10']);
+        unset($values['end_date']);
+        $this->assertTrue($event->check($values));
+        $this->assertSame('2026-10-10', $event->getEndDate(false));
+        $this->assertTrue($event->isOpenFlag());
+
+        $this->assertTrue($event->check($this->getFormValues(['open' => null])));
+        $values = $this->getFormValues();
+        unset($values['open']);
+        $this->assertTrue($event->check($values));
+        $this->assertFalse($event->isOpenFlag());
+        $this->assertFalse($event->isOpen());
+    }
+
+    /**
+     * Events are removed with their bookings and activities links
+     */
+    public function testRemove(): void
+    {
+        $member_one = $this->getMemberOne();
+        $id = $this->insertEvent('Event');
+        $this->linkActivity($id, $this->insertActivity('Dinner'));
+        $this->insertBooking($id, $member_one->id, ['number_people' => 3, 'is_paid' => $this->zdb->isPostgres() ? 'true' : 1]);
+
+        $event = new \GaletteEvents\Event($this->zdb, $this->login, $id);
+        $attendees = [];
+        foreach ($event->countAttendees() as $row) {
+            $attendees[(int)(bool)$row['is_paid']] = (int)$row['count'];
+        }
+        $this->assertSame([1 => 3], $attendees);
+
+        $this->assertTrue($event->remove());
+        $this->assertSame(0, $this->countBookings($id));
+        $this->assertSame([], $this->getEventActivities($id));
+        $this->assertFalse((new \GaletteEvents\Event($this->zdb, $this->login))->load($id));
+    }
 }
