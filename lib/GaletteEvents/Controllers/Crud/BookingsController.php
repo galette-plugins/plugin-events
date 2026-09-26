@@ -231,10 +231,20 @@ class BookingsController extends AbstractPluginController
             //$this->session->filter_bookings = $filters;
             $filters->selected = $post['entries_sel'];
 
+            //selection is restricted to bookings current logged-in user can list
             $bookings = new Bookings($this->zdb, $this->login, $filters);
             $members = [];
             foreach ($bookings->getList() as $booking) {
                 $members[] = $booking->getMemberId();
+            }
+            if (count($members) === 0) {
+                $this->flash->addMessage(
+                    'error_detected',
+                    _T("No booking was selected, please check at least one.", "events")
+                );
+                return $response
+                    ->withStatus(301)
+                    ->withHeader('Location', $this->routeparser->urlFor('events_events'));
             }
             $mfilter = new MembersList();
             $mfilter->selected = $members;

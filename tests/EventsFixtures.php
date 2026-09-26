@@ -12,6 +12,7 @@ namespace GaletteEvents\tests;
 
 use Galette\Entity\Adherent;
 use Galette\Entity\Group;
+use Galette\Entity\PaymentType;
 use GaletteEvents\Activity;
 use GaletteEvents\Booking;
 use GaletteEvents\Event;
@@ -150,6 +151,7 @@ trait EventsFixtures
             Event::PK       => $event,
             Adherent::PK    => $member,
             'booking_date'  => date('Y-m-d'),
+            'payment_method' => PaymentType::OTHER,
             'number_people' => 1,
             'creation_date' => date('Y-m-d'),
             'comment'       => '',

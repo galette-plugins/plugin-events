@@ -380,4 +380,44 @@ class BookingsController extends GaletteRoutingTestCase
         $this->assertSame($member_two->id, $this->getBookedMember($event));
         $this->resetStaffStatus($staff, $member_two);
     }
+
+    /**
+     * Group managers run batch actions on bookings of the groups they manage only
+     */
+    public function testManagerBatchOnManagedGroupsBookingsOnly(): void
+    {
+        $member_one = $this->getMemberOne();
+        $member_two = $this->getMemberTwo();
+        $managed = $this->createGroup('Managed group', [$member_two], [$member_one]);
+        $other = $this->createGroup('Other group', [], [$member_one, $member_two]);
+        $managed_booking = $this->insertBooking(
+            $this->insertEvent('Managed event', ['id_group' => $managed->getId()]),
+            $member_one->id
+        );
+        $other_booking = $this->insertBooking(
+            $this->insertEvent('Other event', ['id_group' => $other->getId()]),
+            $member_one->id
+        );
+
+        $this->logMember($this->dataAdherentTwo());
+        $batch = function (array $selected): \Psr\Http\Message\ResponseInterface {
+            $request = $this->createRequest('batch-eventslist', [], 'POST')->withParsedBody([
+                'entries_sel'   => array_map('strval', $selected),
+                'csv'           => '1',
+            ]);
+            return $this->app->handle($request);
+        };
+
+        $test_response = $batch([$other_booking]);
+        $this->assertSame(
+            ['Location' => [$this->routeparser->urlFor('events_events')]],
+            $test_response->getHeaders()
+        );
+        $this->expectFlashData(['error_detected' => [_T('No booking was selected, please check at least one.', 'events')]]);
+        $this->assertFalse(isset($this->session->{'plugin-events-members'}));
+
+        $test_response = $batch([$other_booking, $managed_booking]);
+        $this->assertSame(307, $test_response->getStatusCode());
+        $this->assertSame([$member_one->id], $this->session->{'plugin-events-members'}->selected);
+    }
 }

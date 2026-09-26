@@ -18,7 +18,6 @@ use Galette\Core\Login;
 use Galette\Core\Db;
 use Galette\Entity\Adherent;
 use Galette\Entity\Group;
-use Galette\Repository\Groups;
 use GaletteEvents\Event;
 use GaletteEvents\Booking;
 use GaletteEvents\Filters\BookingsList;
@@ -235,49 +234,20 @@ class Bookings
             }
 
             if (!$this->login->isAdmin() && !$this->login->isStaff()) {
-                $groups = Groups::loadGroups(
-                    $this->login->id,
-                    false,
-                    false
-                );
-
-                if ($this->login->isGroupManager() && count($this->login->managed_groups)) {
-                    $groups = array_merge($groups, $this->login->managed_groups);
-                }
-
-                $set = [new PredicateSet(
-                    [
-                        new Predicate\IsNull(Group::PK),
-                        new Predicate\Operator(
-                            'is_open',
-                            '=',
-                            true
-                        ),
-                        new Predicate\Operator(
-                            'begin_date',
-                            '>=',
-                            date('Y-m-d')
-                        )
-                    ]
-                )];
-
-                if (count($groups)) {
-                    $set[] = new Predicate\In(
-                        Group::PK,
-                        $groups
-                    );
-                }
-
-                if (!$this->login->isSuperAdmin()) {
-                    $set[] = new Predicate\Operator(
+                //members see their own bookings, group managers also the ones on events of groups they manage
+                $set = [
+                    new Predicate\Operator(
                         'a.' . Adherent::PK,
                         '=',
                         $this->login->id
-                    );
+                    )
+                ];
 
-                    if (!$this->login->isGroupManager()) {
-                        $select->where(['a.' . Adherent::PK => $this->login->id]);
-                    }
+                if ($this->login->isGroupManager() && count($this->login->managed_groups)) {
+                    $set[] = new Predicate\In(
+                        'e.' . Group::PK,
+                        $this->login->managed_groups
+                    );
                 }
 
                 $select->where(
