@@ -286,4 +286,66 @@ class EventsController extends GaletteRoutingTestCase
         $body = html_entity_decode((string)$test_response->getBody(), ENT_QUOTES);
         $this->assertStringContainsString("<title>Remove event 'Party' - ", $body);
     }
+
+    /**
+     * Events list shows events current user can see
+     */
+    public function testList(): void
+    {
+        $this->getMemberOne();
+        $member_two = $this->getMemberTwo();
+        $other = $this->createGroup('Other group', [], [$member_two]);
+        $this->insertEvent('Public event');
+        $this->insertEvent('Other group event', ['id_group' => $other->getId()]);
+
+        $this->logMember($this->dataAdherentOne());
+        $test_response = $this->app->handle($this->createRequest('events_events'));
+        $this->assertSame(200, $test_response->getStatusCode());
+        $body = (string)$test_response->getBody();
+        $this->assertStringContainsString('Public event', $body);
+        $this->assertStringNotContainsString('Other group event', $body);
+        $this->expectNoLogEntry();
+        $this->login->logout();
+
+        $this->logSuperAdmin();
+        $body = (string)$this->app->handle($this->createRequest('events_events'))->getBody();
+        $this->assertStringContainsString('Public event', $body);
+        $this->assertStringContainsString('Other group event', $body);
+    }
+
+    /**
+     * Events list filters are stored in session
+     */
+    public function testFilter(): void
+    {
+        $this->logSuperAdmin();
+        $filter = function (array $data): \Psr\Http\Message\ResponseInterface {
+            return $this->app->handle(
+                $this->createRequest('filter-eventslist', [], 'POST')->withParsedBody($data)
+            );
+        };
+
+        $test_response = $filter(['nbshow' => '50']);
+        $this->assertSame(['Location' => [$this->routeparser->urlFor('events_events')]], $test_response->getHeaders());
+        $this->assertSame(50, $this->session->plugin_events_events_filter->show);
+
+        $filter(['clear_filter' => '1']);
+        $this->assertSame((int)$this->preferences->pref_numrows, $this->session->plugin_events_events_filter->show);
+    }
+
+    /**
+     * Calendar page loads its script
+     */
+    public function testCalendarPage(): void
+    {
+        $this->getMemberOne();
+        $this->logMember($this->dataAdherentOne());
+
+        $test_response = $this->app->handle($this->createRequest('events_calendar'));
+        $this->assertSame(200, $test_response->getStatusCode());
+        $body = (string)$test_response->getBody();
+        $this->assertStringContainsString('<div id=\'calendar\'></div>', $body);
+        $this->assertStringContainsString('js/calendar.bundle.js', $body);
+        $this->assertStringContainsString($this->routeparser->urlFor('ajax-events_calendar'), $body);
+    }
 }

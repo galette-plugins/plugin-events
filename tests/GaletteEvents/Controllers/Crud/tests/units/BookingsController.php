@@ -493,4 +493,67 @@ class BookingsController extends GaletteRoutingTestCase
             (string)$test_response->getBody()
         );
     }
+
+    /**
+     * Bookings list shows bookings current user can see
+     */
+    public function testList(): void
+    {
+        $member_one = $this->getMemberOne();
+        $member_two = $this->getMemberTwo();
+        $event = $this->insertEvent('Public event');
+        $this->insertBooking($event, $member_one->id);
+        $this->insertBooking($event, $member_two->id);
+
+        $this->logMember($this->dataAdherentOne());
+        $test_response = $this->app->handle($this->createRequest('events_bookings', ['event' => 'all']));
+        $this->assertSame(200, $test_response->getStatusCode());
+        $body = (string)$test_response->getBody();
+        $this->assertStringContainsString($member_one->sfullname, $body);
+        $this->assertStringNotContainsString($member_two->sfullname, $body);
+        $this->expectNoLogEntry();
+        $this->login->logout();
+
+        $this->logSuperAdmin();
+        $body = (string)$this->app->handle($this->createRequest('events_bookings', ['event' => (string)$event]))->getBody();
+        $this->assertStringContainsString($member_one->sfullname, $body);
+        $this->assertStringContainsString($member_two->sfullname, $body);
+    }
+
+    /**
+     * Bookings list filters are stored in session
+     */
+    public function testFilter(): void
+    {
+        $this->logSuperAdmin();
+        $event = $this->insertEvent('Event');
+        $request = $this->createRequest('filter-bookingslist', ['event' => (string)$event], 'POST')->withParsedBody([
+            'nbshow'                => '20',
+            'paid_filter'           => (string)\GaletteEvents\Repository\Bookings::FILTER_PAID,
+            'payment_type_filter'   => (string)\Galette\Entity\PaymentType::CASH,
+            'event_filter'          => (string)$event,
+            'group_filter'          => 'not a number',
+        ]);
+        $test_response = $this->app->handle($request);
+        $this->assertSame(
+            ['Location' => [$this->routeparser->urlFor('events_bookings', ['event' => (string)$event])]],
+            $test_response->getHeaders()
+        );
+
+        $filters = $this->session->plugin_events_bookings_filter;
+        $this->assertSame(20, $filters->show);
+        $this->assertEquals(\GaletteEvents\Repository\Bookings::FILTER_PAID, $filters->paid_filter);
+        $this->assertEquals(\Galette\Entity\PaymentType::CASH, $filters->payment_type_filter);
+        $this->assertEquals($event, $filters->event_filter);
+        $this->assertNull($filters->group_filter);
+
+        $request = $this->createRequest('filter-bookingslist', ['event' => (string)$event], 'POST')
+            ->withParsedBody(['clear_filter' => '1']);
+        $test_response = $this->app->handle($request);
+        $this->assertSame(
+            ['Location' => [$this->routeparser->urlFor('events_bookings', ['event' => 'all'])]],
+            $test_response->getHeaders()
+        );
+        $this->assertSame('all', $this->session->plugin_events_bookings_filter->event_filter);
+    }
 }

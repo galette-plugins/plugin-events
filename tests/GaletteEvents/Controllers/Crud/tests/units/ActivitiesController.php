@@ -119,4 +119,26 @@ class ActivitiesController extends GaletteRoutingTestCase
         $this->expectFlashData(['success_detected' => ['Successfully deleted!']]);
         $this->assertSame(0, $this->countActivities('Dinner'));
     }
+
+    /**
+     * Staff members list, display and store activities
+     */
+    public function testStaffManagesActivities(): void
+    {
+        $this->logSuperAdmin();
+        $id = $this->insertActivity('Dinner');
+
+        $test_response = $this->app->handle($this->createRequest('events_activities'));
+        $this->assertSame(200, $test_response->getStatusCode());
+        $this->assertStringContainsString('Dinner', (string)$test_response->getBody());
+
+        $test_response = $this->app->handle($this->createRequest('events_activity_edit', ['id' => (string)$id]));
+        $this->assertSame(200, $test_response->getStatusCode());
+        $this->assertStringContainsString('value="Dinner"', (string)$test_response->getBody());
+
+        $test_response = $this->postActivity(['name' => 'Lodging', 'active' => '1', 'comment' => '']);
+        $this->assertSame(['Location' => [$this->routeparser->urlFor('events_activities')]], $test_response->getHeaders());
+        $this->assertSame(1, $this->countActivities('Lodging'));
+        $this->expectNoLogEntry();
+    }
 }
