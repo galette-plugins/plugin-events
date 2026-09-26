@@ -726,6 +726,7 @@ class Booking
      */
     public function loadActivities(): void
     {
+        $this->activities = [];
         $select = $this->zdb->select(EVENTS_PREFIX . 'activitiesbookings', 'acb');
         $select->where([self::PK => $this->id]);
         $results = $this->zdb->execute($select);

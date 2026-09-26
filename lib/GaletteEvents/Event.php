@@ -53,8 +53,6 @@ class Event
 
     /** @var array<int, array<string, mixed>> */
     private array $activities = [];
-    /** @var array<int, array<string, mixed>> */
-    private array $activities_removed = [];
 
     /**
      * Default constructor
@@ -280,41 +278,41 @@ class Event
             isset($values['add_activity'])
             && !empty($values['attach_activity'])
         ) {
-            $this->activities[$values['attach_activity']] = [
-                'activity'  => new Activity(
-                    $this->zdb,
-                    $this->login,
-                    (int)$values['attach_activity']
-                ),
-                'status'    => Activity::YES
-            ];
+            $activity = new Activity($this->zdb, $this->login, (int)$values['attach_activity']);
+            if ($activity->getId() !== null && $activity->isActive()) {
+                $this->activities[$activity->getId()] = [
+                    'activity'  => $activity,
+                    'status'    => Activity::YES
+                ];
+            }
         }
 
+        $detached = null;
         if (
             isset($values['remove_activity'])
             && !empty($values['detach_activity'])
         ) {
-            unset($this->activities[$values['detach_activity']]);
-            $this->activities_removed[$values['detach_activity']] = [
-                self::PK        => $this->id,
-                Activity::PK    => $values['detach_activity']
-            ];
-
-            if (count($values['activities_ids'])) {
-                unset($values['activities_ids'][array_search($values['detach_activity'], $values['activities_ids'])]);
-            }
+            $detached = (int)$values['detach_activity'];
+            unset($this->activities[$detached]);
         }
 
         if (isset($values['activities_ids'])) {
             foreach ($values['activities_ids'] as $row => $activity_id) {
+                $activity_id = (int)$activity_id;
+                $status = (int)($values['activities_status'][$row] ?? Activity::YES);
+                if ($activity_id === $detached || !in_array($status, [Activity::NO, Activity::YES, Activity::REQUIRED], true)) {
+                    continue;
+                }
                 if (isset($this->activities[$activity_id])) {
-                    $this->activities[$activity_id]['status'] = $values['activities_status'][$row];
+                    $this->activities[$activity_id]['status'] = $status;
                 } else {
-                    $activity = new Activity($this->zdb, $this->login, (int)$activity_id);
-                    $this->activities[$activity_id] = [
-                        'activity'  => $activity,
-                        'status'    => $values['activities_status'][$row]
-                    ];
+                    $activity = new Activity($this->zdb, $this->login, $activity_id);
+                    if ($activity->getId() !== null && $activity->isActive()) {
+                        $this->activities[$activity_id] = [
+                            'activity'  => $activity,
+                            'status'    => $status
+                        ];
+                    }
                 }
             }
         }
@@ -414,91 +412,7 @@ class Event
                 }
             }
 
-            $void   = [];
-            $update = [];
-            $insert = [];
-            $key_values = [];
-            $delete = $this->activities_removed;
-
-            foreach ($this->activities as $aid => $data) {
-                $activity = $data['activity'];
-                $status = $data['status'];
-                $key_values = [
-                    self::PK        => $this->id,
-                    $activity::PK   => $activity->getId()
-                ];
-
-                $select = $this->zdb->select(EVENTS_PREFIX . 'activitiesevents', 'ace');
-                $select->where($key_values);
-                $results = $this->zdb->execute($select);
-
-                foreach ($results as $result) {
-                    $values = [
-                        Activity::PK    => $result[Activity::PK],
-                        self::PK        => $this->id,
-                        'status'        => $status
-                    ];
-                    if (!isset($this->activities[$result[Activity::PK]])) {
-                        $delete[$result[Activity::PK]] = $values;
-                    } elseif ($result['status'] != $this->activities[$result[Activity::PK]]['status']) {
-                        $update[$result[Activity::PK]] = $values;
-                    } else {
-                        $void[$result[Activity::PK]] = $values;
-                    }
-                }
-
-                if (!isset($void[$aid]) && !isset($update[$aid]) && !isset($delete[$aid])) {
-                    $insert[$aid] = [
-                        Activity::PK    => $aid,
-                        self::PK        => $this->id,
-                        'status'        => $status
-                    ];
-                }
-            }
-
-            if (count($delete)) {
-                $stmt = $this->zdb->delete(EVENTS_PREFIX . 'activitiesevents');
-                $count = 0;
-                foreach ($delete as $values) {
-                    $stmt->where($values);
-                    $this->zdb->execute($stmt);
-                    ++$count;
-                }
-                Analog::log(
-                    sprintf('%1$s activities removed', $count),
-                    Analog::INFO
-                );
-            }
-
-            if (count($update)) {
-                $stmt = $this->zdb->update(EVENTS_PREFIX . 'activitiesevents');
-                $count = 0;
-                foreach ($update as $values) {
-                    $stmt
-                        ->set($values)
-                        ->where($key_values);
-                    $this->zdb->execute($stmt);
-                    ++$count;
-                }
-                Analog::log(
-                    sprintf('%1$s activities updated', $count),
-                    Analog::INFO
-                );
-            }
-
-            if (count($insert)) {
-                $stmt = $this->zdb->insert(EVENTS_PREFIX . 'activitiesevents');
-                $count = 0;
-                foreach ($insert as $values) {
-                    $stmt->values(array_merge($key_values, $values));
-                    $this->zdb->execute($stmt);
-                    ++$count;
-                }
-                Analog::log(
-                    sprintf('%1$s activities added', $count),
-                    Analog::INFO
-                );
-            }
+            $this->storeActivities();
 
             $this->zdb->connection->commit();
             return true;
@@ -510,6 +424,65 @@ class Event
                 Analog::ERROR
             );
             throw $e;
+        }
+    }
+
+    /**
+     * Store activities linked to the event, compared to the stored ones
+     */
+    private function storeActivities(): void
+    {
+        $table = EVENTS_PREFIX . 'activitiesevents';
+
+        $stored = [];
+        $select = $this->zdb->select($table);
+        $select->where([self::PK => $this->id]);
+        foreach ($this->zdb->execute($select) as $row) {
+            $stored[(int)$row[Activity::PK]] = (int)$row['status'];
+        }
+
+        $counts = ['added' => 0, 'updated' => 0, 'removed' => 0];
+        foreach ($this->activities as $aid => $data) {
+            $status = (int)$data['status'];
+            if (!isset($stored[$aid])) {
+                $insert = $this->zdb->insert($table);
+                $insert->values([
+                    self::PK        => $this->id,
+                    Activity::PK    => $aid,
+                    'status'        => $status
+                ]);
+                $this->zdb->execute($insert);
+                ++$counts['added'];
+            } elseif ($stored[$aid] !== $status) {
+                $update = $this->zdb->update($table);
+                $update->set(['status' => $status])->where([
+                    self::PK        => $this->id,
+                    Activity::PK    => $aid
+                ]);
+                $this->zdb->execute($update);
+                ++$counts['updated'];
+            }
+        }
+
+        foreach (array_keys($stored) as $aid) {
+            if (!isset($this->activities[$aid])) {
+                $delete = $this->zdb->delete($table);
+                $delete->where([
+                    self::PK        => $this->id,
+                    Activity::PK    => $aid
+                ]);
+                $this->zdb->execute($delete);
+                ++$counts['removed'];
+            }
+        }
+
+        foreach ($counts as $action => $count) {
+            if ($count > 0) {
+                Analog::log(
+                    sprintf('%1$s activities %2$s', $count, $action),
+                    Analog::INFO
+                );
+            }
         }
     }
 
@@ -694,6 +667,7 @@ class Event
     public function availableActivities(): array
     {
         $select = $this->zdb->select(EVENTS_PREFIX . Activity::TABLE, 'ac');
+        $select->where->equalTo('is_active', true);
         $results = $this->zdb->execute($select);
 
         $activities = [];
@@ -711,6 +685,7 @@ class Event
      */
     public function loadActivities(): void
     {
+        $this->activities = [];
         $select = $this->zdb->select(EVENTS_PREFIX . 'activitiesevents', 'ace');
         $select->where([self::PK => $this->id]);
         $results = $this->zdb->execute($select);

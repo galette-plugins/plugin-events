@@ -116,4 +116,82 @@ class Event extends GaletteTestCase
         $this->assertNull($event->getGroup());
         $this->assertSame('', $event->getColor());
     }
+
+    /**
+     * Activities linked to an event are added, changed and removed
+     */
+    public function testActivitiesSync(): void
+    {
+        $this->logSuperAdmin();
+        $dinner = $this->insertActivity('Dinner');
+        $lodging = $this->insertActivity('Lodging');
+        $visit = $this->insertActivity('Visit');
+        $ids = array_map('strval', [$dinner, $lodging, $visit]);
+
+        $event = new \GaletteEvents\Event($this->zdb, $this->login);
+        $this->assertTrue($event->check($this->getFormValues([
+            'activities_ids'    => $ids,
+            'activities_status' => ['1', '1', '2'],
+        ])));
+        $this->assertTrue($event->store());
+        $id = (int)$event->getId();
+        $this->assertSame([$dinner => 1, $lodging => 1, $visit => 2], $this->getEventActivities($id));
+
+        //change status of activities that are not the last one
+        $event = new \GaletteEvents\Event($this->zdb, $this->login, $id);
+        $this->assertTrue($event->check($this->getFormValues([
+            'activities_ids'    => $ids,
+            'activities_status' => ['2', '0', '2'],
+        ])));
+        $this->assertTrue($event->store());
+        $this->assertSame([$dinner => 2, $lodging => 0, $visit => 2], $this->getEventActivities($id));
+
+        //remove two activities before storing
+        $event = new \GaletteEvents\Event($this->zdb, $this->login, $id);
+        $this->assertTrue($event->check($this->getFormValues([
+            'remove_activity'   => '1',
+            'detach_activity'   => (string)$dinner,
+            'activities_ids'    => $ids,
+            'activities_status' => ['2', '0', '2'],
+        ])));
+        $this->assertTrue($event->check($this->getFormValues([
+            'remove_activity'   => '1',
+            'detach_activity'   => (string)$lodging,
+            'activities_ids'    => [(string)$lodging, (string)$visit],
+            'activities_status' => ['0', '2'],
+        ])));
+        $this->assertTrue($event->store());
+        $this->assertSame([$visit => 2], $this->getEventActivities($id));
+
+        //reloading does not keep activities of the previous event
+        $other = (int)$this->insertEvent('Other event');
+        $this->assertTrue($event->load($other));
+        $this->assertSame([], $event->getActivities());
+    }
+
+    /**
+     * Only active activities can be attached to events
+     */
+    public function testInactiveActivities(): void
+    {
+        $this->logSuperAdmin();
+        $dinner = $this->insertActivity('Dinner');
+        $lodging = $this->insertActivity('Lodging');
+        $update = $this->zdb->update(EVENTS_PREFIX . \GaletteEvents\Activity::TABLE);
+        $update->set(['is_active' => $this->zdb->isPostgres() ? 'false' : 0])
+            ->where([\GaletteEvents\Activity::PK => $lodging]);
+        $this->zdb->execute($update);
+
+        $event = new \GaletteEvents\Event($this->zdb, $this->login);
+        $this->assertSame(
+            [$dinner],
+            array_map(fn($row): int => (int)$row[\GaletteEvents\Activity::PK], $event->availableActivities())
+        );
+
+        $this->assertTrue($event->check($this->getFormValues([
+            'add_activity'      => '1',
+            'attach_activity'   => (string)$lodging,
+        ])));
+        $this->assertSame([], $event->getActivities());
+    }
 }

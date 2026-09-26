@@ -190,6 +190,42 @@ trait EventsFixtures
     }
 
     /**
+     * Get activities linked to an event, and their status
+     *
+     * @param int $event Event ID
+     *
+     * @return array<int,int>
+     */
+    protected function getEventActivities(int $event): array
+    {
+        $select = $this->zdb->select(EVENTS_PREFIX . 'activitiesevents');
+        $select->where([Event::PK => $event])->order(Activity::PK);
+        $activities = [];
+        foreach ($this->zdb->execute($select) as $row) {
+            $activities[(int)$row[Activity::PK]] = (int)$row['status'];
+        }
+        return $activities;
+    }
+
+    /**
+     * Get activities of a booking, and whether they are checked
+     *
+     * @param int $booking Booking ID
+     *
+     * @return array<int,bool>
+     */
+    protected function getBookingActivities(int $booking): array
+    {
+        $select = $this->zdb->select(EVENTS_PREFIX . 'activitiesbookings');
+        $select->where([Booking::PK => $booking])->order(Activity::PK);
+        $activities = [];
+        foreach ($this->zdb->execute($select) as $row) {
+            $activities[(int)$row[Activity::PK]] = (bool)$row['checked'];
+        }
+        return $activities;
+    }
+
+    /**
      * Get an ID from a name
      *
      * @param string $table Table name, without prefixes
