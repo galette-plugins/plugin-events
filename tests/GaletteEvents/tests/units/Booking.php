@@ -92,4 +92,44 @@ class Booking extends GaletteTestCase
         $this->assertTrue($booking->store());
         $this->assertSame([$lodging => true], $this->getBookingActivities($id));
     }
+
+    /**
+     * Amounts are cleared, use comma as decimal separator, and may be zero once paid
+     */
+    public function testAmount(): void
+    {
+        $this->logSuperAdmin();
+        $member_one = $this->getMemberOne();
+        $values = [
+            'event'         => (string)$this->insertEvent('Event'),
+            'member'        => (string)$member_one->id,
+            'booking_date'  => date('Y-m-d'),
+            'number_people' => '1',
+        ];
+
+        $booking = new \GaletteEvents\Booking($this->zdb, $this->login);
+        $this->assertTrue($booking->check($values + ['amount' => '12,50']));
+        $this->assertSame(12.5, $booking->getAmount());
+        $this->assertTrue($booking->store());
+        $id = (int)$booking->getId();
+
+        $booking = new \GaletteEvents\Booking($this->zdb, $this->login, $id);
+        $this->assertTrue($booking->check($values + ['amount' => '']));
+        $this->assertTrue($booking->store());
+        $booking = new \GaletteEvents\Booking($this->zdb, $this->login, $id);
+        $this->assertNull($booking->getAmount());
+
+        $this->assertTrue($booking->check($values + ['amount' => '0', 'paid' => '1']));
+        $this->assertSame(0.0, $booking->getAmount());
+
+        $this->assertSame(
+            [_T('Please specify amount if booking has been paid ;)', 'events')],
+            $booking->check($values + ['amount' => '', 'paid' => '1'])
+        );
+        $this->assertSame(
+            [_T('Amount must be a number.', 'events')],
+            $booking->check($values + ['amount' => 'ten'])
+        );
+        $this->expectLogEntry(\Analog\Analog::ERROR, 'Some errors has been threw attempting to edit/store a booking');
+    }
 }

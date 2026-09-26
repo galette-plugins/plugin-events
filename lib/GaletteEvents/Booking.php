@@ -220,11 +220,19 @@ class Booking
                 $this->paid = false;
             }
 
-            if (isset($values['amount']) && !empty($values['amount'])) {
-                $this->amount = (float)$values['amount'];
+            if (isset($values['amount'])) {
+                //accept comma as decimal separator
+                $amount = strtr(trim((string)$values['amount']), ',', '.');
+                if ($amount === '') {
+                    $this->amount = null;
+                } elseif (is_numeric($amount)) {
+                    $this->amount = (float)$amount;
+                } else {
+                    $this->errors[] = _T('Amount must be a number.', 'events');
+                }
             }
 
-            if ($this->paid && !$this->amount) {
+            if ($this->paid && $this->amount === null) {
                 $this->errors[] = _T('Please specify amount if booking has been paid ;)', 'events');
             }
 
