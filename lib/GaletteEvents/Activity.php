@@ -44,11 +44,11 @@ class Activity
     /**
      * Default constructor
      *
-     * @param Db                                      $zdb   Database instance
-     * @param Login                                   $login Login instance
-     * @param null|int|ArrayObject<string,int|string> $args  Either a ResultSet row or its id for to load
-     *                                                       a specific activity, or null to just
-     *                                                       instanciate object
+     * @param Db                                  $zdb   Database instance
+     * @param Login                               $login Login instance
+     * @param null|int|ArrayObject<string, mixed> $args  Either a ResultSet row or its id for to load
+     *                                                   a specific activity, or null to just
+     *                                                   instanciate object
      */
     public function __construct(Db $zdb, Login $login, int|ArrayObject|null $args = null)
     {
@@ -94,15 +94,15 @@ class Activity
     /**
      * Populate object from a resultset row
      *
-     * @param ArrayObject<string, string|int> $r the resultset row
+     * @param ArrayObject<string, mixed> $r the resultset row
      */
     private function loadFromRS(ArrayObject $r): void
     {
-        $this->id = (int)$r->id_activity;
-        $this->name = $r->name;
-        $this->active = (bool)$r->is_active;
-        $this->creation_date = $r->creation_date;
-        $this->comment = $r->comment ?? '';
+        $this->id = (int)$r['id_activity'];
+        $this->name = $r['name'];
+        $this->active = (bool)$r['is_active'];
+        $this->creation_date = $r['creation_date'];
+        $this->comment = $r['comment'] ?? '';
     }
 
     /**

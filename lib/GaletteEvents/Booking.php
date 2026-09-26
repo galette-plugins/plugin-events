@@ -54,11 +54,11 @@ class Booking
     /**
      * Default constructor
      *
-     * @param Db                                      $zdb   Database instance
-     * @param Login                                   $login Login instance
-     * @param null|int|ArrayObject<string,int|string> $args  Either a ResultSet row or its id for to load
-     *                                                       a specific event, or null to just
-     *                                                       instanciate object
+     * @param Db                                  $zdb   Database instance
+     * @param Login                               $login Login instance
+     * @param null|int|ArrayObject<string, mixed> $args  Either a ResultSet row or its id for to load
+     *                                                   a specific event, or null to just
+     *                                                   instanciate object
      */
     public function __construct(Db $zdb, Login $login, int|ArrayObject|null $args = null)
     {
@@ -106,22 +106,22 @@ class Booking
     /**
      * Populate object from a resultset row
      *
-     * @param ArrayObject<string, int|string> $r the resultset row
+     * @param ArrayObject<string, mixed> $r the resultset row
      */
     private function loadFromRS(ArrayObject $r): void
     {
-        $this->id = (int)$r->id_booking;
-        $this->event = (int)$r->id_event;
-        $this->member = (int)$r->id_adh;
-        $this->date = $r->booking_date;
-        $this->paid = (bool)$r->is_paid;
-        $this->amount = $r->payment_amount === null ? null : (float)$r->payment_amount;
-        $this->payment_method = (int)$r->payment_method;
-        $this->bank_name = $r->bank_name;
-        $this->check_number = $r->check_number;
-        $this->number_people = (int)($r->number_people ?? 1);
-        $this->comment = $r->comment ?? '';
-        $this->creation_date = $r->creation_date;
+        $this->id = (int)$r['id_booking'];
+        $this->event = (int)$r['id_event'];
+        $this->member = (int)$r['id_adh'];
+        $this->date = $r['booking_date'];
+        $this->paid = (bool)$r['is_paid'];
+        $this->amount = $r['payment_amount'] === null ? null : (float)$r['payment_amount'];
+        $this->payment_method = (int)$r['payment_method'];
+        $this->bank_name = $r['bank_name'];
+        $this->check_number = $r['check_number'];
+        $this->number_people = (int)($r['number_people'] ?? 1);
+        $this->comment = $r['comment'] ?? '';
+        $this->creation_date = $r['creation_date'];
     }
 
     /**
