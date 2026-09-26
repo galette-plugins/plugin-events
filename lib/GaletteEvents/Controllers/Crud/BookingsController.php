@@ -244,7 +244,6 @@ class BookingsController extends AbstractPluginController
                 $filters = new BookingsList();
             }
 
-            //$this->session->{$this->getFilterName('bookings')} = $filters;
             $filters->selected = $post['entries_sel'];
 
             //selection is restricted to bookings current logged-in user can list

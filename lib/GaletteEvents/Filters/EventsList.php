@@ -24,32 +24,24 @@ use GaletteEvents\Repository\Events;
  * @property bool    $calendar_filter
  * @property ?string $start_date_filter
  * @property ?string $raw_start_date_filter
+ * @property ?string $end_date_filter
+ * @property ?string $raw_end_date_filter
  */
 
 class EventsList extends Pagination
 {
     //filters
-    private ?string $name_filter = null;
     private ?string $start_date_filter = null;
     private ?string $end_date_filter = null;
-    private int $group_filter = 0;
-    private ?string $meal_filter = null;
-    private ?string $lodging_filter = null;
-    private ?string $open_filter = null;
     private bool $calendar_filter = false;
     private string $query;
 
     /** @var array<string> */
     protected array $list_fields = [
-        'name_filter',
         'start_date_filter',
         'raw_start_date_filter',
         'end_date_filter',
         'raw_end_date_filter',
-        'group_filter',
-        'meal_filter',
-        'lodging_filter',
-        'open_filter',
         'calendar_filter'
     ];
 
@@ -85,13 +77,8 @@ class EventsList extends Pagination
     public function reinit(): void
     {
         parent::reinit();
-        $this->name_filter = null;
         $this->start_date_filter = null;
         $this->end_date_filter = null;
-        $this->group_filter = 0;
-        $this->meal_filter = null;
-        $this->lodging_filter = null;
-        $this->open_filter = null;
         $this->calendar_filter = false;
     }
 

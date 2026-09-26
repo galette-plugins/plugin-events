@@ -9,17 +9,6 @@
 declare(strict_types=1);
 
 use Galette\Middleware\Authenticate;
-use Galette\Repository\Groups;
-use GaletteEvents\Filters\BookingsList;
-use GaletteEvents\Filters\ActivitiesList;
-use GaletteEvents\Event;
-use GaletteEvents\Booking;
-use GaletteEvents\Activity;
-use GaletteEvents\Repository\Bookings;
-use GaletteEvents\Repository\Activities;
-use Galette\Repository\Members;
-use Galette\Filters\MembersList;
-use Galette\Entity\Adherent;
 use GaletteEvents\Controllers\Crud\EventsController;
 use GaletteEvents\Controllers\Crud\ActivitiesController;
 use GaletteEvents\Controllers\Crud\BookingsController;

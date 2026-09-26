@@ -1,11 +1,8 @@
 {
   "name": "plugin-events",
-  "version": "1.0.0",
+  "version": "2.2.1",
   "description": "A [Galette](https://galette.eu) plugin to manage events and bookings",
   "main": "index.js",
-  "directories": {
-    "lib": "lib"
-  },
   "scripts": {
     "build": "webpack",
     "build-dist": "webpack --mode=production",
@@ -14,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "ssh://git.tuxfamily.org/gitroot/galette/plugin-events.git"
+    "url": "https://github.com/galette-plugins/plugin-events.git"
   },
   "author": "Johan Cwiklinski <johan AT x-tnd DOT be>",
   "license": "GPL-3.0-or-later",

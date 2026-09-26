@@ -28,10 +28,6 @@ class Event
     public const string TABLE = 'events';
     public const string PK = 'id_event';
 
-    public const int ACTIVITY_NO = 0;
-    public const int ACTIVITY_YES = 1;
-    public const int ACTIVITY_REQUIRED = 2;
-
     private Db $zdb;
     private Login $login;
     /** @var array<string> */
@@ -657,16 +653,6 @@ class Event
             }
         }
         return false;
-    }
-
-    /**
-     * Set name
-     *
-     * @param string $name Event name
-     */
-    public function setName(string $name): void
-    {
-        $this->name = $name;
     }
 
     /**

@@ -409,14 +409,11 @@ def add_libs(rel_name, galette_archive):
 
     # development only, nothing a Galette installation needs
     todrop = [
-        '.composer-require-checker.config.json',
         '.docheader',
         '.gitignore',
         '.php-cs-fixer.dist.php',
         '.phpcs.xml',
-        '.scrutinizer.yml',
         'calendar.js',
-        'composer.json.checker',
         'package-lock.json',
         'package.json',
         'phpstan.neon',
