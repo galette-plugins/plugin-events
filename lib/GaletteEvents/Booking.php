@@ -236,18 +236,28 @@ class Booking
         }
 
         //booking information
-        if (!isset($values['member']) || empty($values['member'])) {
-            if (
-                $this->login->isAdmin()
-                || $this->login->isStaff()
-                || $this->login->isGroupManager()
-            ) {
-                $this->errors[] = _T('Member is mandatory', 'events');
-            } else {
-                $this->member = $this->login->id;
-            }
+        if (!$this->login->isAdmin() && !$this->login->isStaff() && !$this->login->isGroupManager()) {
+            //members book for themselves only
+            $this->member = $this->login->id;
+        } elseif (!isset($values['member']) || empty($values['member'])) {
+            $this->errors[] = _T('Member is mandatory', 'events');
         } else {
-            $this->member = (int)$values['member'];
+            $member = (int)$values['member'];
+            if (
+                !$this->login->isAdmin()
+                && !$this->login->isStaff()
+                && $member !== $this->login->id
+                && $member !== $this->getMemberId()
+            ) {
+                //group managers book for members of the groups they manage, on events of those groups
+                $group = $this->getEvent()?->getGroup();
+                if (!(new Adherent($this->zdb, $member))->canShow($this->login)) {
+                    $this->errors[] = _T("- Please select a member from a group you manage.");
+                } elseif ($group === null || !$this->login->isGroupManager($group)) {
+                    $this->errors[] = _T('You can only book other members on events of groups you manage.', 'events');
+                }
+            }
+            $this->member = $member;
         }
 
         if (isset($values['number_people'])) {

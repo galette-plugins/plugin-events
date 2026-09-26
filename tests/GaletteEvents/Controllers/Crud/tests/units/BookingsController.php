@@ -100,6 +100,36 @@ class BookingsController extends GaletteRoutingTestCase
     }
 
     /**
+     * Get member of the only booking of an event
+     *
+     * @param int $event Event ID
+     */
+    private function getBookedMember(int $event): int
+    {
+        $this->assertSame(1, $this->countBookings($event));
+        $select = $this->zdb->select(EVENTS_PREFIX . \GaletteEvents\Booking::TABLE);
+        $select->where([\GaletteEvents\Event::PK => $event]);
+        return (int)$this->zdb->execute($select)->current()['id_adh'];
+    }
+
+    /**
+     * Assert new booking has been refused by validation
+     *
+     * @param \Psr\Http\Message\ResponseInterface $test_response Response
+     * @param string                              $error         Expected error message
+     */
+    private function expectBookingInvalid(\Psr\Http\Message\ResponseInterface $test_response, string $error): void
+    {
+        $this->assertSame(
+            ['Location' => [$this->routeparser->urlFor('events_booking_add')]],
+            $test_response->getHeaders()
+        );
+        $this->expectFlashData(['error_detected' => [$error]]);
+        $this->expectLogEntry(Analog::ERROR, 'Some errors has been threw attempting to edit/store a booking');
+        $this->expectNoLogEntry();
+    }
+
+    /**
      * Visitors cannot list bookings
      */
     public function testVisitorCannotListBookings(): void
@@ -209,5 +239,78 @@ class BookingsController extends GaletteRoutingTestCase
         $this->assertTrue($this->login->isStaff());
         $this->expectBookingForm($this->getBookingForm($booking));
         $this->resetStaffStatus($staff, $this->getMemberTwo());
+    }
+
+    /**
+     * Members book for themselves, whatever member is posted
+     */
+    public function testMemberBooksForThemselvesOnly(): void
+    {
+        $member_one = $this->getMemberOne();
+        $member_two = $this->getMemberTwo();
+        $event = $this->insertEvent('Public event');
+
+        $this->logMember($this->dataAdherentOne());
+        $test_response = $this->postBooking(null, ['event' => (string)$event, 'member' => (string)$member_two->id]);
+        $this->assertSame(
+            ['Location' => [$this->routeparser->urlFor('events_bookings', ['event' => (string)$event])]],
+            $test_response->getHeaders()
+        );
+        $this->expectFlashData(['success_detected' => ['New booking has been successfully added.']]);
+        $this->assertSame($member_one->id, $this->getBookedMember($event));
+    }
+
+    /**
+     * Group managers book members of the groups they manage, on events of those groups
+     */
+    public function testManagerBooksMembersOfManagedGroups(): void
+    {
+        $member_one = $this->getMemberOne();
+        $member_two = $this->getMemberTwo();
+        $managed = $this->createGroup('Managed group', [$member_two], [$member_one]);
+        $managed_event = $this->insertEvent('Managed event', ['id_group' => $managed->getId()]);
+        $public_event = $this->insertEvent('Public event');
+
+        $this->logMember($this->dataAdherentTwo());
+
+        //a public event is not an event of a managed group
+        $test_response = $this->postBooking(
+            null,
+            ['event' => (string)$public_event, 'member' => (string)$member_one->id]
+        );
+        $this->expectBookingInvalid(
+            $test_response,
+            _T('You can only book other members on events of groups you manage.', 'events')
+        );
+        $this->assertSame(0, $this->countBookings($public_event));
+
+        //but group managers can still book for themselves
+        $this->postBooking(null, ['event' => (string)$public_event, 'member' => (string)$member_two->id]);
+        $this->flash_data = [];
+        $this->assertSame($member_two->id, $this->getBookedMember($public_event));
+
+        $this->postBooking(null, ['event' => (string)$managed_event, 'member' => (string)$member_one->id]);
+        $this->expectFlashData(['success_detected' => [_T('New booking has been successfully added.', 'events')]]);
+        $this->assertSame($member_one->id, $this->getBookedMember($managed_event));
+    }
+
+    /**
+     * Group managers cannot book members out of the groups they manage
+     */
+    public function testManagerCannotBookOtherMembers(): void
+    {
+        $member_one = $this->getMemberOne();
+        $member_two = $this->getMemberTwo();
+        $managed = $this->createGroup('Managed group', [$member_two]);
+        $this->createGroup('Other group', [], [$member_one, $member_two]);
+        $managed_event = $this->insertEvent('Managed event', ['id_group' => $managed->getId()]);
+
+        $this->logMember($this->dataAdherentTwo());
+        $test_response = $this->postBooking(
+            null,
+            ['event' => (string)$managed_event, 'member' => (string)$member_one->id]
+        );
+        $this->expectBookingInvalid($test_response, _T('- Please select a member from a group you manage.'));
+        $this->assertSame(0, $this->countBookings($managed_event));
     }
 }
