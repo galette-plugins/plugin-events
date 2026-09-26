@@ -11,6 +11,7 @@ declare(strict_types=1);
 namespace GaletteEvents\Repository;
 
 use Analog\Analog;
+use ArrayObject;
 use Galette\Entity\Adherent;
 use GaletteEvents\Booking;
 use Laminas\Db\ResultSet\ResultSet;
@@ -71,7 +72,7 @@ class Events
      * @param bool $fullcalendar get events for fullcalendar display (ie. end date +1 day)
      * @param bool $full         get full list, not paginated
      *
-     * @return array<int|string, Event|array<string, mixed>>
+     * @return array<int|string, Event|ArrayObject<string, mixed>>
      */
     public function getList(bool $bookable = false, bool $fullcalendar = false, bool $full = false): array
     {
