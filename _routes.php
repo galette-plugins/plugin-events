@@ -75,7 +75,7 @@ $app->post(
 $app->get(
     '/bookings/{event:guess|all|\d+}[/{option:page|order|clear_filter}/{value:\d+}]',
     [BookingsController::class, 'listBookings']
-)->setName('events_bookings');
+)->setName('events_bookings')->add(Authenticate::class);
 
 //bookings list filtering
 $app->post(
@@ -158,7 +158,7 @@ $app->get(
 $app->post(
     '/activity/add',
     [ActivitiesController::class, 'doAdd']
-)->setName('events_storeactivity_add');
+)->setName('events_storeactivity_add')->add(Authenticate::class);
 
 $app->post(
     '/activity/store',

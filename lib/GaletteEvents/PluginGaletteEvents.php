@@ -68,25 +68,19 @@ class PluginGaletteEvents extends GalettePlugin implements InstallableInterface,
                             'name' => 'events_calendar',
                         ]
                     ],
+                    [
+                        'label' => _T('Bookings', 'events'),
+                        'route' => [
+                            'name' => 'events_bookings',
+                            'args' => [
+                                'event' => 'all'
+                            ],
+                            'aliases' => ['events_booking_add', 'events_booking_edit']
+                        ]
+                    ],
                 ]
             ];
         }
-
-        $menus['plugin_events']['items'] = array_merge(
-            $menus['plugin_events']['items'],
-            [
-                [
-                    'label' => _T('Bookings', 'events'),
-                    'route' => [
-                        'name' => 'events_bookings',
-                        'args' => [
-                            'event' => 'all'
-                        ],
-                        'aliases' => ['events_booking_add', 'events_booking_edit']
-                    ]
-                ]
-            ]
-        );
 
         if ($login->isAdmin() || $login->isStaff()) {
             $menus['plugin_events']['items'] = array_merge(
