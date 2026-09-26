@@ -15,6 +15,7 @@ use Galette\Core\Db;
 use Galette\Core\Login;
 use Galette\Entity\Adherent;
 use Galette\Entity\PaymentType;
+use Galette\Repository\Groups;
 use Analog\Analog;
 
 /**
@@ -174,8 +175,12 @@ class Booking
         if (!isset($values['event']) || empty($values['event']) || $values['event'] == -1) {
             $this->errors[] = _T('Event is mandatory', 'events');
         } else {
+            $event_changed = $this->getId() === null || $this->getEventId() !== (int)$values['event'];
             $this->event = (int)$values['event'];
             $event = $this->getEvent();
+            if ($event_changed && !$this->canBook($event)) {
+                $this->errors[] = _T('This event cannot be booked.', 'events');
+            }
             $activities = $event->getActivities();
             foreach ($activities as $aid => $entry) {
                 if (
@@ -250,7 +255,7 @@ class Booking
                 && $member !== $this->getMemberId()
             ) {
                 //group managers book for members of the groups they manage, on events of those groups
-                $group = $this->getEvent()?->getGroup();
+                $group = $this->getEvent()?->getGroup() ?: null;
                 if (!(new Adherent($this->zdb, $member))->canShow($this->login)) {
                     $this->errors[] = _T("- Please select a member from a group you manage.");
                 } elseif ($group === null || !$this->login->isGroupManager($group)) {
@@ -746,6 +751,31 @@ class Booking
     }
 
     /**
+     * Can current logged-in user book an event
+     *
+     * Admins and staff members can book any event, others open events
+     * that are public or restricted to one of their groups.
+     *
+     * @param Event $event Event
+     */
+    private function canBook(Event $event): bool
+    {
+        if ($this->login->isAdmin() || $this->login->isStaff()) {
+            return $event->getId() !== null;
+        }
+
+        if ($event->getId() === null || !$event->isOpen()) {
+            return false;
+        }
+
+        //public events have no group, loaded as 0
+        $group = $event->getGroup() ?: null;
+        return $group === null
+            || $this->login->isGroupManager($group)
+            || in_array($group, array_map('intval', Groups::loadGroups($this->login->id, false, false)), true);
+    }
+
+    /**
      * Can current logged-in user edit booking
      *
      * Admins and staff members can edit any booking, members their own ones,
@@ -763,7 +793,8 @@ class Booking
             return true;
         }
 
-        $group = $this->getEvent()?->getGroup();
+        //public events have no group, loaded as 0
+        $group = $this->getEvent()?->getGroup() ?: null;
         return $group !== null && $login->isGroupManager($group);
     }
 

@@ -313,4 +313,71 @@ class BookingsController extends GaletteRoutingTestCase
         $this->expectBookingInvalid($test_response, _T('- Please select a member from a group you manage.'));
         $this->assertSame(0, $this->countBookings($managed_event));
     }
+
+    /**
+     * Members book open events that are public or restricted to their groups
+     */
+    public function testMemberBooksVisibleOpenEventsOnly(): void
+    {
+        $member_one = $this->getMemberOne();
+        $member_two = $this->getMemberTwo();
+        $own_group = $this->createGroup('Own group', [], [$member_one]);
+        $other_group = $this->createGroup('Other group', [], [$member_two]);
+
+        $refused = [
+            'closed'    => $this->insertEvent('Closed event', ['is_open' => false]),
+            'past'      => $this->insertEvent(
+                'Past event',
+                ['begin_date' => date('Y-m-d', strtotime('-2 days')), 'end_date' => date('Y-m-d', strtotime('-1 day'))]
+            ),
+            'other'     => $this->insertEvent('Other group event', ['id_group' => $other_group->getId()]),
+        ];
+        $own_event = $this->insertEvent('Own group event', ['id_group' => $own_group->getId()]);
+
+        $this->logMember($this->dataAdherentOne());
+        foreach ($refused + ['unknown' => $own_event + 1000] as $event) {
+            $this->expectBookingInvalid(
+                $this->postBooking(null, ['event' => (string)$event]),
+                'This event cannot be booked.'
+            );
+        }
+        foreach ($refused as $event) {
+            $this->assertSame(0, $this->countBookings($event));
+        }
+
+        $this->postBooking(null, ['event' => (string)$own_event]);
+        $this->expectFlashData(['success_detected' => ['New booking has been successfully added.']]);
+        $this->assertSame($member_one->id, $this->getBookedMember($own_event));
+    }
+
+    /**
+     * Members still change their bookings once the event has been closed
+     */
+    public function testMemberEditsBookingOfClosedEvent(): void
+    {
+        $member_one = $this->getMemberOne();
+        $event = $this->insertEvent('Closed event', ['is_open' => false]);
+        $booking = $this->insertBooking($event, $member_one->id);
+
+        $this->logMember($this->dataAdherentOne());
+        $this->postBooking($booking, ['event' => (string)$event, 'comment' => 'Changed']);
+        $this->expectFlashData(['success_detected' => ['Booking has been modified.']]);
+        $this->assertSame('Changed', $this->getBookingRow($booking)['comment']);
+    }
+
+    /**
+     * Staff members book closed events
+     */
+    public function testStaffBooksClosedEvent(): void
+    {
+        $staff = $this->getStaffMember($this->getMemberOne());
+        $member_two = $this->getMemberTwo();
+        $event = $this->insertEvent('Closed event', ['is_open' => false]);
+
+        $this->logMember($this->dataAdherentOne());
+        $this->postBooking(null, ['event' => (string)$event, 'member' => (string)$member_two->id]);
+        $this->expectFlashData(['success_detected' => ['New booking has been successfully added.']]);
+        $this->assertSame($member_two->id, $this->getBookedMember($event));
+        $this->resetStaffStatus($staff, $member_two);
+    }
 }
