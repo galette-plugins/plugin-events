@@ -249,11 +249,11 @@ class Event
         } else {
             if (
                 empty($values['group'])
-                || !in_array($values['group'], $this->login->managed_groups)
+                || !in_array((int)$values['group'], array_map('intval', $this->login->managed_groups), true)
             ) {
                 $this->errors[] = _T('Please select a group you own!', 'events');
             } else {
-                $this->group = $values['group'];
+                $this->group = (int)$values['group'];
             }
         }
 
