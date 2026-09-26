@@ -154,7 +154,7 @@ class BookingsList extends Pagination
 
     /**
      * Build href
-     * Override to add "event" parameter
+     * Override to keep "event" parameter
      *
      * @param int $page Page
      */
@@ -163,12 +163,8 @@ class BookingsList extends Pagination
         $args = [
             'option'    => 'page',
             'value'     => (string)$page,
-            'event'     => 'all'
+            'event'     => $this->event_filter === null ? 'all' : (string)$this->event_filter
         ];
-
-        if ($this->view->getEnvironment()->getGlobals()['cur_subroute']) {
-            $args['type'] = $this->view->getEnvironment()->getGlobals()['cur_subroute'];
-        }
 
         $href = $this->routeparser->urlFor(
             $this->view->getEnvironment()->getGlobals()['cur_route'],

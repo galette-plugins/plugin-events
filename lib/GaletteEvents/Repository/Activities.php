@@ -19,7 +19,6 @@ use Laminas\Db\ResultSet\ResultSet;
 use Laminas\Db\Sql\Expression;
 use Galette\Core\Login;
 use Galette\Core\Db;
-use GaletteEvents\Filters\EventsList;
 use Laminas\Db\Sql\Select;
 
 /**
@@ -50,7 +49,7 @@ class Activities extends Repository
         parent::__construct($zdb, $preferences, $login, 'Activity', 'GaletteEvents', EVENTS_PREFIX);
 
         if ($filters === null) {
-            $this->filters = new EventsList();
+            $this->filters = new ActivitiesList();
         } else {
             $this->filters = $filters;
         }

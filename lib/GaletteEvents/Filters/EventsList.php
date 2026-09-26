@@ -186,7 +186,7 @@ class EventsList extends Pagination
                             if ($y === false && $ym  !== false) {
                                 $day = 1;
                                 if ($name === 'end_date_filter') {
-                                    $day = $ym->format('t');
+                                    $day = (int)$ym->format('t');
                                 }
                                 $ym->setDate(
                                     (int)$ym->format('Y'),

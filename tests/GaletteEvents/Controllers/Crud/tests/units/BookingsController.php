@@ -466,4 +466,31 @@ class BookingsController extends GaletteRoutingTestCase
         );
         $this->assertSame(307, $batch('csv')->getStatusCode());
     }
+
+    /**
+     * Bookings list of an event keeps the event in its pagination
+     */
+    public function testListPaginationKeepsEvent(): void
+    {
+        $member_one = $this->getMemberOne();
+        $member_two = $this->getMemberTwo();
+        $event = $this->insertEvent('Event');
+        $this->insertBooking($event, $member_one->id);
+        $this->insertBooking($event, $member_two->id);
+
+        $this->logSuperAdmin();
+        $filters = new \GaletteEvents\Filters\BookingsList();
+        $filters->show = 1;
+        $this->session->filter_bookings = $filters;
+
+        $test_response = $this->app->handle($this->createRequest('events_bookings', ['event' => (string)$event]));
+        $this->assertSame(200, $test_response->getStatusCode());
+        $this->assertStringContainsString(
+            'href="' . $this->routeparser->urlFor(
+                'events_bookings',
+                ['event' => (string)$event, 'option' => 'page', 'value' => '2']
+            ) . '"',
+            (string)$test_response->getBody()
+        );
+    }
 }
