@@ -481,7 +481,7 @@ class BookingsController extends GaletteRoutingTestCase
         $this->logSuperAdmin();
         $filters = new \GaletteEvents\Filters\BookingsList();
         $filters->show = 1;
-        $this->session->filter_bookings = $filters;
+        $this->session->plugin_events_bookings_filter = $filters;
 
         $test_response = $this->app->handle($this->createRequest('events_bookings', ['event' => (string)$event]));
         $this->assertSame(200, $test_response->getStatusCode());

@@ -11,6 +11,8 @@ declare(strict_types=1);
 namespace GaletteEvents\Controllers;
 
 use Analog\Analog;
+use DI\Attribute\Inject;
+use Galette\Core\PluginControllerTrait;
 use Slim\Psr7\Request;
 use Slim\Psr7\Response;
 use Galette\IO\Csv;
@@ -26,6 +28,14 @@ use GaletteEvents\Repository\Bookings;
  */
 class CsvController extends \Galette\Controllers\CsvController
 {
+    use PluginControllerTrait;
+
+    /**
+     * @var array<string, mixed>
+     */
+    #[Inject("Plugin Galette Events")]
+    protected array $module_info;
+
     /**
      * Bookings CSV exports
      *
@@ -55,9 +65,9 @@ class CsvController extends \Galette\Controllers\CsvController
         $csv = new CsvOut();
 
         //filters come from bookings list, or from its batch actions
-        $session_var = $post['session_var'] ?? $get['session_var'] ?? 'filter_bookings';
-        if (!in_array($session_var, ['filter_bookings', 'plugin-events-bookings'], true)) {
-            $session_var = 'filter_bookings';
+        $session_var = $post['session_var'] ?? $get['session_var'] ?? $this->getFilterName('bookings');
+        if (!in_array($session_var, [$this->getFilterName('bookings'), 'plugin-events-bookings'], true)) {
+            $session_var = $this->getFilterName('bookings');
         }
         if ($id === null && ($this->session->$session_var ?? null) instanceof BookingsList) {
             $filters = $this->session->$session_var;

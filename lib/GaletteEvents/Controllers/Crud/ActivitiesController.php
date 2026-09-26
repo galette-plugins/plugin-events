@@ -61,8 +61,8 @@ class ActivitiesController extends AbstractPluginController
      */
     public function list(Request $request, Response $response, ?string $option = null, string|int|null $value = null): Response
     {
-        if (isset($this->session->filter_activities)) {
-            $filters = $this->session->filter_activities;
+        if (isset($this->session->{$this->getFilterName('activities')})) {
+            $filters = $this->session->{$this->getFilterName('activities')};
         } else {
             $filters = new ActivitiesList();
         }
@@ -84,7 +84,7 @@ class ActivitiesController extends AbstractPluginController
         //assign pagination variables to the template and add pagination links
         $filters->setViewPagination($this->routeparser, $this->view, false);
 
-        $this->session->filter_activities = $filters;
+        $this->session->{$this->getFilterName('activities')} = $filters;
 
         // display page
         $this->view->render(
@@ -107,8 +107,8 @@ class ActivitiesController extends AbstractPluginController
     public function filter(Request $request, Response $response): Response
     {
         $post = $request->getParsedBody();
-        if (isset($this->session->filter_activities)) {
-            $filters = $this->session->filter_activities;
+        if (isset($this->session->{$this->getFilterName('activities')})) {
+            $filters = $this->session->{$this->getFilterName('activities')};
         } else {
             $filters = new ActivitiesList();
         }
@@ -123,7 +123,7 @@ class ActivitiesController extends AbstractPluginController
             }
         }
 
-        $this->session->filter_activities = $filters;
+        $this->session->{$this->getFilterName('activities')} = $filters;
 
         return $response
             ->withStatus(301)
@@ -141,9 +141,9 @@ class ActivitiesController extends AbstractPluginController
      */
     public function edit(Request $request, Response $response, ?int $id = null, string $action = 'edit'): Response
     {
-        if ($this->session->activity !== null) {
-            $activity = $this->session->activity;
-            $this->session->activity = null;
+        if ($this->session->plugin_events_activity !== null) {
+            $activity = $this->session->plugin_events_activity;
+            $this->session->plugin_events_activity = null;
         } else {
             $activity = new Activity($this->zdb, $this->login);
         }
@@ -241,7 +241,7 @@ class ActivitiesController extends AbstractPluginController
             $redirect_url = $this->routeparser->urlFor('events_activities');
         } else {
             //store entity in session
-            $this->session->activity = $activity;
+            $this->session->plugin_events_activity = $activity;
 
             if ($activity->getId()) {
                 $redirect_url = $this->routeparser->urlFor(

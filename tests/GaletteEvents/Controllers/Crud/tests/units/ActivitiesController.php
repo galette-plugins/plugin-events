@@ -86,4 +86,18 @@ class ActivitiesController extends GaletteRoutingTestCase
         $this->expectAuthMiddlewareRefused($this->postActivity(['name' => 'Created by a member', 'active' => '1', 'comment' => '']));
         $this->assertSame(0, $this->countActivities('Created by a member'));
     }
+
+    /**
+     * Session keys do not collide with other plugins ones
+     */
+    public function testSessionKeysArePrefixed(): void
+    {
+        $this->logSuperAdmin();
+        //plugin-activities stores its own entity under this key
+        $this->session->activity = new \stdClass();
+
+        $test_response = $this->app->handle($this->createRequest('events_activity_add'));
+        $this->assertSame(200, $test_response->getStatusCode());
+        $this->expectNoLogEntry();
+    }
 }

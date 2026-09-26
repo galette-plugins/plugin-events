@@ -177,7 +177,7 @@ class EventsController extends GaletteRoutingTestCase
             'success_detected' => ['Activity has been attached to event.'],
         ]);
         $this->expectLogEntry(Analog::ERROR, 'Some errors has been threw attempting to edit/store an event');
-        $this->assertSame([$dinner], array_keys($this->session->event->getActivities()));
+        $this->assertSame([$dinner], array_keys($this->session->plugin_events_event->getActivities()));
 
         //an unknown activity is not attached
         $this->postEvent(null, $this->getFormValues([

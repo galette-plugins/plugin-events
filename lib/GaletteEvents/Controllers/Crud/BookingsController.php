@@ -83,7 +83,7 @@ class BookingsController extends AbstractPluginController
      */
     public function listBookings(Response $response, string|int $event, ?string $option = null, string|int|null $value = null): Response
     {
-        $filters = $this->session->filter_bookings ?? new BookingsList();
+        $filters = $this->session->{$this->getFilterName('bookings')} ?? new BookingsList();
 
         if ($event == 'guess') {
             $linked_event = $filters->event_filter;
@@ -124,7 +124,7 @@ class BookingsController extends AbstractPluginController
         //assign pagination variables to the template and add pagination links
         $filters->setViewPagination($this->routeparser, $this->view, false);
 
-        $this->session->filter_bookings = $filters;
+        $this->session->{$this->getFilterName('bookings')} = $filters;
 
         // display page
         $this->view->render(
@@ -163,8 +163,8 @@ class BookingsController extends AbstractPluginController
     public function filterBookings(Request $request, Response $response, string|int $event): Response
     {
         $post = $request->getParsedBody();
-        if (isset($this->session->filter_bookings)) {
-            $filters = $this->session->filter_bookings;
+        if (isset($this->session->{$this->getFilterName('bookings')})) {
+            $filters = $this->session->{$this->getFilterName('bookings')};
         } else {
             $filters = new BookingsList();
         }
@@ -204,7 +204,7 @@ class BookingsController extends AbstractPluginController
             }
         }
 
-        $this->session->filter_bookings = $filters;
+        $this->session->{$this->getFilterName('bookings')} = $filters;
 
         return $response
             ->withStatus(301)
@@ -238,13 +238,13 @@ class BookingsController extends AbstractPluginController
         }
 
         if (isset($post['entries_sel'])) {
-            if (isset($this->session->filter_bookings)) {
-                $filters = clone $this->session->filter_bookings;
+            if (isset($this->session->{$this->getFilterName('bookings')})) {
+                $filters = clone $this->session->{$this->getFilterName('bookings')};
             } else {
                 $filters = new BookingsList();
             }
 
-            //$this->session->filter_bookings = $filters;
+            //$this->session->{$this->getFilterName('bookings')} = $filters;
             $filters->selected = $post['entries_sel'];
 
             //selection is restricted to bookings current logged-in user can list
@@ -363,9 +363,9 @@ class BookingsController extends AbstractPluginController
         $get = $request->getQueryParams();
         $route_params = [];
 
-        if ($this->session->booking !== null) {
-            $booking = $this->session->booking;
-            $this->session->booking = null;
+        if ($this->session->plugin_events_booking !== null) {
+            $booking = $this->session->plugin_events_booking;
+            $this->session->plugin_events_booking = null;
         } else {
             $booking = new Booking($this->zdb, $this->login);
         }
@@ -519,7 +519,7 @@ class BookingsController extends AbstractPluginController
         }
 
         if (!isset($post['save'])) {
-            $this->session->booking = $booking;
+            $this->session->plugin_events_booking = $booking;
             $error_detected = [];
             $goto_list = false;
             $warning_detected[] = _T('Do not forget to store the booking', 'events');
@@ -558,7 +558,7 @@ class BookingsController extends AbstractPluginController
             );
         } else {
             //store entity in session
-            $this->session->booking = $booking;
+            $this->session->plugin_events_booking = $booking;
 
             if ($booking->getId()) {
                 $route = 'events_booking_edit';

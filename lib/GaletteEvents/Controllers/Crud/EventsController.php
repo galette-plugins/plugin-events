@@ -69,8 +69,8 @@ class EventsController extends AbstractPluginController
      */
     public function list(Request $request, Response $response, ?string $option = null, string|int|null $value = null): Response
     {
-        if (isset($this->session->filter_events)) {
-            $filters = $this->session->filter_events;
+        if (isset($this->session->{$this->getFilterName('events')})) {
+            $filters = $this->session->{$this->getFilterName('events')};
         } else {
             $filters = new EventsList();
         }
@@ -92,7 +92,7 @@ class EventsController extends AbstractPluginController
         //assign pagination variables to the template and add pagination links
         $filters->setViewPagination($this->routeparser, $this->view, false);
 
-        $this->session->filter_events = $filters;
+        $this->session->{$this->getFilterName('events')} = $filters;
 
         // display page
         $this->view->render(
@@ -170,8 +170,8 @@ class EventsController extends AbstractPluginController
     public function filter(Request $request, Response $response): Response
     {
         $post = $request->getParsedBody();
-        if (isset($this->session->filter_events)) {
-            $filters = $this->session->filter_events;
+        if (isset($this->session->{$this->getFilterName('events')})) {
+            $filters = $this->session->{$this->getFilterName('events')};
         } else {
             $filters = new EventsList();
         }
@@ -186,7 +186,7 @@ class EventsController extends AbstractPluginController
             }
         }
 
-        $this->session->filter_events = $filters;
+        $this->session->{$this->getFilterName('events')} = $filters;
 
         return $response
             ->withStatus(301)
@@ -204,9 +204,9 @@ class EventsController extends AbstractPluginController
      */
     public function edit(Request $request, Response $response, ?int $id = null, string $action = 'edit'): Response
     {
-        if ($this->session->event !== null) {
-            $event = $this->session->event;
-            $this->session->event = null;
+        if ($this->session->plugin_events_event !== null) {
+            $event = $this->session->plugin_events_event;
+            $this->session->plugin_events_event = null;
         } else {
             $event = new Event($this->zdb, $this->login);
         }
@@ -341,7 +341,7 @@ class EventsController extends AbstractPluginController
             $redirect_url = $this->routeparser->urlFor('events_events');
         } else {
             //store entity in session
-            $this->session->event = $event;
+            $this->session->plugin_events_event = $event;
 
             if ($event->getId()) {
                 $redirect_url = $this->routeparser->urlFor(
