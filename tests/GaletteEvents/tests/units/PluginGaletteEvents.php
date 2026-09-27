@@ -115,7 +115,7 @@ class PluginGaletteEvents extends GaletteTestCase
     public function testNews(): void
     {
         $plugin = $this->getPlugin();
-        $member_one = $this->getMemberOne();
+        $this->getMemberOne();
         $member_two = $this->getMemberTwo();
         $other = $this->createGroup('Other group', [], [$member_two]);
 
