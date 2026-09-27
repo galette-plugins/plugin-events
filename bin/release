@@ -413,7 +413,6 @@ def add_libs(rel_name, galette_archive):
         '.gitignore',
         '.php-cs-fixer.dist.php',
         '.phpcs.xml',
-        'calendar.js',
         'package-lock.json',
         'package.json',
         'phpstan.neon',
@@ -424,7 +423,7 @@ def add_libs(rel_name, galette_archive):
         if os.path.exists(target):
             os.remove(target)
 
-    for todrop in ['.github', 'bin', 'node_modules', 'tests']:
+    for todrop in ['.github', 'bin', 'js', 'node_modules', 'tests']:
         target = os.path.join(npm_dir, todrop)
         if os.path.exists(target):
             shutil.rmtree(target)

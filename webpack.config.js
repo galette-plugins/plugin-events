@@ -7,7 +7,7 @@
 const path = require('path')
 
 module.exports = {
-  entry: './calendar.js',
+  entry: './js/calendar.js',
   mode: 'none',
   output: {
     filename: "calendar.bundle.js",

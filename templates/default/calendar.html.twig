@@ -8,37 +8,41 @@
 
 {% block content %}
     <div id='calendar'></div>
+    <div class="ui tiny modal" id="calendar_event">
+        <div class="header"></div>
+        <div class="content"></div>
+        <div class="actions">
+            {# edit link is shown for events current user can edit #}
+            <a href="#" class="ui labeled icon blue button" data-action="edit">
+                <i class="edit icon" aria-hidden="true"></i>
+                {{ _T("Edit") }}
+            </a>
+            <a href="#" class="ui labeled icon green button" data-action="booking">
+                <i class="plus circle icon" aria-hidden="true"></i>
+                {{ _T("New booking", "events") }}
+            </a>
+            <button type="button" class="ui labeled icon cancel button">
+                <i class="times icon" aria-hidden="true"></i>
+                {{ _T("Close") }}
+            </button>
+        </div>
+    </div>
 {% endblock %}
 
 {% block javascripts %}
-<script type="text/javascript">
-    var _calendar_dataurl = '{{ url_for("ajax-events_calendar") }}';
-    var _calendar_event_url = '{{ url_for("events_event_edit", {"id": "PLACEBO"}) }}';
-    var _calendar_booking_url = '{{ url_for("events_booking_add") }}?event=PLACEBO';
-    var _fullcalendar_views = {
-      listDay: { buttonText: '{{ _T("Daily list", "events")|e('js') }}' },
-      listWeek: { buttonText: '{{ _T("Weekly list", "events")|e('js') }}' },
-      listMonth: { buttonText: '{{ _T("Monthly list", "events")|e('js') }}' },
-      dayGridMonth: { buttonText: '{{ _T("Month calendar", "events")|e('js') }}' },
-      today: { buttonText: '{{ _T("Today", "events")|e('js') }}' }
-    }
-    var _fullcalendar_locale = '{{ i18n.getWebID() }}';
-    //edit action is added for events current user can edit
-    var _edit_action = {
-      text    : '{{ _T("Edit")|e('js') }}',
-      icon    : 'edit',
-      class   : 'icon labeled blue approve'
-    };
-    var _booking_action = {
-      text    : '{{ _T("New booking", "events")|e('js') }}',
-      icon    : 'plus circle',
-      class   : 'icon labeled green'
-    };
-    var _close_action = {
-      text    : '{{ _T("Close")|e('js') }}',
-      icon    : 'times',
-      class   : 'icon labeled cancel'
-    };
-</script>
-<script type="text/javascript" src="{{ url_for("plugin_res", {"plugin": module_id, "path": "js/calendar.bundle.js"}) }}"></script>
+    {% set calendar_options = {
+        'dataurl': url_for("ajax-events_calendar"),
+        'event_url': url_for("events_event_edit", {"id": "PLACEBO"}),
+        'booking_url': url_for("events_booking_add") ~ '?event=PLACEBO',
+        'locale': i18n.getWebID(),
+        'views': {
+            'listDay': {'buttonText': _T("Daily list", "events")},
+            'listWeek': {'buttonText': _T("Weekly list", "events")},
+            'listMonth': {'buttonText': _T("Monthly list", "events")},
+            'dayGridMonth': {'buttonText': _T("Month calendar", "events")},
+            'today': {'buttonText': _T("Today", "events")}
+        }
+    } %}
+    <script type="application/json" id="calendar_options">{{ calendar_options|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }}</script>
+    <script type="text/javascript" src="{{ url_for("plugin_res", {"plugin": module_id, "path": "js/calendar.bundle.js"}) }}"></script>
 {% endblock %}

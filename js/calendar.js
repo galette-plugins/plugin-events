@@ -17,49 +17,38 @@ import 'fullcalendar/themes/classic/palette.css';
 
 $(function() {
   var calendarEl = document.getElementById('calendar');
+  var options = JSON.parse(document.getElementById('calendar_options').textContent);
+  //modal is written in the page, only its content changes
+  var $modal = $('#calendar_event');
+  var $edit = $modal.find('[data-action="edit"]');
+  var $booking = $modal.find('[data-action="booking"]');
 
   var calendar = new Calendar(calendarEl, {
     plugins: [ themePlugin, interactionPlugin, dayGridPlugin, listPlugin ],
-    views: _fullcalendar_views,
+    views: options.views,
     headerToolbar: {
       left: 'title',
       right: 'dayGridMonth,listDay,listWeek,listMonth prevYear,prev,today,next,nextYear'
     },
     height: 'auto',
     locales: allLocales,
-    locale: _fullcalendar_locale,
+    locale: options.locale,
     weekNumbers: true,
-    events: _calendar_dataurl,
+    events: options.dataurl,
     selectable: true,
     eventClick: function(info) {
-      var _infos = JSON.parse(JSON.stringify(info.event.extendedProps));
-      _infos.url = _calendar_event_url.replace('PLACEBO', _infos.id_event);
-      _infos.booking = _calendar_booking_url.replace('PLACEBO', _infos.id_event);
-      var _actions = [];
-      if (_infos.can_edit) {
-        _actions.push(_edit_action);
-      }
-      _actions.push(Object.assign({}, _booking_action, {
-        click: function() {
-          window.location.href = _infos.booking;
-        }
-      }));
-      _actions.push(_close_action);
+      var infos = info.event.extendedProps;
       //description is built and escaped server side, other values must be displayed as text
-      var _elt = $('<div class="ui tiny modal"><div class="header"></div><div class="content"></div></div>');
-      _elt.find('.header').text(_infos.name + ' (' + _infos.begin_date_fmt + ' - ' + _infos.end_date_fmt + ')');
-      _elt.find('.content').html(_infos.description);
-      _elt.appendTo('body');
-      _elt.modal({
-        onApprove: function() {
-          window.location.href = _infos.url;
-        },
-        actions: _actions
-      }).modal('show');
+      $modal.find('.header').text(infos.name + ' (' + infos.begin_date_fmt + ' - ' + infos.end_date_fmt + ')');
+      $modal.find('.content').html(infos.description);
+      $edit
+        .attr('href', options.event_url.replace('PLACEBO', infos.id_event))
+        .toggleClass('displaynone', !infos.can_edit);
+      $booking.attr('href', options.booking_url.replace('PLACEBO', infos.id_event));
+      $modal.modal('show');
     },
     eventMouseEnter: function(info) {
-      var _el = $(info.el);
-      _el.popup({
+      $(info.el).popup({
         exclusive: true,
         hoverable: true,
         variation: 'basic',
@@ -70,4 +59,3 @@ $(function() {
 
   calendar.render();
 });
-
