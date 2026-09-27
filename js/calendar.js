@@ -25,7 +25,7 @@ $(function() {
 
   var calendar = new Calendar(calendarEl, {
     plugins: [ themePlugin, interactionPlugin, dayGridPlugin, listPlugin ],
-    views: options.views,
+    buttons: options.buttons,
     headerToolbar: {
       left: 'title',
       right: 'dayGridMonth,listDay,listWeek,listMonth prevYear,prev,today,next,nextYear'

@@ -451,7 +451,7 @@ class EventsController extends GaletteRoutingTestCase
         $this->assertSame(1, preg_match('#<script type="application/json" id="calendar_options">(.+?)</script>#s', $body, $matches));
         $options = json_decode($matches[1], true);
         $this->assertSame($this->routeparser->urlFor('ajax-events_calendar'), $options['dataurl']);
-        $this->assertSame('Daily list', $options['views']['listDay']['buttonText']);
+        $this->assertSame('Daily list', $options['buttons']['listDay']['text']);
         $this->assertSame('en-US', $options['locale']);
     }
 

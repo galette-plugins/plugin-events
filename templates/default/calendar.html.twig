@@ -35,12 +35,12 @@
         'event_url': url_for("events_event_edit", {"id": "PLACEBO"}),
         'booking_url': url_for("events_booking_add") ~ '?event=PLACEBO',
         'locale': i18n.getWebID(),
-        'views': {
-            'listDay': {'buttonText': _T("Daily list", "events")},
-            'listWeek': {'buttonText': _T("Weekly list", "events")},
-            'listMonth': {'buttonText': _T("Monthly list", "events")},
-            'dayGridMonth': {'buttonText': _T("Month calendar", "events")},
-            'today': {'buttonText': _T("Today", "events")}
+        'buttons': {
+            'listDay': {'text': _T("Daily list", "events")},
+            'listWeek': {'text': _T("Weekly list", "events")},
+            'listMonth': {'text': _T("Monthly list", "events")},
+            'dayGridMonth': {'text': _T("Month calendar", "events")},
+            'today': {'text': _T("Today", "events")}
         }
     } %}
     <script type="application/json" id="calendar_options">{{ calendar_options|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }}</script>
