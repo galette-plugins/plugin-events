@@ -79,6 +79,8 @@ class Activity extends GaletteTestCase
         $this->assertTrue($activity->store());
         $first_id = $activity->getId();
         $this->assertGreaterThan(0, $first_id);
+        //creation date column holds no time
+        $this->assertSame(date('Y-m-d'), $activity->getCreationDate(false));
 
         $this->assertTrue($activity->load($first_id));
         $this->assertSame('Test activity', $activity->getName());

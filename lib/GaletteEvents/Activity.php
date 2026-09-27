@@ -200,7 +200,7 @@ class Activity
 
             if (empty($this->id)) {
                 //we're inserting a new event
-                $this->creation_date = date("Y-m-d H:i:s");
+                $this->creation_date = date("Y-m-d");
                 $values['creation_date'] = $this->creation_date;
 
                 $insert = $this->zdb->insert($this->getTableName());
