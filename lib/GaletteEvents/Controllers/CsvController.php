@@ -80,7 +80,7 @@ class CsvController extends \Galette\Controllers\CsvController
             $filters->event_filter = $id;
         }
 
-        $bookings = new Bookings($this->zdb, $this->login, $this->history, $filters);
+        $bookings = new Bookings($this->zdb, $this->login, $this->history, $this->preferences, $filters);
         $bookings_list = $bookings->getList(true);
 
         $labels = [

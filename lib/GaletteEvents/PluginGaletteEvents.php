@@ -14,6 +14,7 @@ use DI\Attribute\Inject;
 use Galette\Core\Db;
 use Galette\Core\History;
 use Galette\Core\Login;
+use Galette\Core\Preferences;
 use Galette\Core\Plugins\DashboardProviderInterface;
 use Galette\Core\Plugins\InstallableInterface;
 use Galette\Core\Plugins\MemberActionProviderInterface;
@@ -45,6 +46,9 @@ class PluginGaletteEvents extends GalettePlugin implements InstallableInterface,
 
     #[Inject]
     protected History $history;
+
+    #[Inject]
+    protected Preferences $preferences;
 
     /**
      * Extra menus entries
@@ -195,7 +199,7 @@ class PluginGaletteEvents extends GalettePlugin implements InstallableInterface,
         $filters = new EventsList();
         $now = new \DateTime();
         $filters->start_date_filter = $now->format(__('Y-m-d'));
-        $events = new Events($this->zdb, $this->login, $this->history, $filters);
+        $events = new Events($this->zdb, $this->login, $this->history, $this->preferences, $filters);
 
         $posts = [];
         $list = $events->getList();

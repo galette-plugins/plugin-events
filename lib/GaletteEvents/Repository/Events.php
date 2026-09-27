@@ -20,24 +20,24 @@ use Laminas\Db\Sql\Predicate\PredicateSet;
 use Galette\Core\Login;
 use Galette\Core\Db;
 use Galette\Core\History;
+use Galette\Core\Preferences;
 use Galette\Entity\Group;
 use Galette\Repository\Groups;
 use GaletteEvents\Event;
 use GaletteEvents\Filters\EventsList;
-use Laminas\Db\Sql\Select;
 
 /**
  * Events
  *
  * @author Johan Cwiklinski <johan@x-tnd.be>
  */
-class Events
+class Events extends AbstractRepository
 {
-    private Db $zdb;
-    private Login $login;
-    private History $history;
-    private EventsList $filters;
-    private int $count = 0;
+    protected const string PK = Event::PK;
+    protected const string ALIAS = 'e';
+
+    /** @var EventsList */
+    protected \Galette\Core\Pagination $filters;
 
     public const int ORDERBY_DATE = 0;
     public const int ORDERBY_NAME = 1;
@@ -46,22 +46,20 @@ class Events
     /**
      * Constructor
      *
-     * @param Db          $zdb     Database instance
-     * @param Login       $login   Login instance
-     * @param History     $history History instance
-     * @param ?EventsList $filters Filtering
+     * @param Db          $zdb         Database instance
+     * @param Login       $login       Login instance
+     * @param History     $history     History instance
+     * @param Preferences $preferences Preferences instance
+     * @param ?EventsList $filters     Filtering
      */
-    public function __construct(Db $zdb, Login $login, History $history, ?EventsList $filters = null)
-    {
-        $this->zdb = $zdb;
-        $this->login = $login;
-        $this->history = $history;
-
-        if ($filters === null) {
-            $this->filters = new EventsList();
-        } else {
-            $this->filters = $filters;
-        }
+    public function __construct(
+        Db $zdb,
+        Login $login,
+        History $history,
+        Preferences $preferences,
+        ?EventsList $filters = null
+    ) {
+        parent::__construct($zdb, $login, $history, $preferences, 'Event', $filters ?? new EventsList());
     }
 
     /**
@@ -147,7 +145,6 @@ class Events
                 $this->filters->setLimits($select);
             }
             $results = $this->zdb->execute($select);
-            $this->filters->query = $this->zdb->query_string;
 
             $rows = [];
             foreach ($results as $row) {
@@ -288,121 +285,17 @@ class Events
     }
 
     /**
-     * Is field allowed to order? it should be present in
-     * provided fields list (those that are SELECT'ed).
-     *
-     * @param string         $field_name Field name to order by
-     * @param ?array<string> $fields     SELECTE'ed fields
-     */
-    private function canOrderBy(string $field_name, ?array $fields = null): bool
-    {
-        if (!is_array($fields)) {
-            return true;
-        } elseif (in_array($field_name, $fields)) {
-            return true;
-        } else {
-            Analog::log(
-                'Trying to order by ' . $field_name . ' while it is not in '
-                . 'selected fields.',
-                Analog::WARNING
-            );
-            return false;
-        }
-    }
-
-    /**
      * Builds the order clause
-     *
-     * @param array<string> $fields Fields list to ensure ORDER clause
-     *                              references selected fields. Optional.
      *
      * @return array<string> SQL ORDER clauses
      */
-    private function buildOrderClause(?array $fields = null): array
+    private function buildOrderClause(): array
     {
-        $order = [];
-
-        switch ($this->filters->orderby) {
-            case self::ORDERBY_DATE:
-                if ($this->canOrderBy('begin_date', $fields)) {
-                    $order[] = 'begin_date ' . $this->filters->getDirection();
-                }
-                break;
-            case self::ORDERBY_NAME:
-                if ($this->canOrderBy('name', $fields)) {
-                    $order[] = 'name ' . $this->filters->getDirection();
-                }
-                break;
-            case self::ORDERBY_TOWN:
-                if ($this->canOrderBy('town', $fields)) {
-                    $order[] = 'town ' . $this->filters->getDirection();
-                }
-                break;
-        }
-
-        return $order;
-    }
-
-    /**
-     * Count events from the query
-     *
-     * @param Select $select Original select
-     */
-    private function proceedCount(Select $select): void
-    {
-        try {
-            $countSelect = clone $select;
-            $countSelect->reset($countSelect::COLUMNS);
-            $countSelect->reset($countSelect::ORDER);
-            $countSelect->reset($countSelect::HAVING);
-            $countSelect->reset($countSelect::GROUP);
-            $joins = $countSelect->joins;
-            $countSelect->reset($countSelect::JOINS);
-            foreach ($joins as $join) {
-                $countSelect->join(
-                    $join['name'],
-                    $join['on'],
-                    [],
-                    $join['type']
-                );
-                unset($join['columns']);
-            }
-
-            $countSelect->columns(
-                [
-                    'count' => new Expression('count(DISTINCT e.' . Event::PK . ')')
-                ]
-            );
-
-            $have = $select->having;
-            if ($have->count() > 0) {
-                foreach ($have->getPredicates() as $h) {
-                    $countSelect->where($h);
-                }
-            }
-
-            $results = $this->zdb->execute($countSelect);
-
-            if ($result = $results->current()) {
-                $this->count = (int)$result->count;
-                if ($this->count > 0) {
-                    $this->filters->setCounter($this->count);
-                }
-            }
-        } catch (\Exception $e) {
-            Analog::log(
-                'Cannot count events | ' . $e->getMessage(),
-                Analog::WARNING
-            );
-            throw $e;
-        }
-    }
-
-    /**
-     * Get count for current query
-     */
-    public function getCount(): int
-    {
-        return $this->count;
+        $column = match ($this->filters->orderby) {
+            self::ORDERBY_NAME => 'e.name',
+            self::ORDERBY_TOWN => 'e.town',
+            default => 'e.begin_date',
+        };
+        return [$column . ' ' . $this->filters->getDirection()];
     }
 }
