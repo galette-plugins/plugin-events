@@ -468,6 +468,22 @@ class EventsController extends GaletteRoutingTestCase
         $this->assertStringNotContainsString('alert(', $body);
         $this->assertStringContainsString('aria-controls="attach_activity"', $body);
 
+        //linked activities status are labelled
+        $event = $this->insertEvent('Linked');
+        $dinner = $this->insertActivity('Supper');
+        $this->linkActivity($event, $dinner, \GaletteEvents\Activity::REQUIRED);
+        $body = (string)$this->app->handle($this->createRequest('events_event_edit', ['id' => (string)$event]))->getBody();
+        $this->assertMatchesRegularExpression('#<label\s+for="activities_status_' . $dinner . '"\s*>\s*Supper\s*</label>#', $body);
+        $this->assertMatchesRegularExpression(
+            '#<select\s+name="activities_status\[\]"\s+id="activities_status_' . $dinner . '"#',
+            $body
+        );
+        $this->assertMatchesRegularExpression(
+            '#<option\s+value="' . \GaletteEvents\Activity::REQUIRED . '"\s+selected="selected"#',
+            $body
+        );
+        $this->assertStringNotContainsString('{$activity', $body);
+
         $body = (string)$this->app->handle($this->createRequest('dashboard'))->getBody();
         $this->assertStringNotContainsString('events.js', $body);
     }
