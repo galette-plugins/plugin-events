@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 namespace GaletteEvents\Controllers\Crud;
 
+use ArrayObject;
 use Galette\Repository\Groups;
 use Galette\Core\Pagination;
 use GaletteEvents\Filters\EventsList;
@@ -168,8 +169,21 @@ class EventsController extends AbstractController
         $filters->end_date_filter = date(__("Y-m-d"), $end);
 
         $events = new Events($this->zdb, $this->login, $this->history, $this->preferences, $filters);
+        $list = $events->getList(false, true);
 
-        return $this->withJson($response, $events->getList(false, true));
+        //links of the event modal
+        foreach ($list as $row) {
+            if (!$row instanceof ArrayObject) {
+                continue;
+            }
+            $id = (string)$row[Event::PK];
+            if ($row['can_edit']) {
+                $row['edit_url'] = $this->routeparser->urlFor('events_event_edit', ['id' => $id]);
+            }
+            $row['booking_url'] = $this->routeparser->urlFor('events_booking_add') . '?event=' . $id;
+        }
+
+        return $this->withJson($response, $list);
     }
 
     // /CRUD - Read

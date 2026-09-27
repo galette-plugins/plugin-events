@@ -41,10 +41,11 @@ $(function() {
       //description is built and escaped server side, other values must be displayed as text
       $modal.find('.header').text(infos.name + ' (' + infos.begin_date_fmt + ' - ' + infos.end_date_fmt + ')');
       $modal.find('.content').html(infos.description);
+      //links are given with the event, edit one only when current user can edit it
       $edit
-        .attr('href', options.event_url.replace('PLACEBO', infos.id_event))
-        .toggleClass('displaynone', !infos.can_edit);
-      $booking.attr('href', options.booking_url.replace('PLACEBO', infos.id_event));
+        .attr('href', infos.edit_url || '#')
+        .toggleClass('displaynone', !infos.edit_url);
+      $booking.attr('href', infos.booking_url);
       $modal.modal('show');
     },
     eventMouseEnter: function(info) {

@@ -318,6 +318,20 @@ class EventsController extends GaletteRoutingTestCase
         $can_edit = array_column($events, 'can_edit', 'name');
         ksort($can_edit);
         $this->assertSame(['Managed event' => true, 'Public event' => false], $can_edit);
+
+        //links of the event modal come with the event
+        $by_name = array_column($events, null, 'name');
+        $managed_id = (string)$by_name['Managed event']['id_event'];
+        $public_id = (string)$by_name['Public event']['id_event'];
+        $this->assertSame(
+            $this->routeparser->urlFor('events_event_edit', ['id' => $managed_id]),
+            $by_name['Managed event']['edit_url']
+        );
+        $this->assertArrayNotHasKey('edit_url', $by_name['Public event']);
+        $this->assertSame(
+            $this->routeparser->urlFor('events_booking_add') . '?event=' . $public_id,
+            $by_name['Public event']['booking_url']
+        );
     }
 
     /**

@@ -32,8 +32,6 @@
 {% block javascripts %}
     {% set calendar_options = {
         'dataurl': url_for("ajax-events_calendar"),
-        'event_url': url_for("events_event_edit", {"id": "PLACEBO"}),
-        'booking_url': url_for("events_booking_add") ~ '?event=PLACEBO',
         'locale': i18n.getWebID(),
         'buttons': {
             'listDay': {'text': _T("Daily list", "events")},
