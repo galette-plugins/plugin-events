@@ -107,7 +107,7 @@ class Events extends AbstractRepository
                 } else {
                     $set = [new PredicateSet(
                         [
-                            new Predicate\Operator('e.is_open', '=', true),
+                            new Predicate\Operator('e.is_open', '=', 1),
                             new Predicate\Operator('e.begin_date', '>=', date('Y-m-d')),
                             $visible
                         ]

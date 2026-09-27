@@ -128,8 +128,7 @@ class Activity
         $this->transactional(function (): void {
             $values = [
                 'name'                  => $this->name,
-                'is_active'             => ($this->active ? $this->active
-                                                : ($this->zdb->isPostgres() ? 'false' : 0)),
+                'is_active'             => (int)$this->active,
                 'comment'               => $this->comment
             ];
 

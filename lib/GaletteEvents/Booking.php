@@ -303,8 +303,7 @@ class Booking
                 Event::PK           => $this->event,
                 Adherent::PK        => $this->member,
                 'booking_date'      => $this->date,
-                'is_paid'           => ($this->paid ? $this->paid
-                                            : ($this->zdb->isPostgres() ? 'false' : 0)),
+                'is_paid'           => (int)$this->paid,
                 'payment_method'    => $this->payment_method,
                 'payment_amount'    => $this->amount,
                 'bank_name'         => $this->bank_name,
@@ -378,8 +377,7 @@ class Booking
                         ];
                     } elseif ($result['checked'] != $this->activities[$result[Activity::PK]]['checked']) {
                         $update[$result[Activity::PK]] = [
-                            'checked'   => ($checked ? $checked
-                                            : ($this->zdb->isPostgres() ? 'false' : 0))
+                            'checked'   => (int)$checked
                         ];
                     } else {
                         $void[$result[Activity::PK]] = true;
@@ -390,8 +388,7 @@ class Booking
                     $insert[$aid] = [
                         Activity::PK    => $aid,
                         self::PK        => $this->id,
-                        'checked'       => ($checked ? $checked
-                                            : ($this->zdb->isPostgres() ? 'false' : 0))
+                        'checked'       => (int)$checked
                     ];
                 }
             }
