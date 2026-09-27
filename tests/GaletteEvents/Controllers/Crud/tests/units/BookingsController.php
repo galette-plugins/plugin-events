@@ -521,6 +521,34 @@ class BookingsController extends GaletteRoutingTestCase
     }
 
     /**
+     * Changing the event of a booking shows its activities, before the booking is stored
+     */
+    public function testChangeEventShowsItsActivities(): void
+    {
+        $this->getMemberOne();
+        $event = $this->insertEvent('Event');
+        $dinner = $this->insertActivity('Dinner');
+        $this->linkActivity($event, $dinner);
+        $this->logMember($this->dataAdherentOne());
+
+        $data = ['event' => (string)$event, 'booking_date' => date('Y-m-d'), 'number_people' => '1', 'comment' => ''];
+        $test_response = $this->app->handle(
+            $this->createRequest('events_storebooking_add', [], 'POST')->withParsedBody($data)
+        );
+        $this->assertSame(
+            ['Location' => [$this->routeparser->urlFor('events_booking_add', ['action' => 'add'])]],
+            $test_response->getHeaders()
+        );
+        $this->expectFlashData(['warning_detected' => ['Do not forget to store the booking']]);
+        $this->assertSame(0, $this->countBookings($event));
+
+        $test_response = $this->app->handle($this->createRequest('events_booking_add'));
+        $this->assertSame(200, $test_response->getStatusCode());
+        $this->assertStringContainsString('id="activity_' . $dinner . '"', (string)$test_response->getBody());
+        $this->expectNoLogEntry();
+    }
+
+    /**
      * New bookings are dated from today
      */
     public function testNewBookingIsDatedToday(): void

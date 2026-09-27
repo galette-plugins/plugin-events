@@ -205,15 +205,10 @@ class EventsController extends AbstractPluginController
      */
     public function edit(Request $request, Response $response, ?int $id = null, string $action = 'edit'): Response
     {
-        if ($this->session->plugin_events_event !== null) {
-            $event = $this->session->plugin_events_event;
-            $this->session->plugin_events_event = null;
-        } else {
-            $event = new Event($this->zdb, $this->login, $this->history);
-        }
+        $event = new Event($this->zdb, $this->login, $this->history);
         $can = $event->canCreate($this->login);
 
-        if ($id !== null && $event->getId() != $id) {
+        if ($id !== null) {
             try {
                 $event->load($id);
             } catch (NotFoundException) {
@@ -225,6 +220,13 @@ class EventsController extends AbstractPluginController
         //check if logged-in user can edit event
         if (!$can) {
             return $this->redirectForbidden($response, $event);
+        }
+
+        //values posted before an error, or before activities have been changed
+        $data = $this->session->plugin_events_event_data ?? null;
+        unset($this->session->plugin_events_event_data);
+        if (is_array($data) && $data['id'] === $event->getId()) {
+            $event->check($data['values']);
         }
 
         // template variable declaration
@@ -354,8 +356,11 @@ class EventsController extends AbstractPluginController
         if (count($error_detected) == 0 && $goto_list) {
             $redirect_url = $this->routeparser->urlFor('events_events');
         } else {
-            //store entity in session
-            $this->session->plugin_events_event = $event;
+            //keep posted values for the form
+            $this->session->plugin_events_event_data = [
+                'id'        => $event->getId(),
+                'values'    => $post
+            ];
 
             if ($event->getId()) {
                 $redirect_url = $this->routeparser->urlFor(

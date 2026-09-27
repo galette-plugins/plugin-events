@@ -143,19 +143,21 @@ class ActivitiesController extends AbstractPluginController
      */
     public function edit(Request $request, Response $response, ?int $id = null, string $action = 'edit'): Response
     {
-        if ($this->session->plugin_events_activity !== null) {
-            $activity = $this->session->plugin_events_activity;
-            $this->session->plugin_events_activity = null;
-        } else {
-            $activity = new Activity($this->zdb, $this->history);
-        }
+        $activity = new Activity($this->zdb, $this->history);
 
-        if ($id !== null && $activity->getId() != $id) {
+        if ($id !== null) {
             try {
                 $activity->load($id);
             } catch (NotFoundException) {
                 return $this->redirectNotFound($response, $id);
             }
+        }
+
+        //values posted before an error
+        $data = $this->session->plugin_events_activity_data ?? null;
+        unset($this->session->plugin_events_activity_data);
+        if (is_array($data) && $data['id'] === $activity->getId()) {
+            $activity->check($data['values']);
         }
 
         // template variable declaration
@@ -247,8 +249,11 @@ class ActivitiesController extends AbstractPluginController
         if (count($error_detected) == 0) {
             $redirect_url = $this->routeparser->urlFor('events_activities');
         } else {
-            //store entity in session
-            $this->session->plugin_events_activity = $activity;
+            //keep posted values for the form
+            $this->session->plugin_events_activity_data = [
+                'id'        => $activity->getId(),
+                'values'    => $post
+            ];
 
             if ($activity->getId()) {
                 $redirect_url = $this->routeparser->urlFor(

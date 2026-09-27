@@ -378,14 +378,9 @@ class BookingsController extends AbstractPluginController
         $get = $request->getQueryParams();
         $route_params = [];
 
-        if ($this->session->plugin_events_booking !== null) {
-            $booking = $this->session->plugin_events_booking;
-            $this->session->plugin_events_booking = null;
-        } else {
-            $booking = new Booking($this->zdb, $this->login, $this->history);
-        }
+        $booking = new Booking($this->zdb, $this->login, $this->history);
 
-        if ($id !== null && $booking->getId() != $id) {
+        if ($id !== null) {
             try {
                 $booking->load($id);
             } catch (NotFoundException) {
@@ -395,6 +390,13 @@ class BookingsController extends AbstractPluginController
 
         if ($booking->getId() !== null && !$booking->canEdit($this->login)) {
             return $this->redirectForbidden($response, $booking);
+        }
+
+        //values posted before an error, or before the event has been changed
+        $data = $this->session->plugin_events_booking_data ?? null;
+        unset($this->session->plugin_events_booking_data);
+        if (is_array($data) && $data['id'] === $booking->getId()) {
+            $booking->check($data['values']);
         }
 
         // template variable declaration
@@ -539,7 +541,6 @@ class BookingsController extends AbstractPluginController
         }
 
         if (!isset($post['save'])) {
-            $this->session->plugin_events_booking = $booking;
             $error_detected = [];
             $goto_list = false;
             $warning_detected[] = _T('Do not forget to store the booking', 'events');
@@ -577,8 +578,11 @@ class BookingsController extends AbstractPluginController
                 ['event' => (string)$booking->getEventId()]
             );
         } else {
-            //store entity in session
-            $this->session->plugin_events_booking = $booking;
+            //keep posted values for the form
+            $this->session->plugin_events_booking_data = [
+                'id'        => $booking->getId(),
+                'values'    => $post
+            ];
 
             if ($booking->getId()) {
                 $route = 'events_booking_edit';

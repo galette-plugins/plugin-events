@@ -177,7 +177,14 @@ class EventsController extends GaletteRoutingTestCase
             'success_detected' => ['Activity has been attached to event.'],
         ]);
         $this->expectLogEntry(Analog::ERROR, 'Some errors has been threw attempting to edit/store an event');
-        $this->assertSame([$dinner], array_keys($this->session->plugin_events_event->getActivities()));
+        //form shows posted values, with the attached activity
+        $test_response = $this->app->handle($this->createRequest('events_event_add'));
+        $this->assertSame(200, $test_response->getStatusCode());
+        $body = (string)$test_response->getBody();
+        $this->assertStringContainsString('name="activities_ids[]" value="' . $dinner . '"', $body);
+        $this->assertStringContainsString('value="Lille"', $body);
+        $this->expectLogEntry(Analog::ERROR, 'Some errors has been threw attempting to edit/store an event');
+        $this->assertNull($this->session->plugin_events_event_data ?? null);
 
         //an unknown activity is not attached
         $this->postEvent(null, $this->getFormValues([
@@ -185,6 +192,25 @@ class EventsController extends GaletteRoutingTestCase
             'attach_activity'   => (string)($dinner + 1000),
         ]));
         $this->expectFlashData(['error_detected' => ['Please choose an activity to add']]);
+    }
+
+    /**
+     * Values posted on an event are not shown on another one
+     */
+    public function testPostedValuesStayOnTheirEvent(): void
+    {
+        $this->logSuperAdmin();
+        $first = $this->insertEvent('First event');
+        $second = $this->insertEvent('Second event');
+
+        $this->postEvent($first, $this->getFormValues(['name' => 'Renamed', 'town' => '', 'save' => '1']));
+        $this->expectFlashData(['error_detected' => ['Town is mandatory']]);
+        $this->expectLogEntry(Analog::ERROR, 'Some errors has been threw attempting to edit/store an event');
+
+        $body = (string)$this->app->handle($this->createRequest('events_event_edit', ['id' => (string)$second]))->getBody();
+        $this->assertStringContainsString('value="Second event"', $body);
+        $this->assertStringNotContainsString('Renamed', $body);
+        $this->expectNoLogEntry();
     }
 
     /**
