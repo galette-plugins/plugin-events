@@ -532,8 +532,8 @@ msgstr "செலுத்தப்படவில்லை"
 
 #: ../templates/default/bookings.html.twig:147
 #, php-format
-msgid "Found bookings total %f"
-msgstr "முன்பதிவு மொத்தம் %f"
+msgid "Found bookings total %1$s"
+msgstr "முன்பதிவு மொத்தம் %1$s"
 
 #: ../templates/default/bookings.html.twig:192
 msgid "Edit booking"

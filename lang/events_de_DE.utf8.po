@@ -535,8 +535,8 @@ msgstr "Nicht bezahlt"
 
 #: ../templates/default/bookings.html.twig:147
 #, php-format
-msgid "Found bookings total %f"
-msgstr "Gesamtzahl der gefundenen Buchungen: %f"
+msgid "Found bookings total %1$s"
+msgstr "Gesamtzahl der gefundenen Buchungen: %1$s"
 
 #: ../templates/default/bookings.html.twig:192
 msgid "Edit booking"

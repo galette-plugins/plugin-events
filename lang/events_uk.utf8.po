@@ -540,8 +540,8 @@ msgstr "Не оплачено"
 
 #: ../templates/default/bookings.html.twig:147
 #, php-format
-msgid "Found bookings total %f"
-msgstr "Загалом бронювань знайдено: %f"
+msgid "Found bookings total %1$s"
+msgstr "Загалом бронювань знайдено: %1$s"
 
 #: ../templates/default/bookings.html.twig:192
 msgid "Edit booking"

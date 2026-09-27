@@ -533,8 +533,8 @@ msgstr "Ni plačano"
 
 #: ../templates/default/bookings.html.twig:147
 #, php-format
-msgid "Found bookings total %f"
-msgstr "Skupaj najdenih rezervacij %f"
+msgid "Found bookings total %1$s"
+msgstr "Skupaj najdenih rezervacij %1$s"
 
 #: ../templates/default/bookings.html.twig:192
 msgid "Edit booking"

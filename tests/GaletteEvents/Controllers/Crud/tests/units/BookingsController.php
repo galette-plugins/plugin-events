@@ -660,4 +660,21 @@ class BookingsController extends GaletteRoutingTestCase
         $this->assertNull($this->session->plugin_events_bookings_filter->event_filter);
         $this->expectNoLogEntry();
     }
+
+    /**
+     * Bookings list shows the total amount of listed bookings
+     */
+    public function testListTotal(): void
+    {
+        $member_one = $this->getMemberOne();
+        $member_two = $this->getMemberTwo();
+        $event = $this->insertEvent('Event');
+        $this->insertBooking($event, $member_one->id, ['payment_amount' => 12.5]);
+        $this->insertBooking($event, $member_two->id, ['payment_amount' => 7]);
+        $this->logSuperAdmin();
+
+        $body = (string)$this->app->handle($this->createRequest('events_bookings', ['event' => (string)$event]))->getBody();
+        $this->assertStringContainsString('Found bookings total 19.5', $body);
+        $this->expectNoLogEntry();
+    }
 }

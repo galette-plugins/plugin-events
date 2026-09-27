@@ -530,8 +530,8 @@ msgstr "Non pagato"
 
 #: ../templates/default/bookings.html.twig:147
 #, php-format
-msgid "Found bookings total %f"
-msgstr "Totale prenotazioni trovate %f"
+msgid "Found bookings total %1$s"
+msgstr "Totale prenotazioni trovate %1$s"
 
 #: ../templates/default/bookings.html.twig:192
 msgid "Edit booking"

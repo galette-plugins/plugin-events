@@ -526,7 +526,7 @@ msgstr "No pagat"
 
 #: ../templates/default/bookings.html.twig:147
 #, php-format
-msgid "Found bookings total %f"
+msgid "Found bookings total %1$s"
 msgstr ""
 
 #: ../templates/default/bookings.html.twig:192
