@@ -35,15 +35,15 @@ class Event
     /** @var array<string> */
     private array $errors = [];
 
-    private int $id;
-    private string $name;
+    private ?int $id = null;
+    private string $name = '';
     private string $address = '';
     private string $zip = '';
     private string $town = '';
     private ?string $country = null;
     private string $begin_date;
     private string $end_date;
-    private string $creation_date;
+    private ?string $creation_date = null;
     private bool $open = true;
     private ?int $group = null;
     private string $comment = '';
@@ -301,7 +301,7 @@ class Event
      */
     public function store(): void
     {
-        $new = empty($this->id);
+        $new = $this->id === null;
         $transaction = !$this->zdb->connection->inTransaction();
         if ($transaction) {
             $this->zdb->connection->beginTransaction();
@@ -383,7 +383,7 @@ class Event
             }
             if ($new) {
                 //nothing has been stored
-                unset($this->id);
+                $this->id = null;
             }
             throw $e;
         }
@@ -468,15 +468,15 @@ class Event
      */
     public function getId(): ?int
     {
-        return $this->id ?? null;
+        return $this->id;
     }
 
     /**
      * Get event name
      */
-    public function getName(): ?string
+    public function getName(): string
     {
-        return $this->name ?? null;
+        return $this->name;
     }
 
     /**
@@ -508,7 +508,7 @@ class Event
      */
     public function getCountry(): ?string
     {
-        return $this->country ?? null;
+        return $this->country;
     }
 
     /**
@@ -516,7 +516,7 @@ class Event
      */
     public function getGroup(): ?int
     {
-        return $this->group ?? null;
+        return $this->group;
     }
 
     /**
@@ -540,6 +540,10 @@ class Event
      */
     private function getDate(string $prop, bool $formatted = true): string
     {
+        if ($this->$prop === null) {
+            return '';
+        }
+
         if ($formatted === true) {
             $date = new \DateTime($this->$prop);
             return $date->format(__("Y-m-d"));

@@ -37,10 +37,10 @@ class Activity
     /** @var array<string> */
     private array $errors = [];
 
-    private int $id;
-    private string $name;
+    private ?int $id = null;
+    private string $name = '';
     private bool $active = false;
-    private string $creation_date;
+    private ?string $creation_date = null;
     private string $comment = '';
 
     /**
@@ -163,7 +163,7 @@ class Activity
             'comment'               => $this->comment
         ];
 
-        if (empty($this->id)) {
+        if ($this->id === null) {
             //we're inserting a new activity
             $this->creation_date = date("Y-m-d");
             $values['creation_date'] = $this->creation_date;
@@ -218,7 +218,7 @@ class Activity
      */
     public function getId(): ?int
     {
-        return $this->id ?? null;
+        return $this->id;
     }
 
     /**
@@ -226,7 +226,7 @@ class Activity
      */
     public function getName(): string
     {
-        return $this->name ?? '';
+        return $this->name;
     }
 
     /**
@@ -237,7 +237,7 @@ class Activity
      */
     private function getDate(string $prop, bool $formatted = true): string
     {
-        if (!isset($this->$prop)) {
+        if ($this->$prop === null) {
             return '';
         }
 
@@ -288,7 +288,7 @@ class Activity
      */
     public function countEvents(): int
     {
-        if (empty($this->id)) {
+        if ($this->id === null) {
             return 0;
         }
 

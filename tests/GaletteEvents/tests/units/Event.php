@@ -59,6 +59,22 @@ class Event extends GaletteTestCase
     }
 
     /**
+     * New events are fully initialized
+     */
+    public function testEmpty(): void
+    {
+        $event = new \GaletteEvents\Event($this->zdb, $this->login, $this->history);
+        $this->assertNull($event->getId());
+        $this->assertSame('', $event->getName());
+        $this->assertSame('', $event->getCreationDate());
+        $this->assertSame(date('Y-m-d'), $event->getBeginDate(false));
+        $this->assertSame(date('Y-m-d'), $event->getEndDate(false));
+        $this->assertNull($event->getGroup());
+        $this->assertSame([], $event->getActivities());
+        $this->assertSame([], $event->getErrors());
+    }
+
+    /**
      * Group managers create events of the groups they manage
      */
     public function testManagerCreatesEvent(): void

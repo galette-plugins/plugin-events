@@ -35,9 +35,9 @@ class Booking
     /** @var array<string> */
     private array $errors = [];
 
-    private int $id;
-    private int $event;
-    private int $member;
+    private ?int $id = null;
+    private ?int $event = null;
+    private ?int $member = null;
     private string $date = '';
     private bool $paid = false;
     private ?float $amount = null;
@@ -51,7 +51,7 @@ class Booking
     private array $activities = [];
     /** @var array<int, array<string,mixed>> */
     private array $activities_removed = [];
-    private string $creation_date;
+    private ?string $creation_date = null;
 
     /**
      * Default constructor
@@ -267,7 +267,7 @@ class Booking
                 Event::PK       => $this->event,
                 Adherent::PK    => $this->member
             ]);
-            if (isset($this->id)) {
+            if ($this->id !== null) {
                 $select->where->notEqualTo(
                     self::PK,
                     $this->id
@@ -343,7 +343,7 @@ class Booking
      */
     public function store(): void
     {
-        $new = empty($this->id);
+        $new = $this->id === null;
         $transaction = !$this->zdb->connection->inTransaction();
         if ($transaction) {
             $this->zdb->connection->beginTransaction();
@@ -532,7 +532,7 @@ class Booking
             }
             if ($new) {
                 //nothing has been stored
-                unset($this->id);
+                $this->id = null;
             }
             throw $e;
         }
@@ -543,7 +543,7 @@ class Booking
      */
     public function getId(): ?int
     {
-        return $this->id ?? null;
+        return $this->id;
     }
 
     /**
@@ -551,7 +551,7 @@ class Booking
      */
     public function getEventId(): ?int
     {
-        return $this->event ?? null;
+        return $this->event;
     }
 
     /**
@@ -559,7 +559,7 @@ class Booking
      */
     public function getEvent(): ?Event
     {
-        if (isset($this->event)) {
+        if ($this->event !== null) {
             return new Event($this->zdb, $this->login, $this->history, $this->event);
         }
         return null;
@@ -570,11 +570,11 @@ class Booking
      */
     public function getMemberId(): ?int
     {
-        return $this->member ?? null;
+        return $this->member;
     }
 
     /**
-     * Get member
+     * Get member, empty if booking has no member yet
      */
     public function getMember(): Adherent
     {
@@ -588,6 +588,10 @@ class Booking
      */
     public function getDate(bool $formatted = true): string
     {
+        if ($this->date === '') {
+            return '';
+        }
+
         if ($formatted === true) {
             $date = new \DateTime($this->date);
             return $date->format(__("Y-m-d"));
@@ -666,6 +670,10 @@ class Booking
      */
     public function getCreationDate(bool $formatted = true): string
     {
+        if ($this->creation_date === null) {
+            return '';
+        }
+
         if ($formatted === true) {
             $date = new \DateTime($this->creation_date);
             return $date->format(__("Y-m-d"));

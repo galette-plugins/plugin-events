@@ -35,6 +35,23 @@ class Booking extends GaletteTestCase
     }
 
     /**
+     * New bookings are fully initialized
+     */
+    public function testEmpty(): void
+    {
+        $booking = new \GaletteEvents\Booking($this->zdb, $this->login, $this->history);
+        $this->assertNull($booking->getId());
+        $this->assertNull($booking->getEventId());
+        $this->assertNull($booking->getEvent());
+        $this->assertNull($booking->getMemberId());
+        $this->assertNull($booking->getMember()->id);
+        $this->assertSame('', $booking->getDate());
+        $this->assertSame('', $booking->getCreationDate());
+        $this->assertSame([], $booking->getActivities());
+        $this->assertSame([], $booking->getErrors());
+    }
+
+    /**
      * Optional values may be NULL in database
      */
     public function testLoadNullValues(): void
