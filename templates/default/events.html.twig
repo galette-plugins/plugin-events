@@ -78,7 +78,7 @@
         <td data-col-label="{{ _T("Town", "events") }}">{{ event.getTown() }}</td>
         <td data-col-label="{{ _T("Group", "events") }}">{{ event.getGroupName() }}</td>
         <td class="center id_row collapsing" data-col-label="{{ _T("Open", "events") }}">
-            <i class="lock{% if event.isOpen() %} open green{% else %} red{% endif %} icon tooltip" data-html="{% if event.isOpen() %}{{ _T("Event is open", "events") }}{% else %}{{ _T("Event is closed", "events") }}{% endif %}"></i>
+            <i class="lock{% if event.isOpen() %} open green{% else %} red{% endif %} icon tooltip" data-html="{% if event.isOpen() %}{{ _T("Event is open", "events") }}{% else %}{{ _T("Event is closed", "events") }}{% endif %}" aria-hidden="true"></i>
             <span class="visually-hidden">
                 {% if event.isOpen() %}
                     {{ _T("Event is open", "events") }}

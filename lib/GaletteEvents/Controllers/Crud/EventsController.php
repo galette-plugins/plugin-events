@@ -223,7 +223,6 @@ class EventsController extends AbstractController
             $response,
             $this->getTemplate('event'),
             [
-                'autocomplete'      => true,
                 'page_title'        => $title,
                 'event'             => $event,
                 'require_calendar'  => true,

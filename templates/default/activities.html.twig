@@ -73,7 +73,7 @@
             <td class="collapsing" data-col-label="{{ _T("Creation date", "events") }}">{{ activity.getCreationDate()|date(_T("Y-m-d")) }}</td>
             <td class="collapsing" data-col-label="{{ _T("Events", "events") }}">{{ activity.countEvents() }}</td>
             <td class="center id_row collapsing" data-col-label="{{ _T("Is active", "events") }}">
-                <i class="toggle {% if activity.isActive() %}on{% else %}off{% endif %} icon tooltip" data-html="{% if activity.isActive() %}{{ _T("Active", "events") }}{% else %}{{ _T("Inactive", "events") }}{% endif %}"></i>
+                <i class="toggle {% if activity.isActive() %}on{% else %}off{% endif %} icon tooltip" data-html="{% if activity.isActive() %}{{ _T("Active", "events") }}{% else %}{{ _T("Inactive", "events") }}{% endif %}" aria-hidden="true"></i>
                 <span class="visually-hidden">
                 {% if activity.isActive() %}
                     {{ _T("Active", "events") }}

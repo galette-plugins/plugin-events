@@ -150,7 +150,6 @@ class ActivitiesController extends AbstractController
             $response,
             $this->getTemplate('activity'),
             [
-                'autocomplete'  => true,
                 'page_title'    => $title,
                 'activity'      => $activity,
                 // pseudo random int

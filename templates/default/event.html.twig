@@ -10,7 +10,7 @@
     <form action="{% if event.getId() %}{{ url_for("events_storeevent_edit", {"id": event.getId()}) }}{% else %}{{ url_for("events_storeevent_add") }}{% endif %}" method="post" class="ui form">
         <div class="ui styled fluid accordion field">
             <div class="active title">
-                <i class="icon dropdown"></i>
+                <i class="icon dropdown" aria-hidden="true"></i>
                 {{ _T("General information", "events") }}
             </div>
             <div class="active content">
@@ -71,7 +71,7 @@
 
         <div class="ui styled fluid accordion field">
             <div class="active title">
-                <i class="icon dropdown"></i>
+                <i class="icon dropdown" aria-hidden="true"></i>
                 {{ _T("Location", "events") }}
             </div>
             <div class="active content">
@@ -104,7 +104,7 @@
 
         <div class="ui styled fluid accordion field">
             <div class="active title">
-                <i class="icon dropdown"></i>
+                <i class="icon dropdown" aria-hidden="true"></i>
                 {{ _T("Activities", "events") }}
             </div>
             <div class="active content">
@@ -177,7 +177,7 @@
 
         <div class="ui basic center aligned fitted segment">
             <button type="submit" name="save" class="action ui labeled icon primary button">
-                <i class="save icon"></i> {{ _T("Save") }}
+                <i class="save icon" aria-hidden="true"></i> {{ _T("Save") }}
             </button>
             <input type="hidden" name="id" id="id" value="{{ event.getId() }}"/>
         </div>
