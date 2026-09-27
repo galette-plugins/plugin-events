@@ -63,13 +63,13 @@ $app->post(
 
 $app->get(
     '/bookings/{event:guess|all|\d+}[/{option:page|order|clear_filter}/{value:\d+}]',
-    [BookingsController::class, 'listBookings']
+    [BookingsController::class, 'list']
 )->setName('events_bookings')->add(Authenticate::class);
 
 //bookings list filtering
 $app->post(
     '/bookings/filter/{event:guess|all|\d+}',
-    [BookingsController::class, 'filterBookings']
+    [BookingsController::class, 'filter']
 )->setName('filter-bookingslist')->add(Authenticate::class);
 
 $app->get(

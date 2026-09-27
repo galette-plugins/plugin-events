@@ -14,7 +14,7 @@ use Analog\Analog;
 use Galette\Entity\Adherent;
 use Galette\Repository\Groups;
 use Galette\Repository\Members;
-use Galette\Controllers\Crud\AbstractPluginController;
+use Galette\Core\Pagination;
 use Galette\Filters\MembersList;
 use GaletteEvents\Filters\BookingsList;
 use GaletteEvents\Booking;
@@ -24,21 +24,54 @@ use GaletteEvents\Repository\Bookings;
 use GaletteEvents\Repository\Events;
 use Slim\Psr7\Request;
 use Slim\Psr7\Response;
-use DI\Attribute\Inject;
 
 /**
  * Bookings controller
  *
  * @author Johan Cwiklinski <johan@x-tnd.be>
+ *
+ * @extends AbstractController<BookingsList>
  */
 
-class BookingsController extends AbstractPluginController
+class BookingsController extends AbstractController
 {
     /**
-     * @var array<string, mixed>
+     * Entity name, for session keys and logs
      */
-    #[Inject("Plugin Galette Events")]
-    protected array $module_info;
+    protected function getEntityName(): string
+    {
+        return 'booking';
+    }
+
+    /**
+     * List name, for filters session key
+     */
+    protected function getListName(): string
+    {
+        return 'bookings';
+    }
+
+    /**
+     * Create empty list filters
+     */
+    protected function createFilters(): Pagination
+    {
+        return new BookingsList();
+    }
+
+    /**
+     * Get the message for a booking that does not exist
+     *
+     * @param int $id Requested booking identifier
+     */
+    protected function getNotFoundMessage(int $id): string
+    {
+        return sprintf(
+            //TRANS: %1$s is the booking identifier
+            _T('No booking #%1$s.', 'events'),
+            $id
+        );
+    }
 
     // CRUD - Create
 
@@ -66,45 +99,19 @@ class BookingsController extends AbstractPluginController
     /**
      * List page
      *
-     * @param string|null     $option One of 'page' or 'order'
+     * @param string|null     $option One of 'page', 'order' or 'clear_filter'
      * @param string|int|null $value  Value of the option
-     */
-    public function list(Request $request, Response $response, ?string $option = null, string|int|null $value = null): Response
-    {
-        //just for inheritance. see listBookings which signature changes.
-        return $response;
-    }
-
-    /**
-     * List page
-     *
      * @param string|int      $event  Linked event. May be an event ID, 'all' or 'guess'.
-     * @param string|null     $option One of 'page' or 'order'
-     * @param string|int|null $value  Value of the option
      */
-    public function listBookings(Response $response, string|int $event, ?string $option = null, string|int|null $value = null): Response
-    {
-        $filters = $this->session->{$this->getFilterName('bookings')} ?? new BookingsList();
-
-        if ($event == 'guess') {
-            $linked_event = $filters->event_filter ?? 'all';
-        } else {
-            $linked_event = $event;
-        }
-
-        if ($option !== null) {
-            switch ($option) {
-                case 'page':
-                    $filters->current_page = (int)$value;
-                    break;
-                case 'order':
-                    $filters->orderby = $value;
-                    break;
-                case 'clear_filter':
-                    $filters->reinit();
-                    break;
-            }
-        }
+    public function list(
+        Request $request,
+        Response $response,
+        ?string $option = null,
+        string|int|null $value = null,
+        string|int $event = 'all'
+    ): Response {
+        $filters = $this->getFilters($option, $value);
+        $linked_event = $event == 'guess' ? ($filters->event_filter ?? 'all') : $event;
 
         $event = null;
         if ($linked_event !== 'all') {
@@ -113,7 +120,7 @@ class BookingsController extends AbstractPluginController
             } catch (NotFoundException) {
                 //event may have been removed since it has been filtered
                 $filters->event_filter = null;
-                $this->session->{$this->getFilterName('bookings')} = $filters;
+                $this->storeFilters($filters);
                 return $this->redirectWithErrors(
                     response: $response,
                     errors: [sprintf(
@@ -125,6 +132,8 @@ class BookingsController extends AbstractPluginController
                 );
             }
             $filters->event_filter = (int)$linked_event;
+        } else {
+            $filters->event_filter = null;
         }
 
         //Groups
@@ -132,102 +141,53 @@ class BookingsController extends AbstractPluginController
         $groups_list = $groups->getList();
 
         $bookings = new Bookings($this->zdb, $this->login, $this->history, $this->preferences, $filters);
-
-        $events = new Events($this->zdb, $this->login, $this->history, $this->preferences);
         $list = $bookings->getList();
-        $count = $bookings->getCount();
+        $events = new Events($this->zdb, $this->login, $this->history, $this->preferences);
 
-        //assign pagination variables to the template and add pagination links
-        $filters->setViewPagination($this->routeparser, $this->view, false);
-
-        $this->session->{$this->getFilterName('bookings')} = $filters;
-
-        // display page
-        $this->view->render(
+        return $this->renderList(
             $response,
-            $this->getTemplate('bookings'),
+            'bookings',
+            $filters,
             [
                 'page_title'        => _T("Bookings management", "events"),
                 'bookings'          => $bookings,
                 'bookings_list'     => $list,
-                'nb_bookings'       => $count,
+                'nb_bookings'       => $bookings->getCount(),
                 'event'             => $event,
                 'eventid'           => $linked_event,
-                'require_dialog'    => true,
-                'filters'           => $filters,
                 'events'            => $events->getList(full: true),
                 'groups'            => $groups_list
             ]
         );
-        return $response;
     }
 
     /**
-     * Filtering
+     * Filtering; list shows the filtered event
      */
     public function filter(Request $request, Response $response): Response
     {
-        //just for inheritance. see filterBookings which signature changes.
-        return $response;
-    }
-
-    /**
-     * Filtering
-     *
-     * @param string|int $event Linked event. May be an event ID, 'all' or 'guess'.
-     */
-    public function filterBookings(Request $request, Response $response, string|int $event): Response
-    {
-        $post = $request->getParsedBody();
-        if (isset($this->session->{$this->getFilterName('bookings')})) {
-            $filters = $this->session->{$this->getFilterName('bookings')};
-        } else {
-            $filters = new BookingsList();
-        }
-
-        //reintialize filters
-        if (isset($post['clear_filter'])) {
-            $filters->reinit();
-            $event = 'all';
-        } else {
-            //number of rows to show
-            if (isset($post['nbshow'])) {
-                $filters->show = $post['nbshow'];
-            }
-
-            if (isset($post['paid_filter'])) {
-                if (is_numeric($post['paid_filter'])) {
-                    $filters->paid_filter = $post['paid_filter'];
-                }
-            }
-
-            if (isset($post['payment_type_filter'])) {
-                if (is_numeric($post['payment_type_filter'])) {
-                    $filters->payment_type_filter = $post['payment_type_filter'];
-                }
-            }
-
-            if (isset($post['event_filter'])) {
-                if (is_numeric($post['event_filter'])) {
-                    $filters->event_filter = $post['event_filter'];
-                }
-            }
-
-            if (isset($post['group_filter'])) {
-                if (is_numeric($post['group_filter'])) {
-                    $filters->group_filter = $post['group_filter'];
-                }
-            }
-        }
-
-        $this->session->{$this->getFilterName('bookings')} = $filters;
-
+        $filters = $this->updateFilters($request);
         return $response
             ->withStatus(301)
             ->withHeader(
                 'Location',
-                $this->routeparser->urlFor('events_bookings', ['event' => $event])
+                $this->routeparser->urlFor('events_bookings', ['event' => (string)($filters->event_filter ?? 'all')])
             );
+    }
+
+    /**
+     * Apply posted bookings filters
+     *
+     * @param BookingsList        $filters Filters
+     * @param array<string,mixed> $post    Posted values
+     */
+    protected function applyPostedFilters(Pagination $filters, array $post): void
+    {
+        foreach (['paid_filter', 'payment_type_filter', 'event_filter', 'group_filter'] as $name) {
+            if (isset($post[$name])) {
+                $filters->$name = $post[$name];
+            }
+        }
     }
 
     /**
@@ -254,11 +214,7 @@ class BookingsController extends AbstractPluginController
         }
 
         if (isset($post['entries_sel'])) {
-            if (isset($this->session->{$this->getFilterName('bookings')})) {
-                $filters = clone $this->session->{$this->getFilterName('bookings')};
-            } else {
-                $filters = new BookingsList();
-            }
+            $filters = clone $this->getFilters();
 
             $filters->selected = $post['entries_sel'];
 
@@ -269,13 +225,11 @@ class BookingsController extends AbstractPluginController
                 $members[] = $booking->getMemberId();
             }
             if (count($members) === 0) {
-                $this->flash->addMessage(
-                    'error_detected',
-                    _T("No booking was selected, please check at least one.", "events")
+                return $this->redirectWithErrors(
+                    response: $response,
+                    errors: [_T("No booking was selected, please check at least one.", "events")],
+                    redirect_url: $this->routeparser->urlFor('events_events')
                 );
-                return $response
-                    ->withStatus(301)
-                    ->withHeader('Location', $this->routeparser->urlFor('events_events'));
             }
             $mfilter = new MembersList();
             $mfilter->selected = $members;
@@ -326,20 +280,16 @@ class BookingsController extends AbstractPluginController
                     );
             }
 
-            $this->flash->addMessage(
-                'error_detected',
-                _T("No action was matching.", "events")
-            );
+            $error = _T("No action was matching.", "events");
         } else {
-            $this->flash->addMessage(
-                'error_detected',
-                _T("No booking was selected, please check at least one.", "events")
-            );
+            $error = _T("No booking was selected, please check at least one.", "events");
         }
 
-        return $response
-            ->withStatus(301)
-            ->withHeader('Location', $this->routeparser->urlFor('events_events'));
+        return $this->redirectWithErrors(
+            response: $response,
+            errors: [$error],
+            redirect_url: $this->routeparser->urlFor('events_events')
+        );
     }
 
     /**
@@ -387,19 +337,18 @@ class BookingsController extends AbstractPluginController
         }
 
         if ($booking->getId() !== null && !$booking->canEdit($this->login)) {
-            return $this->redirectForbidden($response, $booking);
+            return $this->redirectForbidden($response, $booking->getId());
         }
 
         //values posted before an error, or before the event has been changed
-        $data = $this->session->plugin_events_booking_data ?? null;
-        unset($this->session->plugin_events_booking_data);
-        if (is_array($data) && $data['id'] === $booking->getId()) {
-            $booking->check($data['values']);
+        $values = $this->getPostedValues($booking->getId());
+        if ($values !== null) {
+            $booking->check($values);
         }
 
         // template variable declaration
         $title = _T("Booking", "events");
-        if ($booking->getId() != '') {
+        if ($booking->getId() !== null) {
             $title .= ' (' . _T("modification") . ')';
         } else {
             $title .= ' (' . _T("creation") . ')';
@@ -487,7 +436,7 @@ class BookingsController extends AbstractPluginController
     {
         $post = $request->getParsedBody();
         $booking = new Booking($this->zdb, $this->login, $this->history);
-        if (isset($post['id']) && !empty($post['id'])) {
+        if (!empty($post['id'])) {
             try {
                 $booking->load((int)$post['id']);
             } catch (NotFoundException) {
@@ -496,7 +445,7 @@ class BookingsController extends AbstractPluginController
         }
 
         if ($booking->getId() !== null && !$booking->canEdit($this->login)) {
-            return $this->redirectForbidden($response, $booking);
+            return $this->redirectForbidden($response, $booking->getId());
         }
 
         if (isset($post['cancel'])) {
@@ -520,22 +469,14 @@ class BookingsController extends AbstractPluginController
         }
 
         if (count($error_detected) == 0 && isset($post['save'])) {
-            //all goes well, we can proceed
-            $new = $booking->getId() === null;
-            try {
-                $booking->store();
-                if ($new) {
-                    $success_detected[] = _T("New booking has been successfully added.", "events");
-                } else {
-                    $success_detected[] = _T("Booking has been modified.", "events");
-                }
-            } catch (\Throwable $e) {
-                Analog::log(
-                    'Unable to store booking #' . ($booking->getId() ?? 'new') . ' | ' . $e->getMessage(),
-                    Analog::ERROR
-                );
-                $error_detected[] = _T("An error occurred while storing the booking.", "events");
-            }
+            $this->storeEntity(
+                $booking,
+                _T("New booking has been successfully added.", "events"),
+                _T("Booking has been modified.", "events"),
+                _T("An error occurred while storing the booking.", "events"),
+                $success_detected,
+                $error_detected
+            );
         }
 
         if (!isset($post['save'])) {
@@ -544,110 +485,24 @@ class BookingsController extends AbstractPluginController
             $warning_detected[] = _T('Do not forget to store the booking', 'events');
         }
 
-        if (count($error_detected) > 0) {
-            foreach ($error_detected as $error) {
-                $this->flash->addMessage(
-                    'error_detected',
-                    $error
-                );
-            }
-        }
-
-        if (count($warning_detected) > 0) {
-            foreach ($warning_detected as $warning) {
-                $this->flash->addMessage(
-                    'warning_detected',
-                    $warning
-                );
-            }
-        }
-        if (count($success_detected) > 0) {
-            foreach ($success_detected as $success) {
-                $this->flash->addMessage(
-                    'success_detected',
-                    $success
-                );
-            }
-        }
-
         if (count($error_detected) == 0 && $goto_list) {
             $redirect_url = $this->routeparser->urlFor(
                 'events_bookings',
                 ['event' => (string)$booking->getEventId()]
             );
         } else {
-            //keep posted values for the form
-            $this->session->plugin_events_booking_data = [
-                'id'        => $booking->getId(),
-                'values'    => $post
-            ];
-
-            if ($booking->getId()) {
-                $route = 'events_booking_edit';
-                $rparams = [
-                    'id'        => $booking->getId(),
-                    'action'    => 'edit'
-                ];
-            } else {
-                $route = 'events_booking_add';
-                $rparams = ['action' => 'add'];
-            }
-            $redirect_url = $this->routeparser->urlFor(
-                $route,
-                $rparams
-            );
+            $this->keepPostedValues($booking->getId(), $post);
+            $redirect_url = $booking->getId() !== null
+                ? $this->routeparser->urlFor('events_booking_edit', ['id' => (string)$booking->getId(), 'action' => 'edit'])
+                : $this->routeparser->urlFor('events_booking_add', ['action' => 'add']);
         }
 
-        return $response
-            ->withStatus(301)
-            ->withHeader('Location', $redirect_url);
-    }
-
-    /**
-     * Get the message for a booking that does not exist
-     *
-     * @param int $id Requested booking identifier
-     */
-    private function getNotFoundMessage(int $id): string
-    {
-        return sprintf(
-            //TRANS: %1$s is the booking identifier
-            _T('No booking #%1$s.', 'events'),
-            $id
-        );
-    }
-
-    /**
-     * Redirect when requested booking does not exist
-     *
-     * @param int $id Requested booking identifier
-     */
-    private function redirectNotFound(Response $response, int $id): Response
-    {
-        return $this->redirectWithErrors(
+        return $this->redirect(
             response: $response,
-            errors: [$this->getNotFoundMessage($id)],
-            redirect_url: $this->routeparser->urlFor('events_bookings', ['event' => 'all'])
-        );
-    }
-
-    /**
-     * Redirect when current logged-in user cannot edit a booking
-     *
-     * @param Booking $booking Booking
-     */
-    private function redirectForbidden(Response $response, Booking $booking): Response
-    {
-        Analog::log(
-            'Logged in member ' . $this->login->login
-            . ' has tried to edit booking #' . $booking->getId()
-            . ' without the right to do so.',
-            Analog::WARNING
-        );
-        return $this->redirectWithErrors(
-            response: $response,
-            errors: [_T("You do not have permission for requested URL.")],
-            redirect_url: $this->routeparser->urlFor('events_bookings', ['event' => 'all'])
+            redirect_url: $redirect_url,
+            successes: $success_detected,
+            warnings: $warning_detected,
+            errors: $error_detected
         );
     }
 
