@@ -19,11 +19,14 @@ use Galette\Core\Plugins\MemberActionProviderInterface;
 use Galette\Core\Plugins\MenuProviderInterface;
 use Galette\Core\Plugins\NewsProviderInterface;
 use Galette\Entity\Adherent;
+use Galette\Entity\Group;
 use Galette\Core\GalettePlugin;
 use Galette\IO\News\Entry;
 use Galette\IO\News\Post;
 use GaletteEvents\Filters\EventsList;
 use GaletteEvents\Repository\Events;
+use Laminas\Db\Metadata\Object\ConstraintObject;
+use Laminas\Db\Metadata\Source\Factory;
 
 /**
  * Galette Events plugin
@@ -217,5 +220,29 @@ class PluginGaletteEvents extends GalettePlugin implements InstallableInterface,
     public function isInstalled(): bool
     {
         return $this->zdb->tableExists(EVENTS_PREFIX . Event::TABLE);
+    }
+
+    /**
+     * Version of tables installed before plugins versions were recorded
+     *
+     * Since 1.1, amounts are no longer floating point numbers on PostgreSQL,
+     * and foreign keys are named on MySQL.
+     */
+    public function getLegacyDbVersion(): ?float
+    {
+        $metadata = Factory::createSourceFromAdapter($this->zdb->db);
+        if ($this->zdb->isPostgres()) {
+            $amount = $metadata->getColumn('payment_amount', PREFIX_DB . EVENTS_PREFIX . Booking::TABLE);
+            return $amount->getDataType() === 'real' ? 1.0 : null;
+        }
+
+        $table = PREFIX_DB . EVENTS_PREFIX . Event::TABLE;
+        /** @var ConstraintObject $constraint */
+        foreach ($metadata->getConstraints($table) as $constraint) {
+            if ($constraint->isForeignKey() && $constraint->getColumns() === [Group::PK]) {
+                return $constraint->getName() === $table . '_id_group_fkey' ? null : 1.0;
+            }
+        }
+        return null;
     }
 }

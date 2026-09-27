@@ -146,4 +146,12 @@ class PluginGaletteEvents extends GaletteTestCase
     {
         $this->assertTrue($this->getPlugin()->isInstalled());
     }
+
+    /**
+     * Test tables installed from current scripts are not taken for legacy ones
+     */
+    public function testGetLegacyDbVersion(): void
+    {
+        $this->assertNull($this->getPlugin()->getLegacyDbVersion());
+    }
 }
