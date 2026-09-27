@@ -79,7 +79,7 @@ class CsvController extends \Galette\Controllers\CsvController
             $filters->event_filter = $id;
         }
 
-        $bookings = new Bookings($this->zdb, $this->login, $filters);
+        $bookings = new Bookings($this->zdb, $this->login, $this->history, $filters);
         $bookings_list = $bookings->getList(true);
 
         $labels = [
@@ -98,7 +98,7 @@ class CsvController extends \Galette\Controllers\CsvController
 
         //activities are onl:y available for one event
         if ($filters->event_filter > 0) {
-            $event = new Event($this->zdb, $this->login, (int)$filters->event_filter);
+            $event = new Event($this->zdb, $this->login, $this->history, (int)$filters->event_filter);
             $activities = $event->getActivities();
             foreach ($activities as $activity) {
                 $labels[] = $activity['activity']->getName();

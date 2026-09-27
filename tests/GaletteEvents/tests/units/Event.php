@@ -69,18 +69,18 @@ class Event extends GaletteTestCase
         $other = $this->createGroup('Other group', [], [$member_two]);
         $this->logMember($this->dataAdherentTwo());
 
-        $event = new \GaletteEvents\Event($this->zdb, $this->login);
+        $event = new \GaletteEvents\Event($this->zdb, $this->login, $this->history);
         $this->assertSame(
             [_T('Please select a group you own!', 'events')],
             $event->check($this->getFormValues(['group' => (string)$other->getId()]))
         );
         $this->expectLogEntry(\Analog\Analog::ERROR, 'Some errors has been threw attempting to edit/store an event');
 
-        $event = new \GaletteEvents\Event($this->zdb, $this->login);
+        $event = new \GaletteEvents\Event($this->zdb, $this->login, $this->history);
         $this->assertTrue($event->check($this->getFormValues(['group' => (string)$managed->getId()])));
         $this->assertTrue($event->store());
 
-        $event = new \GaletteEvents\Event($this->zdb, $this->login, (int)$event->getId());
+        $event = new \GaletteEvents\Event($this->zdb, $this->login, $this->history, (int)$event->getId());
         $this->assertSame($managed->getId(), $event->getGroup());
     }
 
@@ -90,7 +90,7 @@ class Event extends GaletteTestCase
     public function testStoreMandatoryValuesOnly(): void
     {
         $this->logSuperAdmin();
-        $event = new \GaletteEvents\Event($this->zdb, $this->login);
+        $event = new \GaletteEvents\Event($this->zdb, $this->login, $this->history);
         $this->assertTrue($event->check([
             'name'          => 'Event',
             'town'          => 'Lille',
@@ -98,7 +98,7 @@ class Event extends GaletteTestCase
         ]));
         $this->assertTrue($event->store());
 
-        $event = new \GaletteEvents\Event($this->zdb, $this->login, (int)$event->getId());
+        $event = new \GaletteEvents\Event($this->zdb, $this->login, $this->history, (int)$event->getId());
         $this->assertSame('Event', $event->getName());
         $this->assertSame('', $event->getAddress());
         $this->assertNull($event->getGroup());
@@ -111,7 +111,7 @@ class Event extends GaletteTestCase
     {
         $id = $this->insertEvent('Event', ['comment' => null, 'country' => null]);
 
-        $event = new \GaletteEvents\Event($this->zdb, $this->login, $id);
+        $event = new \GaletteEvents\Event($this->zdb, $this->login, $this->history, $id);
         $this->assertSame('', $event->getComment());
         $this->assertNull($event->getGroup());
         $this->assertSame('', $event->getColor());
@@ -128,7 +128,7 @@ class Event extends GaletteTestCase
         $visit = $this->insertActivity('Visit');
         $ids = array_map('strval', [$dinner, $lodging, $visit]);
 
-        $event = new \GaletteEvents\Event($this->zdb, $this->login);
+        $event = new \GaletteEvents\Event($this->zdb, $this->login, $this->history);
         $this->assertTrue($event->check($this->getFormValues([
             'activities_ids'    => $ids,
             'activities_status' => ['1', '1', '2'],
@@ -138,7 +138,7 @@ class Event extends GaletteTestCase
         $this->assertSame([$dinner => 1, $lodging => 1, $visit => 2], $this->getEventActivities($id));
 
         //change status of activities that are not the last one
-        $event = new \GaletteEvents\Event($this->zdb, $this->login, $id);
+        $event = new \GaletteEvents\Event($this->zdb, $this->login, $this->history, $id);
         $this->assertTrue($event->check($this->getFormValues([
             'activities_ids'    => $ids,
             'activities_status' => ['2', '0', '2'],
@@ -147,7 +147,7 @@ class Event extends GaletteTestCase
         $this->assertSame([$dinner => 2, $lodging => 0, $visit => 2], $this->getEventActivities($id));
 
         //remove two activities before storing
-        $event = new \GaletteEvents\Event($this->zdb, $this->login, $id);
+        $event = new \GaletteEvents\Event($this->zdb, $this->login, $this->history, $id);
         $this->assertTrue($event->check($this->getFormValues([
             'remove_activity'   => '1',
             'detach_activity'   => (string)$dinner,
@@ -182,7 +182,7 @@ class Event extends GaletteTestCase
             ->where([\GaletteEvents\Activity::PK => $lodging]);
         $this->zdb->execute($update);
 
-        $event = new \GaletteEvents\Event($this->zdb, $this->login);
+        $event = new \GaletteEvents\Event($this->zdb, $this->login, $this->history);
         $this->assertSame(
             [$dinner],
             array_map(fn($row): int => (int)$row[\GaletteEvents\Activity::PK], $event->availableActivities())
@@ -212,9 +212,9 @@ class Event extends GaletteTestCase
         $manager = new \Galette\Core\Login($this->zdb, $this->i18n);
         $this->assertTrue($manager->login($this->dataAdherentTwo()['login_adh'], $this->dataAdherentTwo()['mdp_adh']));
 
-        $this->assertTrue((new \GaletteEvents\Event($this->zdb, $this->login, $managed_event))->canEdit($manager));
-        $this->assertFalse((new \GaletteEvents\Event($this->zdb, $this->login, $other_event))->canEdit($manager));
-        $this->assertFalse((new \GaletteEvents\Event($this->zdb, $this->login, $this->insertEvent('Public event')))->canEdit($manager));
+        $this->assertTrue((new \GaletteEvents\Event($this->zdb, $this->login, $this->history, $managed_event))->canEdit($manager));
+        $this->assertFalse((new \GaletteEvents\Event($this->zdb, $this->login, $this->history, $other_event))->canEdit($manager));
+        $this->assertFalse((new \GaletteEvents\Event($this->zdb, $this->login, $this->history, $this->insertEvent('Public event')))->canEdit($manager));
     }
 
     /**
@@ -223,7 +223,7 @@ class Event extends GaletteTestCase
     public function testCheck(): void
     {
         $this->logSuperAdmin();
-        $event = new \GaletteEvents\Event($this->zdb, $this->login);
+        $event = new \GaletteEvents\Event($this->zdb, $this->login, $this->history);
 
         $this->assertSame(
             ['Begin date is mandatory', 'Name is mandatory', 'Town is mandatory'],
@@ -264,7 +264,7 @@ class Event extends GaletteTestCase
         $this->linkActivity($id, $this->insertActivity('Dinner'));
         $this->insertBooking($id, $member_one->id, ['number_people' => 3, 'is_paid' => $this->zdb->isPostgres() ? 'true' : 1]);
 
-        $event = new \GaletteEvents\Event($this->zdb, $this->login, $id);
+        $event = new \GaletteEvents\Event($this->zdb, $this->login, $this->history, $id);
         $attendees = [];
         foreach ($event->countAttendees() as $row) {
             $attendees[(int)(bool)$row['is_paid']] = (int)$row['count'];
@@ -274,6 +274,6 @@ class Event extends GaletteTestCase
         $this->assertTrue($event->remove());
         $this->assertSame(0, $this->countBookings($id));
         $this->assertSame([], $this->getEventActivities($id));
-        $this->assertFalse((new \GaletteEvents\Event($this->zdb, $this->login))->load($id));
+        $this->assertFalse((new \GaletteEvents\Event($this->zdb, $this->login, $this->history))->load($id));
     }
 }

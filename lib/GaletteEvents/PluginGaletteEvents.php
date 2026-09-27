@@ -12,6 +12,7 @@ namespace GaletteEvents;
 
 use DI\Attribute\Inject;
 use Galette\Core\Db;
+use Galette\Core\History;
 use Galette\Core\Login;
 use Galette\Core\Plugins\DashboardProviderInterface;
 use Galette\Core\Plugins\InstallableInterface;
@@ -42,6 +43,9 @@ class PluginGaletteEvents extends GalettePlugin implements InstallableInterface,
     #[Inject]
     protected Login $login;
 
+    #[Inject]
+    protected History $history;
+
     /**
      * Extra menus entries
      *
@@ -49,11 +53,9 @@ class PluginGaletteEvents extends GalettePlugin implements InstallableInterface,
      */
     public function getMenus(): array
     {
-        /** @var Login $login */
-        global $login;
         $menus = [];
 
-        if ($login->isLogged()) {
+        if ($this->login->isLogged()) {
             $menus['plugin_events'] = [
                 'title' => _T("Events", "events"),
                 'icon' => 'calendar alternate',
@@ -85,7 +87,7 @@ class PluginGaletteEvents extends GalettePlugin implements InstallableInterface,
             ];
         }
 
-        if ($login->isAdmin() || $login->isStaff()) {
+        if ($this->login->isAdmin() || $this->login->isStaff()) {
             $menus['plugin_events']['items'] = array_merge(
                 $menus['plugin_events']['items'],
                 [
@@ -193,7 +195,7 @@ class PluginGaletteEvents extends GalettePlugin implements InstallableInterface,
         $filters = new EventsList();
         $now = new \DateTime();
         $filters->start_date_filter = $now->format(__('Y-m-d'));
-        $events = new Events($this->zdb, $this->login, $filters);
+        $events = new Events($this->zdb, $this->login, $this->history, $filters);
 
         $posts = [];
         $list = $events->getList();

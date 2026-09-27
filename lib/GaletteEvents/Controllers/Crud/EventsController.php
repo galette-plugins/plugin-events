@@ -86,7 +86,7 @@ class EventsController extends AbstractPluginController
             }
         }
 
-        $events = new Events($this->zdb, $this->login, $filters);
+        $events = new Events($this->zdb, $this->login, $this->history, $filters);
         $events_list = $events->getList();
 
         //assign pagination variables to the template and add pagination links
@@ -159,7 +159,7 @@ class EventsController extends AbstractPluginController
         $filters->start_date_filter = date(__("Y-m-d"), $start);
         $filters->end_date_filter = date(__("Y-m-d"), $end);
 
-        $events = new Events($this->zdb, $this->login, $filters);
+        $events = new Events($this->zdb, $this->login, $this->history, $filters);
 
         return $this->withJson($response, $events->getList(false, true));
     }
@@ -208,7 +208,7 @@ class EventsController extends AbstractPluginController
             $event = $this->session->plugin_events_event;
             $this->session->plugin_events_event = null;
         } else {
-            $event = new Event($this->zdb, $this->login);
+            $event = new Event($this->zdb, $this->login, $this->history);
         }
         $can = $event->canCreate($this->login);
 
@@ -260,7 +260,7 @@ class EventsController extends AbstractPluginController
     public function doEdit(Request $request, Response $response, ?int $id = null, string $action = 'edit'): Response
     {
         $post = $request->getParsedBody();
-        $event = new Event($this->zdb, $this->login);
+        $event = new Event($this->zdb, $this->login, $this->history);
         $can = $event->canCreate($this->login);
         if (isset($post['id']) && !empty($post['id'])) {
             $event->load((int)$post['id']);
@@ -411,7 +411,7 @@ class EventsController extends AbstractPluginController
      */
     public function confirmRemoveTitle(array $args): string
     {
-        $event = new Event($this->zdb, $this->login, (int)$args['id']);
+        $event = new Event($this->zdb, $this->login, $this->history, (int)$args['id']);
         return sprintf(
             //TRANS: %1$s is the event name
             _T('Remove event \'%1$s\'', 'events'),
@@ -427,7 +427,7 @@ class EventsController extends AbstractPluginController
      */
     protected function doDelete(array $args, array $post): bool
     {
-        $event = new Event($this->zdb, $this->login, (int)$post['id']);
+        $event = new Event($this->zdb, $this->login, $this->history, (int)$post['id']);
         return $event->remove();
     }
 

@@ -44,7 +44,7 @@ class Events extends GaletteTestCase
      */
     private function getListed(bool $bookable = false): array
     {
-        $events = new \GaletteEvents\Repository\Events($this->zdb, $this->login);
+        $events = new \GaletteEvents\Repository\Events($this->zdb, $this->login, $this->history);
         $names = [];
         foreach ($events->getList($bookable) as $event) {
             $this->assertInstanceOf(\GaletteEvents\Event::class, $event);
@@ -65,7 +65,7 @@ class Events extends GaletteTestCase
         $filters->calendar_filter = true;
         $filters->start_date_filter = date(__('Y-m-d'), strtotime('-1 month'));
         $filters->end_date_filter = date(__('Y-m-d'), strtotime('+1 month'));
-        $events = new \GaletteEvents\Repository\Events($this->zdb, $this->login, $filters);
+        $events = new \GaletteEvents\Repository\Events($this->zdb, $this->login, $this->history, $filters);
         $names = [];
         foreach ($events->getList(false, true) as $event) {
             $this->assertInstanceOf(\ArrayObject::class, $event);

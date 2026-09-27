@@ -20,6 +20,7 @@ use Laminas\Db\Sql\Predicate;
 use Laminas\Db\Sql\Predicate\PredicateSet;
 use Galette\Core\Login;
 use Galette\Core\Db;
+use Galette\Core\History;
 use Galette\Entity\Group;
 use Galette\Repository\Groups;
 use GaletteEvents\Event;
@@ -35,6 +36,7 @@ class Events
 {
     private Db $zdb;
     private Login $login;
+    private History $history;
     private EventsList $filters;
     private int $count = 0;
 
@@ -47,12 +49,14 @@ class Events
      *
      * @param Db          $zdb     Database instance
      * @param Login       $login   Login instance
+     * @param History     $history History instance
      * @param ?EventsList $filters Filtering
      */
-    public function __construct(Db $zdb, Login $login, ?EventsList $filters = null)
+    public function __construct(Db $zdb, Login $login, History $history, ?EventsList $filters = null)
     {
         $this->zdb = $zdb;
         $this->login = $login;
+        $this->history = $history;
 
         if ($filters === null) {
             $this->filters = new EventsList();
@@ -148,7 +152,7 @@ class Events
 
             $events = [];
             foreach ($results as $row) {
-                $event = new Event($this->zdb, $this->login, $row);
+                $event = new Event($this->zdb, $this->login, $this->history, $row);
                 if (!$this->filters->calendar_filter) {
                     $events[] = $event;
                 } else {

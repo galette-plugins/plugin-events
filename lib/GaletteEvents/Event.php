@@ -12,6 +12,7 @@ namespace GaletteEvents;
 
 use ArrayObject;
 use Galette\Core\Db;
+use Galette\Core\History;
 use Galette\Core\Login;
 use Galette\Entity\Group;
 use Analog\Analog;
@@ -30,6 +31,7 @@ class Event
 
     private Db $zdb;
     private Login $login;
+    private History $history;
     /** @var array<string> */
     private array $errors;
 
@@ -53,16 +55,18 @@ class Event
     /**
      * Default constructor
      *
-     * @param Db                                  $zdb   Database instance
-     * @param Login                               $login Login instance
-     * @param null|int|ArrayObject<string, mixed> $args  Either a ResultSet row or its id for to load
-     *                                                   a specific event, or null to just
-     *                                                   instanciate object
+     * @param Db                                  $zdb     Database instance
+     * @param Login                               $login   Login instance
+     * @param History                             $history History instance
+     * @param null|int|ArrayObject<string, mixed> $args    Either a ResultSet row or its id for to load
+     *                                                     a specific event, or null to just
+     *                                                     instanciate object
      */
-    public function __construct(Db $zdb, Login $login, int|ArrayObject|null $args = null)
+    public function __construct(Db $zdb, Login $login, History $history, int|ArrayObject|null $args = null)
     {
         $this->zdb = $zdb;
         $this->login = $login;
+        $this->history = $history;
         if ($args == null || is_int($args)) {
             if (is_int($args) && $args > 0) {
                 $this->load($args);
@@ -338,8 +342,6 @@ class Event
      */
     public function store(): bool
     {
-        global $hist;
-
         try {
             $this->zdb->connection->beginTransaction();
             $values = [
@@ -376,12 +378,12 @@ class Event
                     }
 
                     // logging
-                    $hist->add(
+                    $this->history->add(
                         _T("Event added", "events"),
                         $this->name
                     );
                 } else {
-                    $hist->add(_T("Fail to add new event.", "events"));
+                    $this->history->add(_T("Fail to add new event.", "events"));
                     throw new \Exception(
                         'An error occurred inserting new event!'
                     );
@@ -399,7 +401,7 @@ class Event
                 //edit == 0 does not mean there were an error, but that there
                 //were nothing to change
                 if ($edit->count() > 0) {
-                    $hist->add(
+                    $this->history->add(
                         _T("Event updated", "events"),
                         $this->name
                     );
@@ -428,7 +430,7 @@ class Event
      */
     private function getActiveActivity(int $id): ?Activity
     {
-        $activity = new Activity($this->zdb, $this->login, $id);
+        $activity = new Activity($this->zdb, $this->login, $this->history, $id);
         return $activity->getId() !== null && $activity->isActive() ? $activity : null;
     }
 
@@ -698,6 +700,7 @@ class Event
                 'activity'  => new Activity(
                     $this->zdb,
                     $this->login,
+                    $this->history,
                     (int)$result[Activity::PK]
                 ),
                 'status'    => $result['status']

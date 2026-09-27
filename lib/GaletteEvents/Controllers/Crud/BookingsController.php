@@ -108,16 +108,16 @@ class BookingsController extends AbstractPluginController
         $event = null;
         if ($linked_event !== 'all') {
             $filters->event_filter = (int)$linked_event;
-            $event = new Event($this->zdb, $this->login, (int)$linked_event);
+            $event = new Event($this->zdb, $this->login, $this->history, (int)$linked_event);
         }
 
         //Groups
         $groups = new Groups($this->zdb, $this->login);
         $groups_list = $groups->getList();
 
-        $bookings = new Bookings($this->zdb, $this->login, $filters);
+        $bookings = new Bookings($this->zdb, $this->login, $this->history, $filters);
 
-        $events = new Events($this->zdb, $this->login);
+        $events = new Events($this->zdb, $this->login, $this->history);
         $list = $bookings->getList();
         $count = $bookings->getCount();
 
@@ -247,7 +247,7 @@ class BookingsController extends AbstractPluginController
             $filters->selected = $post['entries_sel'];
 
             //selection is restricted to bookings current logged-in user can list
-            $bookings = new Bookings($this->zdb, $this->login, $filters);
+            $bookings = new Bookings($this->zdb, $this->login, $this->history, $filters);
             $members = [];
             foreach ($bookings->getList() as $booking) {
                 $members[] = $booking->getMemberId();
@@ -366,7 +366,7 @@ class BookingsController extends AbstractPluginController
             $booking = $this->session->plugin_events_booking;
             $this->session->plugin_events_booking = null;
         } else {
-            $booking = new Booking($this->zdb, $this->login);
+            $booking = new Booking($this->zdb, $this->login, $this->history);
         }
 
         if ($id !== null && $booking->getId() != $id) {
@@ -386,7 +386,7 @@ class BookingsController extends AbstractPluginController
         }
 
         //Events
-        $events = new Events($this->zdb, $this->login);
+        $events = new Events($this->zdb, $this->login, $this->history);
         if ($action === 'add') {
             if (isset($get['event'])) {
                 $booking->setEvent((int)$get['event']);
@@ -466,7 +466,7 @@ class BookingsController extends AbstractPluginController
     public function doEdit(Request $request, Response $response, ?int $id = null, string $action = 'edit'): Response
     {
         $post = $request->getParsedBody();
-        $booking = new Booking($this->zdb, $this->login);
+        $booking = new Booking($this->zdb, $this->login, $this->history);
         if (isset($post['id']) && !empty($post['id'])) {
             $booking->load((int)$post['id']);
         }
@@ -633,7 +633,7 @@ class BookingsController extends AbstractPluginController
      */
     public function confirmRemoveTitle(array $args): string
     {
-        $booking = new Booking($this->zdb, $this->login, (int)$args['id']);
+        $booking = new Booking($this->zdb, $this->login, $this->history, (int)$args['id']);
         $member = $booking->getMember();
         $event = $booking->getEvent();
         return sprintf(
@@ -652,7 +652,7 @@ class BookingsController extends AbstractPluginController
      */
     protected function doDelete(array $args, array $post): bool
     {
-        $booking = new Booking($this->zdb, $this->login, (int)$post['id']);
+        $booking = new Booking($this->zdb, $this->login, $this->history, (int)$post['id']);
         return $booking->remove();
     }
 

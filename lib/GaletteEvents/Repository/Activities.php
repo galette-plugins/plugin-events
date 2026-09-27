@@ -19,6 +19,7 @@ use Laminas\Db\ResultSet\ResultSet;
 use Laminas\Db\Sql\Expression;
 use Galette\Core\Login;
 use Galette\Core\Db;
+use Galette\Core\History;
 use Laminas\Db\Sql\Select;
 
 /**
@@ -28,6 +29,7 @@ use Laminas\Db\Sql\Select;
  */
 class Activities extends Repository
 {
+    private History $history;
     private int $count;
 
     public const int ORDERBY_DATE = 0;
@@ -38,13 +40,15 @@ class Activities extends Repository
      *
      * @param Db              $zdb         Database instance
      * @param Login           $login       Login instance
+     * @param History         $history     History instance
      * @param Preferences     $preferences Preferences instance
      * @param ?ActivitiesList $filters     Filtering
      */
-    public function __construct(Db $zdb, Login $login, Preferences $preferences, ?ActivitiesList $filters = null)
+    public function __construct(Db $zdb, Login $login, History $history, Preferences $preferences, ?ActivitiesList $filters = null)
     {
         $this->zdb = $zdb;
         $this->login = $login;
+        $this->history = $history;
 
         parent::__construct($zdb, $preferences, $login, 'Activity', 'GaletteEvents', EVENTS_PREFIX);
 
@@ -75,7 +79,7 @@ class Activities extends Repository
 
             $activities = [];
             foreach ($results as $row) {
-                $activity = new Activity($this->zdb, $this->login, $row);
+                $activity = new Activity($this->zdb, $this->login, $this->history, $row);
                 $activities[] = $activity;
             }
 

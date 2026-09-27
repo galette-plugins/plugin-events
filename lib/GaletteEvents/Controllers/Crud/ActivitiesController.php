@@ -78,7 +78,7 @@ class ActivitiesController extends AbstractPluginController
             }
         }
 
-        $activities = new Activities($this->zdb, $this->login, $this->preferences, $filters);
+        $activities = new Activities($this->zdb, $this->login, $this->history, $this->preferences, $filters);
         $list = $activities->getList();
 
         //assign pagination variables to the template and add pagination links
@@ -145,7 +145,7 @@ class ActivitiesController extends AbstractPluginController
             $activity = $this->session->plugin_events_activity;
             $this->session->plugin_events_activity = null;
         } else {
-            $activity = new Activity($this->zdb, $this->login);
+            $activity = new Activity($this->zdb, $this->login, $this->history);
         }
 
         if ($id !== null && $activity->getId() != $id) {
@@ -184,7 +184,7 @@ class ActivitiesController extends AbstractPluginController
     public function doEdit(Request $request, Response $response, ?int $id = null, string $action = 'edit'): Response
     {
         $post = $request->getParsedBody();
-        $activity = new Activity($this->zdb, $this->login);
+        $activity = new Activity($this->zdb, $this->login, $this->history);
         if (isset($post['id']) && !empty($post['id'])) {
             $activity->load((int)$post['id']);
         }
@@ -291,7 +291,7 @@ class ActivitiesController extends AbstractPluginController
      */
     public function confirmRemoveTitle(array $args): string
     {
-        $activity = new Activity($this->zdb, $this->login, (int)$args['id']);
+        $activity = new Activity($this->zdb, $this->login, $this->history, (int)$args['id']);
         return sprintf(
             //TRANS %1$s is activity name
             _T('Remove activity %1$s', 'events'),
@@ -307,7 +307,7 @@ class ActivitiesController extends AbstractPluginController
      */
     protected function doDelete(array $args, array $post): bool
     {
-        $activity = new Activity($this->zdb, $this->login, (int)$args['id']);
+        $activity = new Activity($this->zdb, $this->login, $this->history, (int)$args['id']);
         return $activity->remove();
     }
 

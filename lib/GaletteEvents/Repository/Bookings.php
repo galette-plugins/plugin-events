@@ -16,6 +16,7 @@ use Laminas\Db\Sql\Predicate;
 use Laminas\Db\Sql\Predicate\PredicateSet;
 use Galette\Core\Login;
 use Galette\Core\Db;
+use Galette\Core\History;
 use Galette\Entity\Adherent;
 use Galette\Entity\Group;
 use GaletteEvents\Event;
@@ -32,6 +33,7 @@ class Bookings
 {
     private Db $zdb;
     private Login $login;
+    private History $history;
     private BookingsList $filters;
     private int $count;
     private float $sum;
@@ -50,12 +52,14 @@ class Bookings
      *
      * @param Db            $zdb     Database instance
      * @param Login         $login   Login instance
+     * @param History       $history History instance
      * @param ?BookingsList $filters Filtering
      */
-    public function __construct(Db $zdb, Login $login, ?BookingsList $filters = null)
+    public function __construct(Db $zdb, Login $login, History $history, ?BookingsList $filters = null)
     {
         $this->zdb = $zdb;
         $this->login = $login;
+        $this->history = $history;
 
         if ($filters === null) {
             $this->filters = new BookingsList();
@@ -87,7 +91,7 @@ class Bookings
 
             $bookings = [];
             foreach ($results as $row) {
-                $booking = new Booking($this->zdb, $this->login, $row);
+                $booking = new Booking($this->zdb, $this->login, $this->history, $row);
                 $bookings[] = $booking;
             }
 

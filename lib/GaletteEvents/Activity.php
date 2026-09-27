@@ -12,6 +12,7 @@ namespace GaletteEvents;
 
 use ArrayObject;
 use Galette\Core\Db;
+use Galette\Core\History;
 use Galette\Core\Login;
 use Analog\Analog;
 use Laminas\Db\Sql\Expression;
@@ -32,6 +33,7 @@ class Activity
 
     private Db $zdb;
     private Login $login;
+    private History $history;
     /** @var array<string> */
     private array $errors = [];
 
@@ -44,16 +46,18 @@ class Activity
     /**
      * Default constructor
      *
-     * @param Db                                  $zdb   Database instance
-     * @param Login                               $login Login instance
-     * @param null|int|ArrayObject<string, mixed> $args  Either a ResultSet row or its id for to load
-     *                                                   a specific activity, or null to just
-     *                                                   instanciate object
+     * @param Db                                  $zdb     Database instance
+     * @param Login                               $login   Login instance
+     * @param History                             $history History instance
+     * @param null|int|ArrayObject<string, mixed> $args    Either a ResultSet row or its id for to load
+     *                                                     a specific activity, or null to just
+     *                                                     instanciate object
      */
-    public function __construct(Db $zdb, Login $login, int|ArrayObject|null $args = null)
+    public function __construct(Db $zdb, Login $login, History $history, int|ArrayObject|null $args = null)
     {
         $this->zdb = $zdb;
         $this->login = $login;
+        $this->history = $history;
 
         if (is_int($args) && $args > 0) {
             $this->load($args);
@@ -188,8 +192,6 @@ class Activity
      */
     public function store(): bool
     {
-        global $hist;
-
         try {
             $values = [
                 'name'                  => $this->name,
@@ -217,13 +219,13 @@ class Activity
                     }
 
                     // logging
-                    $hist->add(
+                    $this->history->add(
                         _T("Activity added", "events"),
                         $this->name
                     );
                     return true;
                 } else {
-                    $hist->add(_T("Fail to add new activity.", "events"));
+                    $this->history->add(_T("Fail to add new activity.", "events"));
                     throw new \Exception(
                         'An error occurred inserting new activity!'
                     );
@@ -241,7 +243,7 @@ class Activity
                 //edit == 0 does not mean there were an error, but that there
                 //were nothing to change
                 if ($edit->count() > 0) {
-                    $hist->add(
+                    $this->history->add(
                         _T("Activity updated", "events"),
                         $this->name
                     );
