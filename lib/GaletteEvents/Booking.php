@@ -53,8 +53,6 @@ class Booking
 
     /** @var array<int, array<string,mixed>> */
     private array $activities = [];
-    /** @var array<int, array<string,mixed>> */
-    private array $activities_removed = [];
     private ?string $creation_date = null;
 
     /**
@@ -284,10 +282,6 @@ class Booking
         }
         foreach (array_keys($this->activities) as $aid) {
             if (!isset($activities[$aid])) {
-                $this->activities_removed[$aid] = [
-                    Activity::PK    => $aid,
-                    self::PK        => $this->id
-                ];
                 unset($this->activities[$aid]);
             }
         }
@@ -351,115 +345,67 @@ class Booking
                 }
             }
 
-            //store booking activities
-            $void   = [];
-            $update = [];
-            $insert = [];
-            $delete = $this->activities_removed;
-
-            foreach ($this->activities as $aid => $data) {
-                $activity = $data['activity'];
-                $checked = $data['checked'];
-                $key_values = [
-                    self::PK        => $this->id,
-                    $activity::PK   => $activity->getId()
-                ];
-
-                $select = $this->zdb->select(EVENTS_PREFIX . 'activitiesbookings', 'acb');
-                $select->where($key_values);
-                $results = $this->zdb->execute($select);
-
-                foreach ($results as $result) {
-                    if (!isset($this->activities[$result[Activity::PK]])) {
-                        $delete[$result[Activity::PK]] = [
-                            Activity::PK    => $result[Activity::PK],
-                            self::PK        => $this->id,
-                        ];
-                    } elseif ($result['checked'] != $this->activities[$result[Activity::PK]]['checked']) {
-                        $update[$result[Activity::PK]] = [
-                            'checked'   => (int)$checked
-                        ];
-                    } else {
-                        $void[$result[Activity::PK]] = true;
-                    }
-                }
-
-                if (!isset($void[$aid]) && !isset($update[$aid]) && !isset($delete[$aid])) {
-                    $insert[$aid] = [
-                        Activity::PK    => $aid,
-                        self::PK        => $this->id,
-                        'checked'       => (int)$checked
-                    ];
-                }
-            }
-
-            if (count($delete)) {
-                $prepare = $this->zdb->delete(EVENTS_PREFIX . 'activitiesbookings');
-                $prepare->where([
-                    self::PK        => $this->id,
-                    Activity::PK    => ':aid'
-                ]);
-                $stmt = $this->zdb->sql->prepareStatementForSqlObject($prepare);
-
-                $count = 0;
-                foreach ($delete as $values) {
-                    $stmt->execute([':aid' => $values[Activity::PK]]);
-                    ++$count;
-                }
-                Analog::log(
-                    sprintf('%1$s activities removed', $count),
-                    Analog::INFO
-                );
-            }
-
-            if (count($update)) {
-                $prepare = $this->zdb->update(EVENTS_PREFIX . 'activitiesbookings');
-                $prepare->set([
-                    'checked'       => ':checked'
-                ])->where([
-                    self::PK        => $this->id,
-                    Activity::PK    => ':aid'
-                ]);
-                $stmt = $this->zdb->sql->prepareStatementForSqlObject($prepare);
-                $count = 0;
-                foreach ($update as $aid => $values) {
-                    $params = [
-                        'where2'    => $aid,
-                        ':checked'  => $values['checked']
-                    ];
-                    $stmt->execute($params);
-                    ++$count;
-                }
-                Analog::log(
-                    sprintf('%1$s activities updated', $count),
-                    Analog::INFO
-                );
-            }
-
-            if (count($insert)) {
-                $prepare = $this->zdb->insert(EVENTS_PREFIX . 'activitiesbookings');
-                $prepare->values([
-                    self::PK        => ':id',
-                    Activity::PK    => ':aid',
-                    'checked'       => ':checked'
-                ]);
-                $stmt = $this->zdb->sql->prepareStatementForSqlObject($prepare);
-                $count = 0;
-                foreach ($insert as $aid => $values) {
-                    $params = [
-                        $this->id,
-                        $aid,
-                        $values['checked']
-                    ];
-                    $stmt->execute($params);
-                    ++$count;
-                }
-                Analog::log(
-                    sprintf('%1$s activities added', $count),
-                    Analog::INFO
-                );
-            }
+            $this->storeActivities();
         });
+    }
+
+    /**
+     * Store activities of the booking, compared to the stored ones
+     */
+    private function storeActivities(): void
+    {
+        $table = EVENTS_PREFIX . 'activitiesbookings';
+
+        $stored = [];
+        $select = $this->zdb->select($table);
+        $select->where([self::PK => $this->id]);
+        foreach ($this->zdb->execute($select) as $row) {
+            $stored[(int)$row[Activity::PK]] = (bool)$row['checked'];
+        }
+
+        $counts = ['added' => 0, 'updated' => 0, 'removed' => 0];
+        foreach ($this->activities as $aid => $data) {
+            $checked = (bool)$data['checked'];
+            if (!isset($stored[$aid])) {
+                $insert = $this->zdb->insert($table);
+                $insert->values([
+                    self::PK        => $this->id,
+                    Activity::PK    => $aid,
+                    'checked'       => (int)$checked
+                ]);
+                $this->zdb->execute($insert);
+                ++$counts['added'];
+            } elseif ($stored[$aid] !== $checked) {
+                $update = $this->zdb->update($table);
+                $update->set(['checked' => (int)$checked])->where([
+                    self::PK        => $this->id,
+                    Activity::PK    => $aid
+                ]);
+                $this->zdb->execute($update);
+                ++$counts['updated'];
+            }
+        }
+
+        foreach (array_keys($stored) as $aid) {
+            if (!isset($this->activities[$aid])) {
+                $delete = $this->zdb->delete($table);
+                $delete->where([
+                    self::PK        => $this->id,
+                    Activity::PK    => $aid
+                ]);
+                $this->zdb->execute($delete);
+                ++$counts['removed'];
+            }
+        }
+
+        foreach ($counts as $action => $count) {
+            if ($count > 0) {
+                Analog::log(
+                    sprintf('%1$s activities %2$s', $count, $action),
+                    Analog::INFO
+                );
+            }
+        }
     }
 
     /**
