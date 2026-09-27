@@ -184,10 +184,7 @@ class Bookings extends AbstractRepository
                     break;
             }
 
-            if (
-                $this->filters->event_filter !== null
-                && $this->filters->event_filter != 'all'
-            ) {
+            if ($this->filters->event_filter !== null) {
                 $select->where(['b.' . Event::PK => $this->filters->event_filter]);
             }
 
@@ -198,11 +195,7 @@ class Bookings extends AbstractRepository
                 );
             }
 
-            if (
-                $this->filters->group_filter !== null
-                && $this->filters->group_filter != 'all'
-                && $this->filters->group_filter != 0
-            ) {
+            if ($this->filters->group_filter !== null) {
                 $select->where(['e.' . Group::PK => $this->filters->group_filter]);
             }
 

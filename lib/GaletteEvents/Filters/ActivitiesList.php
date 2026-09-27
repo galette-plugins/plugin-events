@@ -10,31 +10,18 @@ declare(strict_types=1);
 
 namespace GaletteEvents\Filters;
 
-use Analog\Analog;
 use Galette\Core\Pagination;
 use Galette\Enums\SQLOrder;
 use GaletteEvents\Repository\Activities;
 
 /**
- * Events lists filters and paginator
+ * Activities lists paginator
  *
- * @author sJohan Cwiklinski <johan@x-tnd.be>
- *
- * @property string $query
+ * @author Johan Cwiklinski <johan@x-tnd.be>
  */
-
 class ActivitiesList extends Pagination
 {
-    //filters
-    private ?string $name_filter = null;
-    private ?bool $active_filter = null;
-    private string $query;
-
-    /** @var array<string> */
-    protected array $list_fields = [
-        'name_filter',
-        'active_filter'
-    ];
+    use FiltersTrait;
 
     /**
      * Default constructor
@@ -63,58 +50,23 @@ class ActivitiesList extends Pagination
     }
 
     /**
-     * Reinit default parameters
+     * Activities lists have no filter, only pagination
+     *
+     * @return array<string>
      */
-    public function reinit(): void
+    protected function getFilterNames(): array
     {
-        parent::reinit();
-        $this->name_filter = null;
-        $this->active_filter = null;
+        return [];
     }
 
     /**
-     * Global getter method
+     * Activities lists have no filter, only pagination
      *
-     * @param string $name name of the property we want to retrieve
-     *
-     * @return mixed the called property
+     * @param string $name  Property name
+     * @param mixed  $value Value
      */
-    public function __get(string $name): mixed
+    protected function setFilter(string $name, mixed $value): bool
     {
-        if (in_array($name, $this->pagination_fields)) {
-            return parent::__get($name);
-        } else {
-            if (in_array($name, $this->list_fields)) {
-                return $this->$name;
-            }
-        }
-
-        throw new \RuntimeException(
-            sprintf(
-                'Unable to get property "%s::%s"!',
-                __CLASS__,
-                $name
-            )
-        );
-    }
-
-    /**
-     * Global setter method
-     *
-     * @param string $name  name of the property we want to assign a value to
-     * @param mixed  $value a relevant value for the property
-     */
-    public function __set(string $name, mixed $value): void
-    {
-        if (in_array($name, $this->pagination_fields)) {
-            parent::__set($name, $value);
-        } else {
-            Analog::log(
-                '[ActivitiesList] Setting property `' . $name . '`',
-                Analog::DEBUG
-            );
-
-            $this->$name = $value;
-        }
+        return false;
     }
 }

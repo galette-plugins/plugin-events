@@ -99,16 +99,16 @@ class CsvController extends \Galette\Controllers\CsvController
 
         //activities are only available for one event
         $event = null;
-        if (is_numeric($filters->event_filter) && (int)$filters->event_filter > 0) {
+        if ($filters->event_filter !== null) {
             try {
-                $event = new Event($this->zdb, $this->login, $this->history, (int)$filters->event_filter);
+                $event = new Event($this->zdb, $this->login, $this->history, $filters->event_filter);
             } catch (NotFoundException) {
                 return $this->redirectWithErrors(
                     response: $response,
                     errors: [sprintf(
                         //TRANS: %1$s is the event identifier
                         _T('No event #%1$s.', 'events'),
-                        (int)$filters->event_filter
+                        $filters->event_filter
                     )],
                     redirect_url: $this->routeparser->urlFor('events_bookings', ['event' => 'all'])
                 );
