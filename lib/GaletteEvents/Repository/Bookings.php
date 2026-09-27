@@ -94,6 +94,7 @@ class Bookings
                 $booking = new Booking($this->zdb, $this->login, $this->history, $row);
                 $bookings[] = $booking;
             }
+            $this->loadEvents($bookings);
 
             return $bookings;
         } catch (\Exception $e) {
@@ -102,6 +103,30 @@ class Bookings
                 Analog::WARNING
             );
             throw $e;
+        }
+    }
+
+    /**
+     * Load events of listed bookings, once each
+     *
+     * @param array<Booking> $bookings Bookings
+     */
+    private function loadEvents(array $bookings): void
+    {
+        $ids = array_unique(array_map(fn(Booking $booking): int => (int)$booking->getEventId(), $bookings));
+        if (count($ids) === 0) {
+            return;
+        }
+
+        $select = $this->zdb->select(EVENTS_PREFIX . Event::TABLE);
+        $select->where([Event::PK => array_values($ids)]);
+        $events = [];
+        foreach ($this->zdb->execute($select) as $row) {
+            $events[(int)$row[Event::PK]] = new Event($this->zdb, $this->login, $this->history, $row);
+        }
+
+        foreach ($bookings as $booking) {
+            $booking->useEvent($events[$booking->getEventId()]);
         }
     }
 

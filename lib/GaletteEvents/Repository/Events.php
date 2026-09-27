@@ -14,7 +14,6 @@ use Analog\Analog;
 use ArrayObject;
 use Galette\Entity\Adherent;
 use GaletteEvents\Booking;
-use Laminas\Db\ResultSet\ResultSet;
 use Laminas\Db\Sql\Expression;
 use Laminas\Db\Sql\Predicate;
 use Laminas\Db\Sql\Predicate\PredicateSet;
@@ -150,8 +149,17 @@ class Events
             $results = $this->zdb->execute($select);
             $this->filters->query = $this->zdb->query_string;
 
-            $events = [];
+            $rows = [];
             foreach ($results as $row) {
+                $rows[] = $row;
+            }
+            $attendees = [];
+            if ($this->filters->calendar_filter) {
+                $attendees = $this->countAttendees(array_map(fn(ArrayObject $row): int => (int)$row[Event::PK], $rows));
+            }
+
+            $events = [];
+            foreach ($rows as $row) {
                 $event = new Event($this->zdb, $this->login, $this->history, $row);
                 if (!$this->filters->calendar_filter) {
                     $events[] = $event;
@@ -182,16 +190,8 @@ class Events
                         $description .= sprintf($pattern, _T("Comment:", "events"), $this->escape($comment));
                     }
 
-                    /** @var ResultSet $attendees */
-                    $attendees = $event->countAttendees();
-                    $total_attendees = 0;
-                    $paid_attendees = 0;
-                    foreach ($attendees as $attendee) {
-                        $total_attendees += $attendee['count'];
-                        if ($attendee['is_paid']) {
-                            $paid_attendees += $attendee['count'];
-                        }
-                    }
+                    $total_attendees = $attendees[$event->getId()]['total'] ?? 0;
+                    $paid_attendees = $attendees[$event->getId()]['paid'] ?? 0;
 
                     $attendees_str = $total_attendees;
                     if ($total_attendees) {
@@ -231,6 +231,40 @@ class Events
             );
             throw $e;
         }
+    }
+
+    /**
+     * Count attendees of events, and the paid ones
+     *
+     * @param array<int> $ids Events identifiers
+     *
+     * @return array<int, array{total: int, paid: int}>
+     */
+    private function countAttendees(array $ids): array
+    {
+        if (count($ids) === 0) {
+            return [];
+        }
+
+        $select = $this->zdb->select(EVENTS_PREFIX . Booking::TABLE, 'b');
+        $select->columns([
+            Event::PK,
+            'is_paid',
+            'count' => new Expression('SUM(b.number_people)')
+        ]);
+        $select->where([Event::PK => $ids]);
+        $select->group([Event::PK, 'is_paid']);
+
+        $attendees = [];
+        foreach ($this->zdb->execute($select) as $row) {
+            $id = (int)$row[Event::PK];
+            $attendees[$id] ??= ['total' => 0, 'paid' => 0];
+            $attendees[$id]['total'] += (int)$row['count'];
+            if ($row['is_paid']) {
+                $attendees[$id]['paid'] += (int)$row['count'];
+            }
+        }
+        return $attendees;
     }
 
     /**

@@ -335,6 +335,34 @@ class EventsController extends GaletteRoutingTestCase
     }
 
     /**
+     * Calendar counts attendees of each event
+     */
+    public function testCalendarAttendees(): void
+    {
+        $member_one = $this->getMemberOne();
+        $member_two = $this->getMemberTwo();
+        $paid = $this->zdb->isPostgres() ? 'true' : 1;
+        $first = $this->insertEvent('First event');
+        $this->insertBooking($first, $member_one->id, ['number_people' => 3, 'is_paid' => $paid]);
+        $this->insertBooking($first, $member_two->id, ['number_people' => 2]);
+        $this->insertEvent('Second event');
+        $this->logSuperAdmin();
+
+        $request = $this->createRequest(
+            'ajax-events_calendar',
+            query_params: [
+                'start' => date('Y-m-d'),
+                'end'   => date('Y-m-d', strtotime('+1 month')),
+            ]
+        );
+        $events = json_decode((string)$this->app->handle($request)->getBody(), true);
+        $this->assertIsArray($events);
+        $descriptions = array_column($events, 'description', 'name');
+        $this->assertStringContainsString('<strong>Attendees:</strong> 5 (3 paid)', $descriptions['First event']);
+        $this->assertStringContainsString('<strong>Attendees:</strong> 0</li>', $descriptions['Second event']);
+    }
+
+    /**
      * Unknown events are reported, instead of showing an empty form
      */
     public function testUnknownEvent(): void

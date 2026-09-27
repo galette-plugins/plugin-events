@@ -40,6 +40,8 @@ class Booking
     private ?int $id = null;
     private ?int $event = null;
     private ?int $member = null;
+    private ?Event $event_entity = null;
+    private ?Adherent $member_entity = null;
     private string $date = '';
     private bool $paid = false;
     private ?float $amount = null;
@@ -125,7 +127,7 @@ class Booking
                 $this->errors[] = _T('This event cannot be booked.', 'events');
             }
             if ($event !== null) {
-                $this->event = (int)$values['event'];
+                $this->useEvent($event);
                 $this->checkActivities($event, $values['activities'] ?? []);
             }
         }
@@ -484,10 +486,13 @@ class Booking
      */
     public function getEvent(): ?Event
     {
-        if ($this->event !== null) {
-            return new Event($this->zdb, $this->login, $this->history, $this->event);
+        if ($this->event === null) {
+            return null;
         }
-        return null;
+        if ($this->event_entity?->getId() !== $this->event) {
+            $this->event_entity = new Event($this->zdb, $this->login, $this->history, $this->event);
+        }
+        return $this->event_entity;
     }
 
     /**
@@ -503,7 +508,10 @@ class Booking
      */
     public function getMember(): Adherent
     {
-        return new Adherent($this->zdb, $this->member);
+        if ($this->member_entity === null || $this->member_entity->id !== $this->member) {
+            $this->member_entity = new Adherent($this->zdb, $this->member);
+        }
+        return $this->member_entity;
     }
 
     /**
@@ -597,6 +605,18 @@ class Booking
     }
 
     /**
+     * Set event from an already loaded one
+     *
+     * @param Event $event Event
+     */
+    public function useEvent(Event $event): self
+    {
+        $this->event = $event->getId();
+        $this->event_entity = $event;
+        return $this;
+    }
+
+    /**
      * Set member
      *
      * @param int $member Member id
@@ -632,15 +652,17 @@ class Booking
     {
         $this->activities = [];
         $select = $this->zdb->select(EVENTS_PREFIX . 'activitiesbookings', 'acb');
-        $select->where([self::PK => $this->id]);
+        //activities are loaded along with their links
+        $select->join(
+            ['ac' => PREFIX_DB . EVENTS_PREFIX . Activity::TABLE],
+            'acb.' . Activity::PK . ' = ac.' . Activity::PK,
+            ['name', 'is_active', 'creation_date', 'comment']
+        );
+        $select->where(['acb.' . self::PK => $this->id]);
         $results = $this->zdb->execute($select);
         foreach ($results as $result) {
             $this->activities[$result[Activity::PK]] = [
-                'activity'  => new Activity(
-                    $this->zdb,
-                    $this->history,
-                    (int)$result[Activity::PK]
-                ),
+                'activity'  => new Activity($this->zdb, $this->history, $result),
                 'checked'    => $result['checked']
             ];
         }

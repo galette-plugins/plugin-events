@@ -16,7 +16,6 @@ use Galette\Core\History;
 use Galette\Core\Login;
 use Galette\Entity\Group;
 use Analog\Analog;
-use Laminas\Db\ResultSet\ResultSet;
 use Laminas\Db\Sql\Expression;
 
 /**
@@ -554,15 +553,17 @@ class Event
     {
         $this->activities = [];
         $select = $this->zdb->select(EVENTS_PREFIX . 'activitiesevents', 'ace');
-        $select->where([self::PK => $this->id]);
+        //activities are loaded along with their links
+        $select->join(
+            ['ac' => PREFIX_DB . EVENTS_PREFIX . Activity::TABLE],
+            'ace.' . Activity::PK . ' = ac.' . Activity::PK,
+            ['name', 'is_active', 'creation_date', 'comment']
+        );
+        $select->where(['ace.' . self::PK => $this->id]);
         $results = $this->zdb->execute($select);
         foreach ($results as $result) {
             $this->activities[$result[Activity::PK]] = [
-                'activity'  => new Activity(
-                    $this->zdb,
-                    $this->history,
-                    (int)$result[Activity::PK]
-                ),
+                'activity'  => new Activity($this->zdb, $this->history, $result),
                 'status'    => $result['status']
             ];
         }
@@ -593,29 +594,6 @@ class Event
     public function getColor(): string
     {
         return $this->color ?? '';
-    }
-
-    /**
-     * Count attendees per event
-     */
-    public function countAttendees(): ResultSet
-    {
-        $select = $this->zdb->select(EVENTS_PREFIX . Booking::TABLE, 'b');
-        $select->columns(
-            [
-                'count' => new Expression('SUM(b.number_people)'),
-                'is_paid'
-            ]
-        );
-        $select->where([
-            self::PK    => $this->id,
-        ]);
-
-        $select->group('is_paid');
-
-        $results = $this->zdb->execute($select);
-
-        return $results;
     }
 
     /**

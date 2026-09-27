@@ -273,12 +273,6 @@ class Event extends GaletteTestCase
         $this->insertBooking($id, $member_one->id, ['number_people' => 3, 'is_paid' => $this->zdb->isPostgres() ? 'true' : 1]);
 
         $event = new \GaletteEvents\Event($this->zdb, $this->login, $this->history, $id);
-        $attendees = [];
-        foreach ($event->countAttendees() as $row) {
-            $attendees[(int)(bool)$row['is_paid']] = (int)$row['count'];
-        }
-        $this->assertSame([1 => 3], $attendees);
-
         $event->remove();
         $this->assertSame(0, $this->countBookings($id));
         $this->assertSame([], $this->getEventActivities($id));

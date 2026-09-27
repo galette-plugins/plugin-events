@@ -104,6 +104,31 @@ class Bookings extends GaletteTestCase
         $this->assertCount(1, $list);
         $this->assertSame('Booking comment', $list[0]->getComment());
         $this->assertSame('2026-02-01', $list[0]->getCreationDate());
+        $this->assertSame('Event comment', $list[0]->getEvent()?->getComment());
+    }
+
+    /**
+     * Bookings of an event share its instance, loaded once
+     */
+    public function testListLoadsEventsOnce(): void
+    {
+        $member_one = $this->getMemberOne();
+        $member_two = $this->getMemberTwo();
+        $event = $this->insertEvent('Event');
+        $this->insertBooking($event, $member_one->id);
+        $this->insertBooking($event, $member_two->id);
+        $this->insertBooking($this->insertEvent('Other event'), $member_one->id);
+
+        $this->logSuperAdmin();
+        $list = (new \GaletteEvents\Repository\Bookings($this->zdb, $this->login, $this->history))->getList();
+        $this->assertCount(3, $list);
+        $events = [];
+        foreach ($list as $booking) {
+            $events[$booking->getEventId()][] = $booking->getEvent();
+        }
+        $this->assertCount(2, $events);
+        $this->assertCount(2, $events[$event]);
+        $this->assertSame($events[$event][0], $events[$event][1]);
     }
 
     /**
