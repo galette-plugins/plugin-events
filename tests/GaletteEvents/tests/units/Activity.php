@@ -38,7 +38,7 @@ class Activity extends GaletteTestCase
      */
     public function testEmpty(): void
     {
-        $activity = new \GaletteEvents\Activity($this->zdb, $this->login, $this->history);
+        $activity = new \GaletteEvents\Activity($this->zdb, $this->history);
 
         $this->assertNull($activity->getId());
         $this->assertSame('', $activity->getName());
@@ -53,7 +53,7 @@ class Activity extends GaletteTestCase
      */
     public function testCrud(): void
     {
-        $activity = new \GaletteEvents\Activity($this->zdb, $this->login, $this->history);
+        $activity = new \GaletteEvents\Activity($this->zdb, $this->history);
         $activities = new \GaletteEvents\Repository\Activities($this->zdb, $this->login, $this->history, $this->preferences);
 
         //ensure the table is empty
@@ -80,7 +80,7 @@ class Activity extends GaletteTestCase
         $first_id = $activity->getId();
         $this->assertGreaterThan(0, $first_id);
         //creation date column holds no time
-        $this->assertSame(date('Y-m-d'), $activity->getCreationDate(false));
+        $this->assertSame(date('Y-m-d'), $activity->getCreationDate());
 
         $activity->load($first_id);
         $this->assertSame('Test activity', $activity->getName());
@@ -88,7 +88,7 @@ class Activity extends GaletteTestCase
         $this->assertFalse($activity->isActive());
         $this->assertSame(0, $activity->countEvents());
         $this->assertSame(date('Y-m-d'), $activity->getCreationDate());
-        $this->assertSame(date('Y-m-d'), $activity->getCreationDate(false));
+        $this->assertSame(date('Y-m-d'), $activity->getCreationDate());
 
         $activities_list = $activities->getList();
         $this->assertCount(1, $activities_list);
@@ -113,7 +113,7 @@ class Activity extends GaletteTestCase
      */
     public function testLoadError(): void
     {
-        $activity = new \GaletteEvents\Activity($this->zdb, $this->login, $this->history);
+        $activity = new \GaletteEvents\Activity($this->zdb, $this->history);
         $this->expectException(\GaletteEvents\NotFoundException::class);
         $activity->load(999);
     }
@@ -123,7 +123,7 @@ class Activity extends GaletteTestCase
      */
     public function testNoComment(): void
     {
-        $activity = new \GaletteEvents\Activity($this->zdb, $this->login, $this->history);
+        $activity = new \GaletteEvents\Activity($this->zdb, $this->history);
         $this->assertTrue($activity->check(['name' => 'Dinner', 'active' => '1']));
         $activity->store();
 
@@ -131,7 +131,7 @@ class Activity extends GaletteTestCase
         $update->set(['comment' => null])->where([\GaletteEvents\Activity::PK => $activity->getId()]);
         $this->zdb->execute($update);
 
-        $activity = new \GaletteEvents\Activity($this->zdb, $this->login, $this->history, (int)$activity->getId());
+        $activity = new \GaletteEvents\Activity($this->zdb, $this->history, (int)$activity->getId());
         $this->assertSame('Dinner', $activity->getName());
         $this->assertSame('', $activity->getComment());
     }
@@ -145,11 +145,11 @@ class Activity extends GaletteTestCase
         $this->linkActivity($this->insertEvent('First event'), $id);
         $this->linkActivity($this->insertEvent('Second event'), $id);
 
-        $activity = new \GaletteEvents\Activity($this->zdb, $this->login, $this->history, $id);
+        $activity = new \GaletteEvents\Activity($this->zdb, $this->history, $id);
         $this->assertSame(2, $activity->countEvents());
         $activity->remove();
         $this->expectException(\GaletteEvents\NotFoundException::class);
-        (new \GaletteEvents\Activity($this->zdb, $this->login, $this->history))->load($id);
+        (new \GaletteEvents\Activity($this->zdb, $this->history))->load($id);
 
         $select = $this->zdb->select(EVENTS_PREFIX . 'activitiesevents');
         $select->where([\GaletteEvents\Activity::PK => $id]);

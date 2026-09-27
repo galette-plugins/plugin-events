@@ -147,7 +147,7 @@ class ActivitiesController extends AbstractPluginController
             $activity = $this->session->plugin_events_activity;
             $this->session->plugin_events_activity = null;
         } else {
-            $activity = new Activity($this->zdb, $this->login, $this->history);
+            $activity = new Activity($this->zdb, $this->history);
         }
 
         if ($id !== null && $activity->getId() != $id) {
@@ -190,7 +190,7 @@ class ActivitiesController extends AbstractPluginController
     public function doEdit(Request $request, Response $response, ?int $id = null, string $action = 'edit'): Response
     {
         $post = $request->getParsedBody();
-        $activity = new Activity($this->zdb, $this->login, $this->history);
+        $activity = new Activity($this->zdb, $this->history);
         if (isset($post['id']) && !empty($post['id'])) {
             try {
                 $activity->load((int)$post['id']);
@@ -327,7 +327,7 @@ class ActivitiesController extends AbstractPluginController
     public function confirmRemoveTitle(array $args): string
     {
         try {
-            $activity = new Activity($this->zdb, $this->login, $this->history, (int)$args['id']);
+            $activity = new Activity($this->zdb, $this->history, (int)$args['id']);
         } catch (NotFoundException) {
             return $this->getNotFoundMessage((int)$args['id']);
         }
@@ -346,7 +346,7 @@ class ActivitiesController extends AbstractPluginController
      */
     protected function doDelete(array $args, array $post): bool
     {
-        $activity = new Activity($this->zdb, $this->login, $this->history, (int)$args['id']);
+        $activity = new Activity($this->zdb, $this->history, (int)$args['id']);
         $activity->remove();
         return true;
     }

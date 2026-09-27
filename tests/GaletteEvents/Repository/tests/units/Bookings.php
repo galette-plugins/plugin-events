@@ -103,7 +103,7 @@ class Bookings extends GaletteTestCase
         $list = (new \GaletteEvents\Repository\Bookings($this->zdb, $this->login, $this->history))->getList();
         $this->assertCount(1, $list);
         $this->assertSame('Booking comment', $list[0]->getComment());
-        $this->assertSame('2026-02-01', $list[0]->getCreationDate(false));
+        $this->assertSame('2026-02-01', $list[0]->getCreationDate());
     }
 
     /**

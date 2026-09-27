@@ -13,7 +13,6 @@ namespace GaletteEvents;
 use ArrayObject;
 use Galette\Core\Db;
 use Galette\Core\History;
-use Galette\Core\Login;
 use Analog\Analog;
 use Laminas\Db\Sql\Expression;
 
@@ -32,7 +31,6 @@ class Activity
     public const int REQUIRED = 2;
 
     private Db $zdb;
-    private Login $login;
     private History $history;
     /** @var array<string> */
     private array $errors = [];
@@ -47,16 +45,14 @@ class Activity
      * Default constructor
      *
      * @param Db                                  $zdb     Database instance
-     * @param Login                               $login   Login instance
      * @param History                             $history History instance
      * @param null|int|ArrayObject<string, mixed> $args    Either a ResultSet row or its id for to load
      *                                                     a specific activity, or null to just
      *                                                     instanciate object
      */
-    public function __construct(Db $zdb, Login $login, History $history, int|ArrayObject|null $args = null)
+    public function __construct(Db $zdb, History $history, int|ArrayObject|null $args = null)
     {
         $this->zdb = $zdb;
-        $this->login = $login;
         $this->history = $history;
 
         if (is_int($args)) {
@@ -230,33 +226,11 @@ class Activity
     }
 
     /**
-     * Get date
-     *
-     * @param string $prop      Property to use
-     * @param bool   $formatted Return date formatted, raw if false
+     * Get creation date, as Y-m-d
      */
-    private function getDate(string $prop, bool $formatted = true): string
+    public function getCreationDate(): string
     {
-        if ($this->$prop === null) {
-            return '';
-        }
-
-        if ($formatted === true) {
-            $date = new \DateTime($this->$prop);
-            return $date->format(__("Y-m-d"));
-        } else {
-            return $this->$prop;
-        }
-    }
-
-    /**
-     * Get creation date
-     *
-     * @param bool $formatted Return date formatted, raw if false
-     */
-    public function getCreationDate(bool $formatted = true): string
-    {
-        return $this->getDate('creation_date', $formatted);
+        return $this->creation_date ?? '';
     }
 
     /**

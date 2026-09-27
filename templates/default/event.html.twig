@@ -37,13 +37,13 @@
 
                 {% include "components/forms/date.html.twig" with {
                     id: 'begin_date',
-                    value: event.getBeginDate(),
+                    value: event.getBeginDate()|date(_T("Y-m-d")),
                     label: _T("Begin date", "events"),
                 } %}
 
                 {% include "components/forms/date.html.twig" with {
                     id: 'end_date',
-                    value: event.getEndDate(),
+                    value: event.getEndDate()|date(_T("Y-m-d")),
                     label: _T("End date", "events"),
                 } %}
 

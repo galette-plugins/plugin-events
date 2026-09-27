@@ -70,9 +70,11 @@ class Booking
         $this->history = $history;
         if (is_int($args)) {
             $this->load($args);
-        } elseif (is_object($args)) {
+        } elseif ($args !== null) {
             $this->loadFromRS($args);
             $this->loadActivities();
+        } else {
+            $this->date = date('Y-m-d');
         }
     }
 
@@ -582,22 +584,11 @@ class Booking
     }
 
     /**
-     * Get date
-     *
-     * @param bool $formatted Return date formatted, raw if false
+     * Get booking date, as Y-m-d
      */
-    public function getDate(bool $formatted = true): string
+    public function getDate(): string
     {
-        if ($this->date === '') {
-            return '';
-        }
-
-        if ($formatted === true) {
-            $date = new \DateTime($this->date);
-            return $date->format(__("Y-m-d"));
-        } else {
-            return $this->date;
-        }
+        return $this->date;
     }
 
     /**
@@ -664,22 +655,11 @@ class Booking
     }
 
     /**
-     * Get creation date
-     *
-     * @param bool $formatted Return date formatted, raw if false
+     * Get creation date, as Y-m-d
      */
-    public function getCreationDate(bool $formatted = true): string
+    public function getCreationDate(): string
     {
-        if ($this->creation_date === null) {
-            return '';
-        }
-
-        if ($formatted === true) {
-            $date = new \DateTime($this->creation_date);
-            return $date->format(__("Y-m-d"));
-        } else {
-            return $this->creation_date;
-        }
+        return $this->creation_date ?? '';
     }
 
     /**
@@ -743,7 +723,6 @@ class Booking
             $this->activities[$result[Activity::PK]] = [
                 'activity'  => new Activity(
                     $this->zdb,
-                    $this->login,
                     $this->history,
                     (int)$result[Activity::PK]
                 ),

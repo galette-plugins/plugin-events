@@ -206,7 +206,7 @@ class PluginGaletteEvents extends GalettePlugin implements InstallableInterface,
         foreach ($list as $event) {
             $posts[] = new Post(
                 title: $event->getName(),
-                date: $event->getBeginDate()
+                date: (new \DateTime($event->getBeginDate()))->format(__('Y-m-d'))
             );
         }
 

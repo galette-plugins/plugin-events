@@ -67,8 +67,8 @@ class Event extends GaletteTestCase
         $this->assertNull($event->getId());
         $this->assertSame('', $event->getName());
         $this->assertSame('', $event->getCreationDate());
-        $this->assertSame(date('Y-m-d'), $event->getBeginDate(false));
-        $this->assertSame(date('Y-m-d'), $event->getEndDate(false));
+        $this->assertSame(date('Y-m-d'), $event->getBeginDate());
+        $this->assertSame(date('Y-m-d'), $event->getEndDate());
         $this->assertNull($event->getGroup());
         $this->assertSame([], $event->getActivities());
         $this->assertSame([], $event->getErrors());
@@ -251,7 +251,7 @@ class Event extends GaletteTestCase
         $values = $this->getFormValues(['begin_date' => '2026-10-10']);
         unset($values['end_date']);
         $this->assertTrue($event->check($values));
-        $this->assertSame('2026-10-10', $event->getEndDate(false));
+        $this->assertSame('2026-10-10', $event->getEndDate());
         $this->assertTrue($event->isOpenFlag());
 
         $this->assertTrue($event->check($this->getFormValues(['open' => null])));

@@ -45,7 +45,7 @@ class Booking extends GaletteTestCase
         $this->assertNull($booking->getEvent());
         $this->assertNull($booking->getMemberId());
         $this->assertNull($booking->getMember()->id);
-        $this->assertSame('', $booking->getDate());
+        $this->assertSame(date('Y-m-d'), $booking->getDate());
         $this->assertSame('', $booking->getCreationDate());
         $this->assertSame([], $booking->getActivities());
         $this->assertSame([], $booking->getErrors());
@@ -67,7 +67,7 @@ class Booking extends GaletteTestCase
         $this->assertSame('', $booking->getComment());
         $this->assertNull($booking->getAmount());
         $this->assertSame(1, $booking->getNumberPeople());
-        $this->assertSame('2026-09-01', $booking->getCreationDate(false));
+        $this->assertSame('2026-09-01', $booking->getCreationDate());
     }
 
     /**

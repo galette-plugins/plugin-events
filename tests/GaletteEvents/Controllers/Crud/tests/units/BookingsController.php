@@ -521,6 +521,20 @@ class BookingsController extends GaletteRoutingTestCase
     }
 
     /**
+     * New bookings are dated from today
+     */
+    public function testNewBookingIsDatedToday(): void
+    {
+        $this->logSuperAdmin();
+        $test_response = $this->app->handle($this->createRequest('events_booking_add'));
+        $this->assertSame(200, $test_response->getStatusCode());
+        $this->assertMatchesRegularExpression(
+            '/id="booking_date"[^>]* value="' . date('Y-m-d') . '"/',
+            (string)$test_response->getBody()
+        );
+    }
+
+    /**
      * Unknown bookings are reported, as well as events removed since they have been filtered
      */
     public function testUnknownBooking(): void

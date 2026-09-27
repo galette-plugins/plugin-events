@@ -16,7 +16,7 @@
             <div class="active content">
                 {% include "components/forms/date.html.twig" with {
                     id: 'booking_date',
-                    value: booking.getDate(),
+                    value: booking.getDate()|date(_T("Y-m-d")),
                     label: _T("Booking date", "events"),
                     required: true
                 } %}

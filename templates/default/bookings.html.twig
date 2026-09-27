@@ -173,7 +173,7 @@
                             {{ booking.getMember().sfullname }}
                         </a>
                     </td>
-                    <td class="{{ rclass }} collapsing" data-col-label="{{ _T("Booking date", "events") }}">{{ booking.getDate() }}</td>
+                    <td class="{{ rclass }} collapsing" data-col-label="{{ _T("Booking date", "events") }}">{{ booking.getDate()|date(_T("Y-m-d")) }}</td>
                     <td class="{{ rclass }} center collapsing" data-col-label="{% if booking.isPaid() %}{{ _T("Paid", "events") }}{% else %}{{ _T("Not paid", "events") }}{% endif %}">
                         <i class="money bill wave{% if not booking.isPaid() %} red{% endif %} icon tooltip" data-html="{% if booking.isPaid() %}{{ _T("Paid", "events") }}{% else %}{{ _T("Not paid", "events") }}{% endif %}"></i>
                         <span class="visually-hidden">

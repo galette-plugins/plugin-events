@@ -74,7 +74,7 @@
                 {{ event.getName() }}
             {% endif %}
         </td>
-        <td class="collapsing" data-col-label="{{ _T("Date", "events") }}">{{ event.getBeginDate() }}</td>
+        <td class="collapsing" data-col-label="{{ _T("Date", "events") }}">{{ event.getBeginDate()|date(_T("Y-m-d")) }}</td>
         <td data-col-label="{{ _T("Town", "events") }}">{{ event.getTown() }}</td>
         <td data-col-label="{{ _T("Group", "events") }}">{{ event.getGroupName() }}</td>
         <td class="center id_row collapsing" data-col-label="{{ _T("Open", "events") }}">

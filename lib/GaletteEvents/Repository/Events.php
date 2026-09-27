@@ -160,23 +160,23 @@ class Events
                     $row['title'] = $row['name'];
                     $row['can_edit'] = $event->canEdit($this->login);
                     $row['start'] = $row['begin_date'];
-                    $end_date = new \DateTime($event->getEndDate(false));
+                    $end_date = new \DateTime($event->getEndDate());
                     if ($fullcalendar === true) {
                         $end_date = $end_date->modify('+1 day');
-                        $row['textColor'] = $event->getForegoundColor();
+                        $row['textColor'] = $event->getForegroundColor();
                     }
                     $row['end'] = $end_date->format('Y-m-d');
 
                     //extended description
-                    $row['begin_date_fmt'] = $event->getBeginDate();
-                    $row['end_date_fmt'] = $event->getEndDate();
+                    $row['begin_date_fmt'] = $this->formatDate($event->getBeginDate());
+                    $row['end_date_fmt'] = $this->formatDate($event->getEndDate());
                     $description = '<h4>';
                     $description .= _T('Event information', 'events');
                     $description .= '</h4>';
                     $description .= '<ul class="ui bulleted list">';
                     $pattern = '<li><strong>%1$s</strong> %2$s</li>';
-                    $description .= sprintf($pattern, _T("Start date:", "events"), $event->getBeginDate());
-                    $description .= sprintf($pattern, _T("End date:", "events"), $event->getEndDate());
+                    $description .= sprintf($pattern, _T("Start date:", "events"), $row['begin_date_fmt']);
+                    $description .= sprintf($pattern, _T("End date:", "events"), $row['end_date_fmt']);
                     $description .= sprintf($pattern, _T("Location:", "events"), $this->escape($event->getTown()));
                     if ($comment = $event->getComment()) {
                         $description .= sprintf($pattern, _T("Comment:", "events"), $this->escape($comment));
@@ -231,6 +231,16 @@ class Events
             );
             throw $e;
         }
+    }
+
+    /**
+     * Format a date for the calendar
+     *
+     * @param string $date Date, as Y-m-d
+     */
+    private function formatDate(string $date): string
+    {
+        return (new \DateTime($date))->format(__('Y-m-d'));
     }
 
     /**

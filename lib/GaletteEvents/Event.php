@@ -397,7 +397,7 @@ class Event
     private function getActiveActivity(int $id): ?Activity
     {
         try {
-            $activity = new Activity($this->zdb, $this->login, $this->history, $id);
+            $activity = new Activity($this->zdb, $this->history, $id);
         } catch (NotFoundException) {
             return null;
         }
@@ -533,53 +533,27 @@ class Event
     }
 
     /**
-     * Get date
-     *
-     * @param string $prop      Property to use
-     * @param bool   $formatted Return date formatted, raw if false
+     * Get creation date, as Y-m-d
      */
-    private function getDate(string $prop, bool $formatted = true): string
+    public function getCreationDate(): string
     {
-        if ($this->$prop === null) {
-            return '';
-        }
-
-        if ($formatted === true) {
-            $date = new \DateTime($this->$prop);
-            return $date->format(__("Y-m-d"));
-        } else {
-            return $this->$prop;
-        }
+        return $this->creation_date ?? '';
     }
 
     /**
-     * Get creation date
-     *
-     * @param bool $formatted Return date formatted, raw if false
+     * Get begin date, as Y-m-d
      */
-    public function getCreationDate(bool $formatted = true): string
+    public function getBeginDate(): string
     {
-        return $this->getDate('creation_date', $formatted);
+        return $this->begin_date;
     }
 
     /**
-     * Get begin date
-     *
-     * @param bool $formatted Return date formatted, raw if false
+     * Get end date, as Y-m-d
      */
-    public function getBeginDate(bool $formatted = true): string
+    public function getEndDate(): string
     {
-        return $this->getDate('begin_date', $formatted);
-    }
-
-    /**
-     * Get end date
-     *
-     * @param bool $formatted Return date formatted, raw if false
-     */
-    public function getEndDate(bool $formatted = true): string
-    {
-        return $this->getDate('end_date', $formatted);
+        return $this->end_date;
     }
 
     /**
@@ -673,7 +647,6 @@ class Event
             $this->activities[$result[Activity::PK]] = [
                 'activity'  => new Activity(
                     $this->zdb,
-                    $this->login,
                     $this->history,
                     (int)$result[Activity::PK]
                 ),
@@ -773,7 +746,7 @@ class Event
     /**
      * Get foreground contrasted color for current background color
      */
-    public function getForegoundColor(): string
+    public function getForegroundColor(): string
     {
         $bgcolor = trim($this->color ?? '#ffffff', '#');
         $r = hexdec(substr($bgcolor, 0, 2));
