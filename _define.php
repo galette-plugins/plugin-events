@@ -48,5 +48,5 @@ $this->register(
         'events_calendar'           => 'member',
         'ajax-events_calendar'      => 'member'
     ],
-    dbver: 1.00
+    dbver: 1.1
 );
