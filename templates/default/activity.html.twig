@@ -43,23 +43,3 @@
         </div>
      </form>
 {% endblock %}
-
-{% block javascripts %}
-    {{ parent() }}
-    <script type="text/javascript">
-        $(function() {
-            $('#meal, #lodging').on('change', function() {
-                var _this = $(this);
-                if (!_this.is(':checked')) {
-                    $('#' + _this.attr('id') + '_required').prop('checked', false);
-                }
-            });
-            $('#meal_required, #lodging_required').on('change', function() {
-                var _this = $(this);
-                if (_this.is(':checked')) {
-                    $('#' + _this.attr('id').replace(/_required/, '')).prop('checked', true);
-                }
-            });
-        });
-    </script>
-{% endblock %}

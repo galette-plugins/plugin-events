@@ -454,4 +454,21 @@ class EventsController extends GaletteRoutingTestCase
         $this->assertSame('Daily list', $options['views']['listDay']['buttonText']);
         $this->assertSame('en-US', $options['locale']);
     }
+
+    /**
+     * Plugin pages load their script from a file, other pages do not
+     */
+    public function testScriptFile(): void
+    {
+        $this->logSuperAdmin();
+        $this->linkActivity($this->insertEvent('Event'), $this->insertActivity('Dinner'));
+
+        $body = (string)$this->app->handle($this->createRequest('events_event_add'))->getBody();
+        $this->assertStringContainsString('events.js', $body);
+        $this->assertStringNotContainsString('alert(', $body);
+        $this->assertStringContainsString('aria-controls="attach_activity"', $body);
+
+        $body = (string)$this->app->handle($this->createRequest('dashboard'))->getBody();
+        $this->assertStringNotContainsString('events.js', $body);
+    }
 }

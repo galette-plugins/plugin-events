@@ -279,47 +279,11 @@
 
 {% block batch_selection %}
                     else if (value == 'sendmail') {
-    {% if existing_mailing == true %}
-                        _sendmail(true);
-    {% else %}
                         _sendmail();
-    {% endif %}
                     }
 {% endblock %}
 
 {% block javascripts %}
     {% set batch_selection = ['sendmail'] %}
     {{ parent() }}
-    <script type="text/javascript">
-{% if nb > 0 %}
-        var _sendmail = function(existing){
-            console.log(existing);
-            var _form = $('#listform');
-                _form.append($('<input type="hidden" name="sendmail" value="true"/>'));
-                _form.append($('<input type="hidden" name="mailing_new" value="true"/>'));
-                _form.append($('<input type="hidden" name="mailing" value="true"/>'));
-            var _redirect = '{{ url_for('mailing') }}';
-
-            if (existing) {
-                {% include "elements/js/modal.js.twig" with {
-                    modal_title_twig: _T("Existing mailing")|e("js"),
-                    modal_content_twig: _T("A mailing already exists. Do you want to create a new one or resume the existing?")|e("js"),
-                    modal_class: "tiny",
-                    modal_onapprove: "_form.submit();",
-                    modal_approve_text: _T("New")|e("js"),
-                    modal_approve_icon: "plus",
-                    modal_approve_color: "green",
-                    modal_additional_button: {
-                        text: _T("Resume")|e("js"),
-                        icon: "edit",
-                        class: "blue",
-                        click: "function() { location.href = _redirect; }"
-                    }
-                } %}
-            } else {
-                _form.submit();
-            }
-        }
-{% endif %}
-    </script>
 {% endblock %}

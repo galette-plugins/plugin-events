@@ -121,7 +121,7 @@
                                 <option value="{{ activity.id_activity }}">{{ activity.name }}</option>
             {% endfor %}
                             </select>
-                            <button type="submit" name="add_activity" id="add_activity" class="action ui icon button tooltip">
+                            <button type="submit" name="add_activity" id="add_activity" class="action ui icon button tooltip" aria-controls="attach_activity" data-message="{{ _T("Please choose an activity to add", "events") }}" data-close="{{ _T("Close") }}">
                                 <i class="add icon"></i>
                                 <span class="visually-hidden">{{ _T("Add selected activity to event", "events") }}"</span>
                             </button>
@@ -134,7 +134,7 @@
                                 <option value="{{ activity.getId() }}">{{ activity.getName() }}</option>
             {% endfor %}
                             </select>
-                            <button type="submit" name="remove_activity" id="remove_activity" class="action ui icon button tooltip">
+                            <button type="submit" name="remove_activity" id="remove_activity" class="action ui icon button tooltip" aria-controls="detach_activity" data-message="{{ _T("Please choose an activity to remove", "events") }}" data-close="{{ _T("Close") }}">
                                 <i class="delete red icon"></i>
                                 <span class="visually-hidden">{{ _T("Remove selected activity from event", "events") }}</span>
                             </button>
@@ -168,24 +168,4 @@
             <input type="hidden" name="id" id="id" value="{{ event.getId() }}"/>
         </div>
      </form>
-{% endblock %}
-
-{% block javascripts %}
-    <script type="text/javascript">
-        $(function() {
-            $('#add_activity').on('click', function (event) {
-                if ($('#attach_activity').val() == '') {
-                    event.preventDefault();
-                    alert('{{ _T("Please choose an activity to add", "events")|e('js') }}');
-                }
-            });
-
-            $('#remove_activity').on('click', function (event) {
-                if ($('#detach_activity').val() == '') {
-                    event.preventDefault();
-                    alert('{{ _T("Please choose an activity to remove", "events")|e('js') }}');
-                }
-            });
-        });
-    </script>
 {% endblock %}
