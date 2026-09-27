@@ -131,9 +131,9 @@ class BookingsController extends AbstractPluginController
         $groups = new Groups($this->zdb, $this->login);
         $groups_list = $groups->getList();
 
-        $bookings = new Bookings($this->zdb, $this->login, $this->history, $filters);
+        $bookings = new Bookings($this->zdb, $this->login, $this->history, $this->preferences, $filters);
 
-        $events = new Events($this->zdb, $this->login, $this->history);
+        $events = new Events($this->zdb, $this->login, $this->history, $this->preferences);
         $list = $bookings->getList();
         $count = $bookings->getCount();
 
@@ -263,7 +263,7 @@ class BookingsController extends AbstractPluginController
             $filters->selected = $post['entries_sel'];
 
             //selection is restricted to bookings current logged-in user can list
-            $bookings = new Bookings($this->zdb, $this->login, $this->history, $filters);
+            $bookings = new Bookings($this->zdb, $this->login, $this->history, $this->preferences, $filters);
             $members = [];
             foreach ($bookings->getList() as $booking) {
                 $members[] = $booking->getMemberId();
@@ -408,7 +408,7 @@ class BookingsController extends AbstractPluginController
         }
 
         //Events
-        $events = new Events($this->zdb, $this->login, $this->history);
+        $events = new Events($this->zdb, $this->login, $this->history, $this->preferences);
         if ($action === 'add') {
             if (isset($get['event'])) {
                 $booking->setEvent((int)$get['event']);

@@ -42,7 +42,7 @@ class Bookings extends GaletteTestCase
      */
     private function getVisibleBookings(): array
     {
-        $bookings = new \GaletteEvents\Repository\Bookings($this->zdb, $this->login, $this->history);
+        $bookings = new \GaletteEvents\Repository\Bookings($this->zdb, $this->login, $this->history, $this->preferences);
         $ids = array_map(fn(Booking $booking): ?int => $booking->getId(), $bookings->getList(true));
         sort($ids);
         return ['ids' => $ids, 'sum' => $bookings->getSum()];
@@ -100,7 +100,7 @@ class Bookings extends GaletteTestCase
         $this->insertBooking($event, $member_one->id, ['comment' => 'Booking comment', 'creation_date' => '2026-02-01']);
 
         $this->logSuperAdmin();
-        $list = (new \GaletteEvents\Repository\Bookings($this->zdb, $this->login, $this->history))->getList();
+        $list = (new \GaletteEvents\Repository\Bookings($this->zdb, $this->login, $this->history, $this->preferences))->getList();
         $this->assertCount(1, $list);
         $this->assertSame('Booking comment', $list[0]->getComment());
         $this->assertSame('2026-02-01', $list[0]->getCreationDate());
@@ -120,7 +120,7 @@ class Bookings extends GaletteTestCase
         $this->insertBooking($this->insertEvent('Other event'), $member_one->id);
 
         $this->logSuperAdmin();
-        $list = (new \GaletteEvents\Repository\Bookings($this->zdb, $this->login, $this->history))->getList();
+        $list = (new \GaletteEvents\Repository\Bookings($this->zdb, $this->login, $this->history, $this->preferences))->getList();
         $this->assertCount(3, $list);
         $events = [];
         foreach ($list as $booking) {
@@ -161,7 +161,7 @@ class Bookings extends GaletteTestCase
             foreach ($filters as $name => $value) {
                 $bookings_filters->$name = $value;
             }
-            $bookings = new \GaletteEvents\Repository\Bookings($this->zdb, $this->login, $this->history, $bookings_filters);
+            $bookings = new \GaletteEvents\Repository\Bookings($this->zdb, $this->login, $this->history, $this->preferences, $bookings_filters);
             $ids = array_map(fn(Booking $booking): ?int => $booking->getId(), $bookings->getList());
             return ['ids' => $ids, 'count' => $bookings->getCount(), 'sum' => $bookings->getSum()];
         };

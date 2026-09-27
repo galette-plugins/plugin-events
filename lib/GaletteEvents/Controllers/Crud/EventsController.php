@@ -87,7 +87,7 @@ class EventsController extends AbstractPluginController
             }
         }
 
-        $events = new Events($this->zdb, $this->login, $this->history, $filters);
+        $events = new Events($this->zdb, $this->login, $this->history, $this->preferences, $filters);
         $events_list = $events->getList();
 
         //assign pagination variables to the template and add pagination links
@@ -160,7 +160,7 @@ class EventsController extends AbstractPluginController
         $filters->start_date_filter = date(__("Y-m-d"), $start);
         $filters->end_date_filter = date(__("Y-m-d"), $end);
 
-        $events = new Events($this->zdb, $this->login, $this->history, $filters);
+        $events = new Events($this->zdb, $this->login, $this->history, $this->preferences, $filters);
 
         return $this->withJson($response, $events->getList(false, true));
     }

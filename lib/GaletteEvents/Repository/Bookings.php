@@ -17,6 +17,7 @@ use Laminas\Db\Sql\Predicate\PredicateSet;
 use Galette\Core\Login;
 use Galette\Core\Db;
 use Galette\Core\History;
+use Galette\Core\Preferences;
 use Galette\Entity\Adherent;
 use Galette\Entity\Group;
 use GaletteEvents\Event;
@@ -29,14 +30,15 @@ use Laminas\Db\Sql\Select;
  *
  * @author Johan Cwiklinski <johan@x-tnd.be>
  */
-class Bookings
+class Bookings extends AbstractRepository
 {
-    private Db $zdb;
-    private Login $login;
-    private History $history;
-    private BookingsList $filters;
-    private int $count;
-    private float $sum;
+    protected const string PK = Booking::PK;
+    protected const string ALIAS = 'b';
+
+    /** @var BookingsList */
+    protected \Galette\Core\Pagination $filters;
+
+    private float $sum = 0;
 
     public const int ORDERBY_EVENT = 0;
     public const int ORDERBY_MEMBER = 1;
@@ -50,22 +52,20 @@ class Bookings
     /**
      * Constructor
      *
-     * @param Db            $zdb     Database instance
-     * @param Login         $login   Login instance
-     * @param History       $history History instance
-     * @param ?BookingsList $filters Filtering
+     * @param Db            $zdb         Database instance
+     * @param Login         $login       Login instance
+     * @param History       $history     History instance
+     * @param Preferences   $preferences Preferences instance
+     * @param ?BookingsList $filters     Filtering
      */
-    public function __construct(Db $zdb, Login $login, History $history, ?BookingsList $filters = null)
-    {
-        $this->zdb = $zdb;
-        $this->login = $login;
-        $this->history = $history;
-
-        if ($filters === null) {
-            $this->filters = new BookingsList();
-        } else {
-            $this->filters = $filters;
-        }
+    public function __construct(
+        Db $zdb,
+        Login $login,
+        History $history,
+        Preferences $preferences,
+        ?BookingsList $filters = null
+    ) {
+        parent::__construct($zdb, $login, $history, $preferences, 'Booking', $filters ?? new BookingsList());
     }
 
     /**
@@ -78,16 +78,15 @@ class Bookings
     public function getList(bool $full = false): array
     {
         try {
-            $select = $this->buildSelect(null);
-            $select->order($this->buildOrderClause());
-
+            $select = $this->buildSelect();
+            $this->calculateSum($select);
             $this->proceedCount($select);
+            $select->order($this->buildOrderClause());
 
             if ($full !== true) {
                 $this->filters->setLimits($select);
             }
             $results = $this->zdb->execute($select);
-            $this->filters->query = $this->zdb->query_string;
 
             $bookings = [];
             foreach ($results as $row) {
@@ -131,53 +130,26 @@ class Bookings
     }
 
     /**
-     * Builds the SELECT statement
-     *
-     * @param ?array<string> $fields fields list to retrieve
-     * @param bool           $count  true if we want to count members
-     *                               (not applicable from static calls), defaults to false
-     *
-     * @return Select SELECT statement
+     * Builds the SELECT statement, filtered but neither ordered nor limited
      */
-    private function buildSelect(?array $fields, bool $count = false): Select
+    private function buildSelect(): Select
     {
-        try {
-            $fieldsList = ['*'];
-            if (is_array($fields) && count($fields)) {
-                $fieldsList = $fields;
-            }
+        $select = $this->zdb->select(EVENTS_PREFIX . Booking::TABLE, 'b');
 
-            $select = $this->zdb->select(EVENTS_PREFIX . Booking::TABLE, 'b');
-            $select->columns($fieldsList);
+        //joined tables are used for filtering and ordering only, their columns would override bookings ones
+        $select->join(
+            ['a' => PREFIX_DB . Adherent::TABLE],
+            'b.' . Adherent::PK . '= a.' . Adherent::PK,
+            []
+        );
+        $select->join(
+            ['e' => PREFIX_DB . EVENTS_PREFIX . Event::TABLE],
+            'b.' . Event::PK . '= e.' . Event::PK,
+            []
+        );
 
-            //joined tables are used for filtering and ordering only, their columns would override bookings ones
-            $select->join(
-                ['a' => PREFIX_DB . Adherent::TABLE],
-                'b.' . Adherent::PK . '= a.' . Adherent::PK,
-                []
-            );
-            $select->join(
-                ['e' => PREFIX_DB . EVENTS_PREFIX . Event::TABLE],
-                'b.' . Event::PK . '= e.' . Event::PK,
-                []
-            );
-
-            $this->buildWhereClause($select);
-
-            $this->calculateSum($select);
-
-            if ($count) {
-                $this->proceedCount($select);
-            }
-
-            return $select;
-        } catch (\Exception $e) {
-            Analog::log(
-                'Cannot build SELECT clause for bookings | ' . $e->getMessage(),
-                Analog::WARNING
-            );
-            throw $e;
-        }
+        $this->buildWhereClause($select);
+        return $select;
     }
 
     /**
@@ -187,39 +159,9 @@ class Bookings
      */
     private function calculateSum(Select $select): void
     {
-        try {
-            $sumSelect = clone $select;
-            $sumSelect->reset($sumSelect::COLUMNS);
-            $joins = $sumSelect->joins;
-            $sumSelect->reset($sumSelect::JOINS);
-            foreach ($joins as $join) {
-                $sumSelect->join(
-                    $join['name'],
-                    $join['on'],
-                    [],
-                    $join['type']
-                );
-                unset($join['columns']);
-            }
-
-            $sumSelect->reset($sumSelect::ORDER);
-            $sumSelect->columns(
-                [
-                    'sum' => new Expression('SUM(payment_amount)')
-                ]
-            );
-
-            $results = $this->zdb->execute($sumSelect);
-            $result = $results->current();
-
-            $this->sum = round((float)$result->sum, 2);
-        } catch (\Exception $e) {
-            Analog::log(
-                'Cannot calculate bookings sum | ' . $e->getMessage(),
-                Analog::WARNING
-            );
-            throw $e;
-        }
+        $sum_select = clone $select;
+        $sum_select->columns(['sum' => new Expression('SUM(b.payment_amount)')]);
+        $this->sum = round((float)$this->zdb->execute($sum_select)->current()['sum'], 2);
     }
 
     /**
@@ -302,125 +244,20 @@ class Bookings
     }
 
     /**
-     * Is field allowed to order? it shoulsd be present in
-     * provided fields list (those that are SELECT'ed).
-     *
-     * @param string         $field_name Field name to order by
-     * @param ?array<string> $fields     SELECTE'ed fields
-     */
-    private function canOrderBy(string $field_name, ?array $fields): bool
-    {
-        if (!is_array($fields)) {
-            return true;
-        } elseif (in_array($field_name, $fields)) {
-            return true;
-        } else {
-            Analog::log(
-                'Trying to order by ' . $field_name . ' while it is not in '
-                . 'selected fields.',
-                Analog::WARNING
-            );
-            return false;
-        }
-    }
-
-    /**
      * Builds the order clause
-     *
-     * @param array<string> $fields Fields list to ensure ORDER clause
-     *                              references selected fields. Optional.
      *
      * @return array<string> SQL ORDER clauses
      */
-    private function buildOrderClause(?array $fields = null): array
+    private function buildOrderClause(): array
     {
-        $order = [];
-
-        switch ($this->filters->orderby) {
-            case self::ORDERBY_EVENT:
-                if ($this->canOrderBy(Event::PK, $fields)) {
-                    $order[] = 'e.name ' . $this->filters->getDirection();
-                }
-                break;
-            case self::ORDERBY_MEMBER:
-                if ($this->canOrderBy(Adherent::PK, $fields)) {
-                    $order[] = 'a.nom_adh ' . $this->filters->getDirection();
-                    $order[] = 'a.prenom_adh ' . $this->filters->getDirection();
-                }
-                break;
-            case self::ORDERBY_BOOKDATE:
-                if ($this->canOrderBy('booking_date', $fields)) {
-                    $order[] = 'booking_date ' . $this->filters->getDirection();
-                }
-                break;
-            case self::ORDERBY_PAID:
-                if ($this->canOrderBy('is_paid', $fields)) {
-                    $order[] = 'is_paid ' . $this->filters->getDirection();
-                }
-                break;
-        }
-
-        return $order;
-    }
-
-    /**
-     * Count events from the query
-     *
-     * @param Select $select Original select
-     */
-    private function proceedCount(Select $select): void
-    {
-        try {
-            $countSelect = clone $select;
-            $countSelect->reset($countSelect::COLUMNS);
-            $countSelect->reset($countSelect::ORDER);
-            $countSelect->reset($countSelect::HAVING);
-            $joins = $countSelect->joins;
-            $countSelect->reset($countSelect::JOINS);
-            foreach ($joins as $join) {
-                $countSelect->join(
-                    $join['name'],
-                    $join['on'],
-                    [],
-                    $join['type']
-                );
-                unset($join['columns']);
-            }
-
-            $countSelect->columns(
-                [
-                    'count' => new Expression('count(DISTINCT b.' . Booking::PK . ')')
-                ]
-            );
-
-            $have = $select->having;
-            if ($have->count() > 0) {
-                foreach ($have->getPredicates() as $h) {
-                    $countSelect->where($h);
-                }
-            }
-
-            $results = $this->zdb->execute($countSelect);
-
-            $this->count = (int)$results->current()->count;
-            if ($this->count > 0) {
-                $this->filters->setCounter($this->count);
-            }
-        } catch (\Exception $e) {
-            Analog::log(
-                'Cannot count bookings | ' . $e->getMessage(),
-                Analog::WARNING
-            );
-            throw $e;
-        }
-    }
-
-    /**
-     * Get count for current query
-     */
-    public function getCount(): int
-    {
-        return $this->count;
+        $columns = match ($this->filters->orderby) {
+            self::ORDERBY_EVENT => ['e.name'],
+            self::ORDERBY_MEMBER => ['a.nom_adh', 'a.prenom_adh'],
+            self::ORDERBY_PAID => ['b.is_paid'],
+            default => ['b.booking_date'],
+        };
+        $direction = $this->filters->getDirection();
+        return array_map(fn(string $column): string => $column . ' ' . $direction, $columns);
     }
 
     /**
