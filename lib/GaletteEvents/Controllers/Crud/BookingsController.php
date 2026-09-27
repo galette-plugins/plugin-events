@@ -285,9 +285,7 @@ class BookingsController extends AbstractPluginController
                 $this->session->redirect_mailing = $this->routeparser->urlFor(
                     'events_bookings',
                     [
-                        'event' => $filters->event_filter == null
-                            ? 'all'
-                            : $filters->event_filter
+                        'event' => $filters->event_filter ?? 'all'
                     ]
                 );
                 return $response

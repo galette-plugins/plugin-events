@@ -625,6 +625,6 @@ class BookingsController extends GaletteRoutingTestCase
             ['Location' => [$this->routeparser->urlFor('events_bookings', ['event' => 'all'])]],
             $test_response->getHeaders()
         );
-        $this->assertSame('all', $this->session->plugin_events_bookings_filter->event_filter);
+        $this->assertNull($this->session->plugin_events_bookings_filter->event_filter);
     }
 }
