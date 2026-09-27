@@ -110,39 +110,13 @@ class Activity
     }
 
     /**
-     * Remove specified event
+     * Remove activity, with its links to events and bookings
      */
-    public function remove(): bool
+    public function remove(): void
     {
-        $transaction = false;
-
-        try {
-            if (!$this->zdb->connection->inTransaction()) {
-                $this->zdb->connection->beginTransaction();
-                $transaction = true;
-            }
-
-            $delete = $this->zdb->delete($this->getTableName());
-            $delete->where([self::PK => $this->id]);
-            $this->zdb->execute($delete);
-
-            //commit all changes
-            if ($transaction) {
-                $this->zdb->connection->commit();
-            }
-
-            return true;
-        } catch (\Exception $e) {
-            if ($transaction) {
-                $this->zdb->connection->rollBack();
-            }
-            Analog::log(
-                'Unable to delete activity ' . $this->name
-                . ' (' . $this->id . ') |' . $e->getMessage(),
-                Analog::ERROR
-            );
-            return false;
-        }
+        $delete = $this->zdb->delete($this->getTableName());
+        $delete->where([self::PK => $this->id]);
+        $this->zdb->execute($delete);
     }
 
     /**
@@ -190,73 +164,62 @@ class Activity
     /**
      * Store the activity
      */
-    public function store(): bool
+    public function store(): void
     {
-        try {
-            $values = [
-                'name'                  => $this->name,
-                'is_active'             => ($this->active ? $this->active
-                                                : ($this->zdb->isPostgres() ? 'false' : 0)),
-                'comment'               => $this->comment
-            ];
+        $values = [
+            'name'                  => $this->name,
+            'is_active'             => ($this->active ? $this->active
+                                            : ($this->zdb->isPostgres() ? 'false' : 0)),
+            'comment'               => $this->comment
+        ];
 
-            if (empty($this->id)) {
-                //we're inserting a new event
-                $this->creation_date = date("Y-m-d");
-                $values['creation_date'] = $this->creation_date;
+        if (empty($this->id)) {
+            //we're inserting a new activity
+            $this->creation_date = date("Y-m-d");
+            $values['creation_date'] = $this->creation_date;
 
-                $insert = $this->zdb->insert($this->getTableName());
-                $insert->values($values);
-                $add = $this->zdb->execute($insert);
-                if ($add->count() > 0) {
-                    if ($this->zdb->isPostgres()) {
-                        /** @phpstan-ignore-next-line */
-                        $this->id = (int)$this->zdb->driver->getLastGeneratedValue(
-                            PREFIX_DB . $this->getTableName() . '_id_seq'
-                        );
-                    } else {
-                        $this->id = (int)$this->zdb->driver->getLastGeneratedValue();
-                    }
-
-                    // logging
-                    $this->history->add(
-                        _T("Activity added", "events"),
-                        $this->name
-                    );
-                    return true;
-                } else {
-                    $this->history->add(_T("Fail to add new activity.", "events"));
-                    throw new \Exception(
-                        'An error occurred inserting new activity!'
-                    );
-                }
-            } else {
-                //we're editing an existing event
-                $values[self::PK] = $this->id;
-                $update = $this->zdb->update($this->getTableName());
-                $update
-                    ->set($values)
-                    ->where([self::PK => $this->id]);
-
-                $edit = $this->zdb->execute($update);
-
-                //edit == 0 does not mean there were an error, but that there
-                //were nothing to change
-                if ($edit->count() > 0) {
-                    $this->history->add(
-                        _T("Activity updated", "events"),
-                        $this->name
-                    );
-                }
-                return true;
+            $insert = $this->zdb->insert($this->getTableName());
+            $insert->values($values);
+            $add = $this->zdb->execute($insert);
+            if ($add->count() === 0) {
+                $this->history->add(_T("Fail to add new activity.", "events"));
+                throw new \RuntimeException(
+                    'An error occurred inserting new activity!'
+                );
             }
-        } catch (\Exception $e) {
-            Analog::log(
-                'Something went wrong :\'( | ' . $e->getMessage() . "\n"
-                . $e->getTraceAsString(),
-                Analog::ERROR
+
+            if ($this->zdb->isPostgres()) {
+                /** @phpstan-ignore-next-line */
+                $this->id = (int)$this->zdb->driver->getLastGeneratedValue(
+                    PREFIX_DB . $this->getTableName() . '_id_seq'
+                );
+            } else {
+                $this->id = (int)$this->zdb->driver->getLastGeneratedValue();
+            }
+
+            // logging
+            $this->history->add(
+                _T("Activity added", "events"),
+                $this->name
             );
-            throw $e;
+        } else {
+            //we're editing an existing activity
+            $values[self::PK] = $this->id;
+            $update = $this->zdb->update($this->getTableName());
+            $update
+                ->set($values)
+                ->where([self::PK => $this->id]);
+
+            $edit = $this->zdb->execute($update);
+
+            //edit == 0 does not mean there were an error, but that there
+            //were nothing to change
+            if ($edit->count() > 0) {
+                $this->history->add(
+                    _T("Activity updated", "events"),
+                    $this->name
+                );
+            }
         }
     }
 

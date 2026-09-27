@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 namespace GaletteEvents\Controllers\Crud;
 
+use Analog\Analog;
 use Galette\Controllers\Crud\AbstractPluginController;
 use GaletteEvents\Filters\ActivitiesList;
 use GaletteEvents\Activity;
@@ -193,28 +194,25 @@ class ActivitiesController extends AbstractPluginController
         $error_detected = [];
 
         // Validation
-        $valid = $activity->check($post);
-        if ($valid !== true) {
+        if (!$activity->check($post)) {
             $error_detected = array_merge($error_detected, $activity->getErrors());
         }
 
         if (count($error_detected) == 0) {
             //all goes well, we can proceed
-
-            $new = false;
-            if ($activity->getId() == '') {
-                $new = true;
-            }
-            $store = $activity->store();
-            if ($store === true) {
-                //member has been stored :)
+            $new = $activity->getId() === null;
+            try {
+                $activity->store();
                 if ($new) {
                     $success_detected[] = _T("New activity has been successfully added.", "events");
                 } else {
                     $success_detected[] = _T("Activity has been modified.", "events");
                 }
-            } else {
-                //something went wrong :'(
+            } catch (\Throwable $e) {
+                Analog::log(
+                    'Unable to store activity #' . ($activity->getId() ?? 'new') . ' | ' . $e->getMessage(),
+                    Analog::ERROR
+                );
                 $error_detected[] = _T("An error occurred while storing the activity.", "events");
             }
         }
@@ -308,7 +306,8 @@ class ActivitiesController extends AbstractPluginController
     protected function doDelete(array $args, array $post): bool
     {
         $activity = new Activity($this->zdb, $this->login, $this->history, (int)$args['id']);
-        return $activity->remove();
+        $activity->remove();
+        return true;
     }
 
     // /CRUD - Delete

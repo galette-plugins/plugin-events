@@ -211,6 +211,27 @@ class EventsController extends GaletteRoutingTestCase
     }
 
     /**
+     * Storage errors are logged, and reported on the form
+     */
+    public function testStoreError(): void
+    {
+        $this->logSuperAdmin();
+        //leave the test transaction: storage opens its own one, as it does outside of tests
+        $this->zdb->connection->rollBack();
+
+        //an unknown group breaks the foreign key
+        $test_response = $this->postEvent(null, $this->getFormValues(['group' => '999999', 'save' => '1']));
+        $this->assertSame(
+            ['Location' => [$this->routeparser->urlFor('events_event_add')]],
+            $test_response->getHeaders()
+        );
+        $this->expectFlashData(['error_detected' => ['An error occurred while storing the event.']]);
+        $this->expectLogEntry(Analog::ERROR, 'Query error');
+        $this->expectLogEntry(Analog::ERROR, 'Unable to store event #new | ');
+        $this->expectNoLogEntry();
+    }
+
+    /**
      * Past events stay open in their form, so storing them does not close them
      */
     public function testPastEventFormKeepsOpenFlag(): void

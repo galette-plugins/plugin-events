@@ -33,7 +33,7 @@ class Booking
     private Login $login;
     private History $history;
     /** @var array<string> */
-    private array $errors;
+    private array $errors = [];
 
     private int $id;
     private int $event;
@@ -129,39 +129,13 @@ class Booking
     }
 
     /**
-     * Remove specified event
+     * Remove booking, with its activities
      */
-    public function remove(): bool
+    public function remove(): void
     {
-        $transaction = false;
-
-        try {
-            if (!$this->zdb->connection->inTransaction()) {
-                $this->zdb->connection->beginTransaction();
-                $transaction = true;
-            }
-
-            $delete = $this->zdb->delete($this->getTableName());
-            $delete->where([self::PK => $this->id]);
-            $this->zdb->execute($delete);
-
-            //commit all changes
-            if ($transaction) {
-                $this->zdb->connection->commit();
-            }
-
-            return true;
-        } catch (\Exception $e) {
-            if ($transaction) {
-                $this->zdb->connection->rollBack();
-            }
-            Analog::log(
-                'Unable to delete booking '
-                . ' (' . $this->id . ') |' . $e->getMessage(),
-                Analog::ERROR
-            );
-            return false;
-        }
+        $delete = $this->zdb->delete($this->getTableName());
+        $delete->where([self::PK => $this->id]);
+        $this->zdb->execute($delete);
     }
 
     /**
@@ -169,10 +143,8 @@ class Booking
      *
      * @param array<string,mixed> $values All values to check, basically the $_POST array
      *                                    after sending the form
-     *
-     * @return true|array<string>
      */
-    public function check(array $values): array|bool
+    public function check(array $values): bool
     {
         $this->errors = [];
 
@@ -350,7 +322,7 @@ class Booking
                 . print_r($this->errors, true),
                 Analog::ERROR
             );
-            return $this->errors;
+            return false;
         } else {
             Analog::log(
                 'Event checked successfully.',
@@ -363,10 +335,15 @@ class Booking
     /**
      * Store the booking
      */
-    public function store(): bool
+    public function store(): void
     {
-        try {
+        $new = empty($this->id);
+        $transaction = !$this->zdb->connection->inTransaction();
+        if ($transaction) {
             $this->zdb->connection->beginTransaction();
+        }
+
+        try {
             $values = [
                 Event::PK           => $this->event,
                 Adherent::PK        => $this->member,
@@ -381,8 +358,8 @@ class Booking
                 'comment'           => $this->comment
             ];
 
-            if (empty($this->id)) {
-                //we're inserting a new event
+            if ($new) {
+                //we're inserting a new booking
                 $this->creation_date = date("Y-m-d");
                 $values['creation_date'] = $this->creation_date;
 
@@ -406,7 +383,7 @@ class Booking
                     );
                 } else {
                     $this->history->add(_T("Fail to add new booking.", "events"));
-                    throw new \Exception(
+                    throw new \RuntimeException(
                         'An error occurred inserting new booking!'
                     );
                 }
@@ -540,15 +517,17 @@ class Booking
                 );
             }
 
-            $this->zdb->connection->commit();
-            return true;
-        } catch (\Exception $e) {
-            $this->zdb->connection->rollBack();
-            Analog::log(
-                'Something went wrong :\'( | ' . $e->getMessage() . "\n"
-                . $e->getTraceAsString(),
-                Analog::ERROR
-            );
+            if ($transaction) {
+                $this->zdb->connection->commit();
+            }
+        } catch (\Throwable $e) {
+            if ($transaction) {
+                $this->zdb->connection->rollBack();
+            }
+            if ($new) {
+                //nothing has been stored
+                unset($this->id);
+            }
             throw $e;
         }
     }
@@ -813,6 +792,16 @@ class Booking
 
         $group = $this->getEvent()?->getGroup();
         return $group !== null && $login->isGroupManager($group);
+    }
+
+    /**
+     * Get errors
+     *
+     * @return array<string>
+     */
+    public function getErrors(): array
+    {
+        return $this->errors;
     }
 
     /**

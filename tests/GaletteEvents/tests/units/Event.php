@@ -70,15 +70,13 @@ class Event extends GaletteTestCase
         $this->logMember($this->dataAdherentTwo());
 
         $event = new \GaletteEvents\Event($this->zdb, $this->login, $this->history);
-        $this->assertSame(
-            [_T('Please select a group you own!', 'events')],
-            $event->check($this->getFormValues(['group' => (string)$other->getId()]))
-        );
+        $this->assertFalse($event->check($this->getFormValues(['group' => (string)$other->getId()])));
+        $this->assertSame([_T('Please select a group you own!', 'events')], $event->getErrors());
         $this->expectLogEntry(\Analog\Analog::ERROR, 'Some errors has been threw attempting to edit/store an event');
 
         $event = new \GaletteEvents\Event($this->zdb, $this->login, $this->history);
         $this->assertTrue($event->check($this->getFormValues(['group' => (string)$managed->getId()])));
-        $this->assertTrue($event->store());
+        $event->store();
 
         $event = new \GaletteEvents\Event($this->zdb, $this->login, $this->history, (int)$event->getId());
         $this->assertSame($managed->getId(), $event->getGroup());
@@ -96,7 +94,7 @@ class Event extends GaletteTestCase
             'town'          => 'Lille',
             'begin_date'    => date('Y-m-d', strtotime('+10 days')),
         ]));
-        $this->assertTrue($event->store());
+        $event->store();
 
         $event = new \GaletteEvents\Event($this->zdb, $this->login, $this->history, (int)$event->getId());
         $this->assertSame('Event', $event->getName());
@@ -133,7 +131,7 @@ class Event extends GaletteTestCase
             'activities_ids'    => $ids,
             'activities_status' => ['1', '1', '2'],
         ])));
-        $this->assertTrue($event->store());
+        $event->store();
         $id = (int)$event->getId();
         $this->assertSame([$dinner => 1, $lodging => 1, $visit => 2], $this->getEventActivities($id));
 
@@ -143,7 +141,7 @@ class Event extends GaletteTestCase
             'activities_ids'    => $ids,
             'activities_status' => ['2', '0', '2'],
         ])));
-        $this->assertTrue($event->store());
+        $event->store();
         $this->assertSame([$dinner => 2, $lodging => 0, $visit => 2], $this->getEventActivities($id));
 
         //remove two activities before storing
@@ -160,7 +158,7 @@ class Event extends GaletteTestCase
             'activities_ids'    => [(string)$lodging, (string)$visit],
             'activities_status' => ['0', '2'],
         ])));
-        $this->assertTrue($event->store());
+        $event->store();
         $this->assertSame([$visit => 2], $this->getEventActivities($id));
 
         //reloading does not keep activities of the previous event
@@ -225,18 +223,12 @@ class Event extends GaletteTestCase
         $this->logSuperAdmin();
         $event = new \GaletteEvents\Event($this->zdb, $this->login, $this->history);
 
-        $this->assertSame(
-            ['Begin date is mandatory', 'Name is mandatory', 'Town is mandatory'],
-            $event->check(['begin_date' => ''])
-        );
-        $this->assertSame(
-            ['- Wrong date format (Y-m-d) for Begin date!'],
-            $event->check($this->getFormValues(['begin_date' => 'tomorrow']))
-        );
-        $this->assertSame(
-            ['End date must be later or equal to begin date'],
-            $event->check($this->getFormValues(['begin_date' => '2026-10-10', 'end_date' => '2026-10-09']))
-        );
+        $this->assertFalse($event->check(['begin_date' => '']));
+        $this->assertSame(['Begin date is mandatory', 'Name is mandatory', 'Town is mandatory'], $event->getErrors());
+        $this->assertFalse($event->check($this->getFormValues(['begin_date' => 'tomorrow'])));
+        $this->assertSame(['- Wrong date format (Y-m-d) for Begin date!'], $event->getErrors());
+        $this->assertFalse($event->check($this->getFormValues(['begin_date' => '2026-10-10', 'end_date' => '2026-10-09'])));
+        $this->assertSame(['End date must be later or equal to begin date'], $event->getErrors());
         $this->expectLogEntry(\Analog\Analog::ERROR, 'Some errors has been threw attempting to edit/store an event');
 
         //end date defaults to begin date
@@ -271,9 +263,42 @@ class Event extends GaletteTestCase
         }
         $this->assertSame([1 => 3], $attendees);
 
-        $this->assertTrue($event->remove());
+        $event->remove();
         $this->assertSame(0, $this->countBookings($id));
         $this->assertSame([], $this->getEventActivities($id));
         $this->assertFalse((new \GaletteEvents\Event($this->zdb, $this->login, $this->history))->load($id));
+    }
+
+    /**
+     * Events are stored in the running transaction, and nothing is kept when storage fails
+     */
+    public function testStoreTransactions(): void
+    {
+        $this->logSuperAdmin();
+        //leave the test transaction: storage opens its own one, as it does outside of tests
+        $this->zdb->connection->rollBack();
+
+        //an unknown group breaks the foreign key
+        $event = new \GaletteEvents\Event($this->zdb, $this->login, $this->history);
+        $this->assertTrue($event->check($this->getFormValues(['group' => '999999'])));
+        try {
+            $event->store();
+            $this->fail('An event of an unknown group must not be stored');
+        } catch (\PDOException) {
+            //expected
+        }
+        $this->expectLogEntry(\Analog\Analog::ERROR, 'Query error');
+        $this->assertNull($event->getId());
+        $this->assertFalse($this->zdb->connection->inTransaction());
+        $this->assertSame(0, $this->zdb->execute($this->zdb->select(EVENTS_PREFIX . \GaletteEvents\Event::TABLE))->count());
+
+        //the transaction opened by the caller is left to it
+        $this->zdb->connection->beginTransaction();
+        $event = new \GaletteEvents\Event($this->zdb, $this->login, $this->history);
+        $this->assertTrue($event->check($this->getFormValues()));
+        $event->store();
+        $this->assertTrue($this->zdb->connection->inTransaction());
+        $this->zdb->connection->rollBack();
+        $this->assertSame(0, $this->zdb->execute($this->zdb->select(EVENTS_PREFIX . \GaletteEvents\Event::TABLE))->count());
     }
 }

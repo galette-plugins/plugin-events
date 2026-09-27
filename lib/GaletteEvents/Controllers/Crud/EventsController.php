@@ -294,17 +294,22 @@ class EventsController extends AbstractPluginController
                 $success_detected[] = _T("Activity has been detached from event.", "events");
                 $warning_detected[] = _T('Do not forget to store the event', 'events');
             }
-        } elseif ($valid !== true) {
-            $error_detected = array_merge($error_detected, $valid);
+        } elseif (!$valid) {
+            $error_detected = array_merge($error_detected, $event->getErrors());
         } elseif (isset($post['save'])) {
             $new = $event->getId() === null;
-            if ($event->store() === true) {
+            try {
+                $event->store();
                 if ($new) {
                     $success_detected[] = _T("New event has been successfully added.", "events");
                 } else {
                     $success_detected[] = _T("Event has been modified.", "events");
                 }
-            } else {
+            } catch (\Throwable $e) {
+                Analog::log(
+                    'Unable to store event #' . ($event->getId() ?? 'new') . ' | ' . $e->getMessage(),
+                    Analog::ERROR
+                );
                 $error_detected[] = _T("An error occurred while storing the event.", "events");
             }
         } else {
@@ -428,7 +433,8 @@ class EventsController extends AbstractPluginController
     protected function doDelete(array $args, array $post): bool
     {
         $event = new Event($this->zdb, $this->login, $this->history, (int)$post['id']);
-        return $event->remove();
+        $event->remove();
+        return true;
     }
 
     // /CRUD - Delete

@@ -76,7 +76,7 @@ class Activity extends GaletteTestCase
             'comment' => 'Test comment',
         ];
         $this->assertTrue($activity->check($data));
-        $this->assertTrue($activity->store());
+        $activity->store();
         $first_id = $activity->getId();
         $this->assertGreaterThan(0, $first_id);
         //creation date column holds no time
@@ -101,7 +101,7 @@ class Activity extends GaletteTestCase
         $data['active'] = true;
         $data['name'] = 'Test activity edited';
         $this->assertTrue($activity->check($data));
-        $this->assertTrue($activity->store());
+        $activity->store();
         $this->assertTrue($activity->load($first_id));
 
         $this->assertSame('Test activity edited', $activity->getName());
@@ -124,7 +124,7 @@ class Activity extends GaletteTestCase
     {
         $activity = new \GaletteEvents\Activity($this->zdb, $this->login, $this->history);
         $this->assertTrue($activity->check(['name' => 'Dinner', 'active' => '1']));
-        $this->assertTrue($activity->store());
+        $activity->store();
 
         $update = $this->zdb->update(EVENTS_PREFIX . \GaletteEvents\Activity::TABLE);
         $update->set(['comment' => null])->where([\GaletteEvents\Activity::PK => $activity->getId()]);
@@ -146,7 +146,7 @@ class Activity extends GaletteTestCase
 
         $activity = new \GaletteEvents\Activity($this->zdb, $this->login, $this->history, $id);
         $this->assertSame(2, $activity->countEvents());
-        $this->assertTrue($activity->remove());
+        $activity->remove();
         $this->assertFalse((new \GaletteEvents\Activity($this->zdb, $this->login, $this->history))->load($id));
 
         $select = $this->zdb->select(EVENTS_PREFIX . 'activitiesevents');

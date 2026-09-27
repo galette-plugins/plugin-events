@@ -491,28 +491,25 @@ class BookingsController extends AbstractPluginController
         $goto_list = true;
 
         // Validation
-        $valid = $booking->check($post);
-        if ($valid !== true) {
-            $error_detected = array_merge($error_detected, $valid);
+        if (!$booking->check($post)) {
+            $error_detected = array_merge($error_detected, $booking->getErrors());
         }
 
         if (count($error_detected) == 0 && isset($post['save'])) {
             //all goes well, we can proceed
-
-            $new = false;
-            if ($booking->getId() == '') {
-                $new = true;
-            }
-            $store = $booking->store();
-            if ($store === true) {
-                //member has been stored :)
+            $new = $booking->getId() === null;
+            try {
+                $booking->store();
                 if ($new) {
                     $success_detected[] = _T("New booking has been successfully added.", "events");
                 } else {
                     $success_detected[] = _T("Booking has been modified.", "events");
                 }
-            } else {
-                //something went wrong :'(
+            } catch (\Throwable $e) {
+                Analog::log(
+                    'Unable to store booking #' . ($booking->getId() ?? 'new') . ' | ' . $e->getMessage(),
+                    Analog::ERROR
+                );
                 $error_detected[] = _T("An error occurred while storing the booking.", "events");
             }
         }
@@ -653,7 +650,8 @@ class BookingsController extends AbstractPluginController
     protected function doDelete(array $args, array $post): bool
     {
         $booking = new Booking($this->zdb, $this->login, $this->history, (int)$post['id']);
-        return $booking->remove();
+        $booking->remove();
+        return true;
     }
 
     // /CRUD - Delete

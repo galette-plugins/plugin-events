@@ -33,7 +33,7 @@ class Event
     private Login $login;
     private History $history;
     /** @var array<string> */
-    private array $errors;
+    private array $errors = [];
 
     private int $id;
     private string $name;
@@ -135,39 +135,13 @@ class Event
     }
 
     /**
-     * Remove specified event
+     * Remove event, with its bookings and activities links
      */
-    public function remove(): bool
+    public function remove(): void
     {
-        $transaction = false;
-
-        try {
-            if (!$this->zdb->connection->inTransaction()) {
-                $this->zdb->connection->beginTransaction();
-                $transaction = true;
-            }
-
-            $delete = $this->zdb->delete($this->getTableName());
-            $delete->where([self::PK => $this->id]);
-            $this->zdb->execute($delete);
-
-            //commit all changes
-            if ($transaction) {
-                $this->zdb->connection->commit();
-            }
-
-            return true;
-        } catch (\Exception $e) {
-            if ($transaction) {
-                $this->zdb->connection->rollBack();
-            }
-            Analog::log(
-                'Unable to delete event ' . $this->name
-                . ' (' . $this->id . ') |' . $e->getMessage(),
-                Analog::ERROR
-            );
-            return false;
-        }
+        $delete = $this->zdb->delete($this->getTableName());
+        $delete->where([self::PK => $this->id]);
+        $this->zdb->execute($delete);
     }
 
     /**
@@ -175,10 +149,8 @@ class Event
      *
      * @param array<string, mixed> $values All values to check, basically the $_POST array
      *                                     after sending the form
-     *
-     * @return true|array<string>
      */
-    public function check(array $values): bool|array
+    public function check(array $values): bool
     {
         $this->errors = [];
 
@@ -327,7 +299,7 @@ class Event
                 . print_r($this->errors, true),
                 Analog::ERROR
             );
-            return $this->errors;
+            return false;
         } else {
             Analog::log(
                 'Event checked successfully.',
@@ -340,10 +312,15 @@ class Event
     /**
      * Store the event
      */
-    public function store(): bool
+    public function store(): void
     {
-        try {
+        $new = empty($this->id);
+        $transaction = !$this->zdb->connection->inTransaction();
+        if ($transaction) {
             $this->zdb->connection->beginTransaction();
+        }
+
+        try {
             $values = [
                 'name'                  => $this->name,
                 'address'               => $this->address,
@@ -359,7 +336,7 @@ class Event
                 'color'                 => $this->color
             ];
 
-            if (empty($this->id)) {
+            if ($new) {
                 //we're inserting a new event
                 $this->creation_date = date("Y-m-d");
                 $values['creation_date'] = $this->creation_date;
@@ -384,7 +361,7 @@ class Event
                     );
                 } else {
                     $this->history->add(_T("Fail to add new event.", "events"));
-                    throw new \Exception(
+                    throw new \RuntimeException(
                         'An error occurred inserting new event!'
                     );
                 }
@@ -410,15 +387,17 @@ class Event
 
             $this->storeActivities();
 
-            $this->zdb->connection->commit();
-            return true;
-        } catch (\Exception $e) {
-            $this->zdb->connection->rollBack();
-            Analog::log(
-                'Something went wrong :\'( | ' . $e->getMessage() . "\n"
-                . $e->getTraceAsString(),
-                Analog::ERROR
-            );
+            if ($transaction) {
+                $this->zdb->connection->commit();
+            }
+        } catch (\Throwable $e) {
+            if ($transaction) {
+                $this->zdb->connection->rollBack();
+            }
+            if ($new) {
+                //nothing has been stored
+                unset($this->id);
+            }
             throw $e;
         }
     }
@@ -784,6 +763,16 @@ class Event
     public function canCreate(Login $login): bool
     {
         return ($login->isAdmin() || $login->isStaff() || $login->isGroupManager());
+    }
+
+    /**
+     * Get errors
+     *
+     * @return array<string>
+     */
+    public function getErrors(): array
+    {
+        return $this->errors;
     }
 
     /**
