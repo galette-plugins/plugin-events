@@ -89,10 +89,7 @@ class Events extends AbstractRepository
 
             if (!$this->login->isAdmin() && !$this->login->isStaff()) {
                 $managed = array_map('intval', $this->login->managed_groups);
-                $groups = array_unique(array_merge(
-                    array_map('intval', Groups::loadGroups((int)$this->login->id, false, false)),
-                    $managed
-                ));
+                $groups = self::getVisibleGroups($this->login);
 
                 $visible = [new Predicate\IsNull('e.' . Group::PK)];
                 if (count($groups)) {
@@ -228,6 +225,37 @@ class Events extends AbstractRepository
             );
             throw $e;
         }
+    }
+
+    /**
+     * Groups whose events a member can see and book: the ones they belong to or manage
+     *
+     * Events without group are visible to every member.
+     *
+     * @param Login $login Logged-in member
+     *
+     * @return array<int>
+     */
+    public static function getVisibleGroups(Login $login): array
+    {
+        return array_values(array_unique(array_merge(
+            array_map('intval', Groups::loadGroups((int)$login->id, false, false)),
+            array_map('intval', $login->managed_groups)
+        )));
+    }
+
+    /**
+     * Is an event of this group visible to a member
+     *
+     * @param ?int  $group Event group, if any
+     * @param Login $login Logged-in member
+     */
+    public static function isVisible(?int $group, Login $login): bool
+    {
+        return $login->isAdmin()
+            || $login->isStaff()
+            || $group === null
+            || in_array($group, self::getVisibleGroups($login), true);
     }
 
     /**

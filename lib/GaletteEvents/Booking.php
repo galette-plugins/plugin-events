@@ -16,8 +16,8 @@ use Galette\Core\History;
 use Galette\Core\Login;
 use Galette\Entity\Adherent;
 use Galette\Entity\PaymentType;
-use Galette\Repository\Groups;
 use Analog\Analog;
+use GaletteEvents\Repository\Events;
 
 /**
  * Booking entity
@@ -686,17 +686,10 @@ class Booking
     private function canBook(Event $event): bool
     {
         if ($this->login->isAdmin() || $this->login->isStaff()) {
-            return $event->getId() !== null;
+            return true;
         }
 
-        if ($event->getId() === null || !$event->isOpen()) {
-            return false;
-        }
-
-        $group = $event->getGroup();
-        return $group === null
-            || $this->login->isGroupManager($group)
-            || in_array($group, array_map('intval', Groups::loadGroups($this->login->id, false, false)), true);
+        return $event->isOpen() && Events::isVisible($event->getGroup(), $this->login);
     }
 
     /**
