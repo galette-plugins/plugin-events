@@ -14,6 +14,7 @@ use Analog\Analog;
 use Galette\Controllers\Crud\AbstractPluginController;
 use GaletteEvents\Filters\ActivitiesList;
 use GaletteEvents\Activity;
+use GaletteEvents\NotFoundException;
 use GaletteEvents\Repository\Activities;
 use Slim\Psr7\Request;
 use Slim\Psr7\Response;
@@ -150,7 +151,11 @@ class ActivitiesController extends AbstractPluginController
         }
 
         if ($id !== null && $activity->getId() != $id) {
-            $activity->load($id);
+            try {
+                $activity->load($id);
+            } catch (NotFoundException) {
+                return $this->redirectNotFound($response, $id);
+            }
         }
 
         // template variable declaration
@@ -187,7 +192,11 @@ class ActivitiesController extends AbstractPluginController
         $post = $request->getParsedBody();
         $activity = new Activity($this->zdb, $this->login, $this->history);
         if (isset($post['id']) && !empty($post['id'])) {
-            $activity->load((int)$post['id']);
+            try {
+                $activity->load((int)$post['id']);
+            } catch (NotFoundException) {
+                return $this->redirectNotFound($response, (int)$post['id']);
+            }
         }
 
         $success_detected = [];
@@ -256,6 +265,34 @@ class ActivitiesController extends AbstractPluginController
             ->withHeader('Location', $redirect_url);
     }
 
+    /**
+     * Get the message for an activity that does not exist
+     *
+     * @param int $id Requested activity identifier
+     */
+    private function getNotFoundMessage(int $id): string
+    {
+        return sprintf(
+            //TRANS: %1$s is the activity identifier
+            _T('No activity #%1$s.', 'events'),
+            $id
+        );
+    }
+
+    /**
+     * Redirect when requested activity does not exist
+     *
+     * @param int $id Requested activity identifier
+     */
+    private function redirectNotFound(Response $response, int $id): Response
+    {
+        return $this->redirectWithErrors(
+            response: $response,
+            errors: [$this->getNotFoundMessage($id)],
+            redirect_url: $this->routeparser->urlFor('events_activities')
+        );
+    }
+
     // /CRUD - Update
     // CRUD - Delete
 
@@ -289,7 +326,11 @@ class ActivitiesController extends AbstractPluginController
      */
     public function confirmRemoveTitle(array $args): string
     {
-        $activity = new Activity($this->zdb, $this->login, $this->history, (int)$args['id']);
+        try {
+            $activity = new Activity($this->zdb, $this->login, $this->history, (int)$args['id']);
+        } catch (NotFoundException) {
+            return $this->getNotFoundMessage((int)$args['id']);
+        }
         return sprintf(
             //TRANS %1$s is activity name
             _T('Remove activity %1$s', 'events'),

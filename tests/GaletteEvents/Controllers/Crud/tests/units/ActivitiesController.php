@@ -141,4 +141,19 @@ class ActivitiesController extends GaletteRoutingTestCase
         $this->assertSame(1, $this->countActivities('Lodging'));
         $this->expectNoLogEntry();
     }
+
+    /**
+     * Unknown activities are reported, instead of showing an empty form
+     */
+    public function testUnknownActivity(): void
+    {
+        $this->logSuperAdmin();
+        $id = $this->insertActivity('Dinner');
+        $this->cleanEvents();
+
+        $test_response = $this->app->handle($this->createRequest('events_activity_edit', ['id' => (string)$id]));
+        $this->assertSame(['Location' => [$this->routeparser->urlFor('events_activities')]], $test_response->getHeaders());
+        $this->expectFlashData(['error_detected' => ['No activity #' . $id . '.']]);
+        $this->expectNoLogEntry();
+    }
 }

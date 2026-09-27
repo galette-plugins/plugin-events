@@ -309,6 +309,30 @@ class EventsController extends GaletteRoutingTestCase
     }
 
     /**
+     * Unknown events are reported, instead of showing an empty form
+     */
+    public function testUnknownEvent(): void
+    {
+        $this->logSuperAdmin();
+        $id = $this->insertEvent('Removed event');
+        $this->cleanEvents();
+        $expected = ['Location' => [$this->routeparser->urlFor('events_events')]];
+
+        $test_response = $this->app->handle($this->createRequest('events_event_edit', ['id' => (string)$id]));
+        $this->assertSame($expected, $test_response->getHeaders());
+        $this->expectFlashData(['error_detected' => ['No event #' . $id . '.']]);
+
+        $test_response = $this->postEvent($id, $this->getFormValues(['save' => '1']));
+        $this->assertSame($expected, $test_response->getHeaders());
+        $this->expectFlashData(['error_detected' => ['No event #' . $id . '.']]);
+
+        $test_response = $this->app->handle($this->createRequest('events_remove_event', ['id' => (string)$id]));
+        $this->assertSame(200, $test_response->getStatusCode());
+        $this->assertStringContainsString('<title>No event #' . $id . '. - ', (string)$test_response->getBody());
+        $this->expectNoLogEntry();
+    }
+
+    /**
      * Events list shows events current user can see
      */
     public function testList(): void

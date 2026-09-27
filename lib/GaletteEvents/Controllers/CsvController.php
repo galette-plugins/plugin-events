@@ -19,6 +19,7 @@ use Galette\IO\Csv;
 use Galette\IO\CsvOut;
 use GaletteEvents\Event;
 use GaletteEvents\Filters\BookingsList;
+use GaletteEvents\NotFoundException;
 use GaletteEvents\Repository\Bookings;
 
 /**
@@ -96,9 +97,22 @@ class CsvController extends \Galette\Controllers\CsvController
             _T('Number of persons', 'events'),
         ];
 
-        //activities are onl:y available for one event
-        if ($filters->event_filter > 0) {
-            $event = new Event($this->zdb, $this->login, $this->history, (int)$filters->event_filter);
+        //activities are only available for one event
+        $event = null;
+        if (is_numeric($filters->event_filter) && (int)$filters->event_filter > 0) {
+            try {
+                $event = new Event($this->zdb, $this->login, $this->history, (int)$filters->event_filter);
+            } catch (NotFoundException) {
+                return $this->redirectWithErrors(
+                    response: $response,
+                    errors: [sprintf(
+                        //TRANS: %1$s is the event identifier
+                        _T('No event #%1$s.', 'events'),
+                        (int)$filters->event_filter
+                    )],
+                    redirect_url: $this->routeparser->urlFor('events_bookings', ['event' => 'all'])
+                );
+            }
             $activities = $event->getActivities();
             foreach ($activities as $activity) {
                 $labels[] = $activity['activity']->getName();
@@ -146,7 +160,7 @@ class CsvController extends \Galette\Controllers\CsvController
                 $booking->getNumberPeople()
             ];
 
-            if ($filters->event_filter > 0) {
+            if ($event !== null) {
                 $bactivities = $booking->getActivities();
                 foreach (array_keys($activities) as $aid) {
                     $entry[] = isset($bactivities[$aid]) && $bactivities[$aid]['checked'] ? _T('Yes') : _T('No');

@@ -59,7 +59,7 @@ class Activity
         $this->login = $login;
         $this->history = $history;
 
-        if (is_int($args) && $args > 0) {
+        if (is_int($args)) {
             $this->load($args);
         } elseif (is_object($args)) {
             $this->loadFromRS($args);
@@ -67,32 +67,22 @@ class Activity
     }
 
     /**
-     * Loads an activity from its id
+     * Load an activity from its id
      *
-     * @param int $id the identifiant for the activity to load
+     * @param int $id Activity identifier
      *
-     * @return bool true if query succeed, false otherwise
+     * @throws NotFoundException
      */
-    public function load(int $id): bool
+    public function load(int $id): void
     {
-        try {
-            $select = $this->zdb->select($this->getTableName());
-            $select->where([self::PK => $id]);
-            $results = $this->zdb->execute($select);
+        $select = $this->zdb->select($this->getTableName());
+        $select->where([self::PK => $id]);
+        $results = $this->zdb->execute($select);
 
-            if ($results->count() > 0) {
-                $this->loadFromRS($results->current());
-                return true;
-            } else {
-                return false;
-            }
-        } catch (\Exception $e) {
-            Analog::log(
-                'Cannot load activity #`' . $id . '` | ' . $e->getMessage(),
-                Analog::WARNING
-            );
-            throw $e;
+        if ($results->count() === 0) {
+            throw new NotFoundException('No activity #' . $id);
         }
+        $this->loadFromRS($results->current());
     }
 
     /**

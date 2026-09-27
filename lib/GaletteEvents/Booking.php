@@ -77,34 +77,23 @@ class Booking
     }
 
     /**
-     * Loads an event from its id
+     * Load a booking from its id
      *
-     * @param int $id the identifiant for the event to load
+     * @param int $id Booking identifier
      *
-     * @return bool true if query succeed, false otherwise
+     * @throws NotFoundException
      */
-    public function load(int $id): bool
+    public function load(int $id): void
     {
-        try {
-            $select = $this->zdb->select($this->getTableName());
-            $select->where([self::PK => $id]);
+        $select = $this->zdb->select($this->getTableName());
+        $select->where([self::PK => $id]);
+        $results = $this->zdb->execute($select);
 
-            $results = $this->zdb->execute($select);
-
-            if ($results->count() > 0) {
-                $this->loadFromRS($results->current());
-                $this->loadActivities();
-                return true;
-            } else {
-                return false;
-            }
-        } catch (\Exception $e) {
-            Analog::log(
-                'Cannot load booking form id `' . $id . '` | ' . $e->getMessage(),
-                Analog::WARNING
-            );
-            throw $e;
+        if ($results->count() === 0) {
+            throw new NotFoundException('No booking #' . $id);
         }
+        $this->loadFromRS($results->current());
+        $this->loadActivities();
     }
 
     /**
@@ -153,38 +142,17 @@ class Booking
             $this->errors[] = _T('Event is mandatory', 'events');
         } else {
             $event_changed = $this->getId() === null || $this->getEventId() !== (int)$values['event'];
-            $this->event = (int)$values['event'];
-            $event = $this->getEvent();
-            if ($event_changed && !$this->canBook($event)) {
+            try {
+                $event = new Event($this->zdb, $this->login, $this->history, (int)$values['event']);
+            } catch (NotFoundException) {
+                $event = null;
+            }
+            if ($event === null || ($event_changed && !$this->canBook($event))) {
                 $this->errors[] = _T('This event cannot be booked.', 'events');
             }
-            $activities = $event->getActivities();
-            foreach ($activities as $aid => $entry) {
-                if (
-                    $event->isActivityRequired($aid)
-                    && (!isset($values['activities']) || !in_array($aid, $values['activities']))
-                ) {
-                    $this->errors[] = sprintf(
-                        //TRANS: %1$s is activity name
-                        _T('%1$s is mandatory for this event!', 'events'),
-                        $entry['activity']->getName()
-                    );
-                } else {
-                    $act = [
-                        'activity'  => $entry['activity'],
-                        'checked'   => (isset($values['activities']) && in_array($aid, $values['activities']))
-                    ];
-                    $this->activities[$aid] = $act;
-                }
-            }
-            foreach (array_keys($this->activities) as $aid) {
-                if (!isset($activities[$aid])) {
-                    $this->activities_removed[$aid] = [
-                        Activity::PK    => $aid,
-                        self::PK        => $this->id
-                    ];
-                    unset($this->activities[$aid]);
-                }
+            if ($event !== null) {
+                $this->event = (int)$values['event'];
+                $this->checkActivities($event, $values['activities'] ?? []);
             }
         }
 
@@ -329,6 +297,44 @@ class Booking
                 Analog::DEBUG
             );
             return true;
+        }
+    }
+
+    /**
+     * Check activities of the booking against the ones of its event
+     *
+     * @param Event        $event   Booked event
+     * @param array<mixed> $checked Checked activities identifiers
+     */
+    private function checkActivities(Event $event, array $checked): void
+    {
+        $activities = $event->getActivities();
+        foreach ($activities as $aid => $entry) {
+            if (
+                $event->isActivityRequired($aid)
+                && !in_array($aid, $checked)
+            ) {
+                $this->errors[] = sprintf(
+                    //TRANS: %1$s is activity name
+                    _T('%1$s is mandatory for this event!', 'events'),
+                    $entry['activity']->getName()
+                );
+            } else {
+                $act = [
+                    'activity'  => $entry['activity'],
+                    'checked'   => in_array($aid, $checked)
+                ];
+                $this->activities[$aid] = $act;
+            }
+        }
+        foreach (array_keys($this->activities) as $aid) {
+            if (!isset($activities[$aid])) {
+                $this->activities_removed[$aid] = [
+                    Activity::PK    => $aid,
+                    self::PK        => $this->id
+                ];
+                unset($this->activities[$aid]);
+            }
         }
     }
 

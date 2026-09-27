@@ -19,6 +19,7 @@ use Galette\Filters\MembersList;
 use GaletteEvents\Filters\BookingsList;
 use GaletteEvents\Booking;
 use GaletteEvents\Event;
+use GaletteEvents\NotFoundException;
 use GaletteEvents\Repository\Bookings;
 use GaletteEvents\Repository\Events;
 use Slim\Psr7\Request;
@@ -86,7 +87,7 @@ class BookingsController extends AbstractPluginController
         $filters = $this->session->{$this->getFilterName('bookings')} ?? new BookingsList();
 
         if ($event == 'guess') {
-            $linked_event = $filters->event_filter;
+            $linked_event = $filters->event_filter ?? 'all';
         } else {
             $linked_event = $event;
         }
@@ -107,8 +108,23 @@ class BookingsController extends AbstractPluginController
 
         $event = null;
         if ($linked_event !== 'all') {
+            try {
+                $event = new Event($this->zdb, $this->login, $this->history, (int)$linked_event);
+            } catch (NotFoundException) {
+                //event may have been removed since it has been filtered
+                $filters->event_filter = null;
+                $this->session->{$this->getFilterName('bookings')} = $filters;
+                return $this->redirectWithErrors(
+                    response: $response,
+                    errors: [sprintf(
+                        //TRANS: %1$s is the event identifier
+                        _T('No event #%1$s.', 'events'),
+                        (int)$linked_event
+                    )],
+                    redirect_url: $this->routeparser->urlFor('events_bookings', ['event' => 'all'])
+                );
+            }
             $filters->event_filter = (int)$linked_event;
-            $event = new Event($this->zdb, $this->login, $this->history, (int)$linked_event);
         }
 
         //Groups
@@ -370,7 +386,11 @@ class BookingsController extends AbstractPluginController
         }
 
         if ($id !== null && $booking->getId() != $id) {
-            $booking->load($id);
+            try {
+                $booking->load($id);
+            } catch (NotFoundException) {
+                return $this->redirectNotFound($response, $id);
+            }
         }
 
         if ($booking->getId() !== null && !$booking->canEdit($this->login)) {
@@ -468,7 +488,11 @@ class BookingsController extends AbstractPluginController
         $post = $request->getParsedBody();
         $booking = new Booking($this->zdb, $this->login, $this->history);
         if (isset($post['id']) && !empty($post['id'])) {
-            $booking->load((int)$post['id']);
+            try {
+                $booking->load((int)$post['id']);
+            } catch (NotFoundException) {
+                return $this->redirectNotFound($response, (int)$post['id']);
+            }
         }
 
         if ($booking->getId() !== null && !$booking->canEdit($this->login)) {
@@ -578,6 +602,34 @@ class BookingsController extends AbstractPluginController
     }
 
     /**
+     * Get the message for a booking that does not exist
+     *
+     * @param int $id Requested booking identifier
+     */
+    private function getNotFoundMessage(int $id): string
+    {
+        return sprintf(
+            //TRANS: %1$s is the booking identifier
+            _T('No booking #%1$s.', 'events'),
+            $id
+        );
+    }
+
+    /**
+     * Redirect when requested booking does not exist
+     *
+     * @param int $id Requested booking identifier
+     */
+    private function redirectNotFound(Response $response, int $id): Response
+    {
+        return $this->redirectWithErrors(
+            response: $response,
+            errors: [$this->getNotFoundMessage($id)],
+            redirect_url: $this->routeparser->urlFor('events_bookings', ['event' => 'all'])
+        );
+    }
+
+    /**
      * Redirect when current logged-in user cannot edit a booking
      *
      * @param Booking $booking Booking
@@ -630,7 +682,11 @@ class BookingsController extends AbstractPluginController
      */
     public function confirmRemoveTitle(array $args): string
     {
-        $booking = new Booking($this->zdb, $this->login, $this->history, (int)$args['id']);
+        try {
+            $booking = new Booking($this->zdb, $this->login, $this->history, (int)$args['id']);
+        } catch (NotFoundException) {
+            return $this->getNotFoundMessage((int)$args['id']);
+        }
         $member = $booking->getMember();
         $event = $booking->getEvent();
         return sprintf(

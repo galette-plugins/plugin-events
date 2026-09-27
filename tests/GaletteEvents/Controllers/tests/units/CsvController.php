@@ -125,6 +125,24 @@ class CsvController extends GaletteRoutingTestCase
     }
 
     /**
+     * Export of an unknown event is reported
+     */
+    public function testExportUnknownEvent(): void
+    {
+        $this->logSuperAdmin();
+        $event = $this->insertEvent('Removed event');
+        $this->cleanEvents();
+
+        $test_response = $this->app->handle($this->createRequest('event_bookings_export', ['id' => (string)$event]));
+        $this->assertSame(
+            ['Location' => [$this->routeparser->urlFor('events_bookings', ['event' => 'all'])]],
+            $test_response->getHeaders()
+        );
+        $this->expectFlashData(['error_detected' => ['No event #' . $event . '.']]);
+        $this->expectNoLogEntry();
+    }
+
+    /**
      * Bookings without a known payment method are exported
      */
     public function testExportUnknownPaymentMethod(): void

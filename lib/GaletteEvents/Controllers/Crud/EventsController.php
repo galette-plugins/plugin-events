@@ -15,6 +15,7 @@ use Galette\Repository\Groups;
 use Galette\Controllers\Crud\AbstractPluginController;
 use GaletteEvents\Filters\EventsList;
 use GaletteEvents\Event;
+use GaletteEvents\NotFoundException;
 use GaletteEvents\Repository\Events;
 use Slim\Psr7\Request;
 use Slim\Psr7\Response;
@@ -213,7 +214,11 @@ class EventsController extends AbstractPluginController
         $can = $event->canCreate($this->login);
 
         if ($id !== null && $event->getId() != $id) {
-            $event->load($id);
+            try {
+                $event->load($id);
+            } catch (NotFoundException) {
+                return $this->redirectNotFound($response, $id);
+            }
             $can = $event->canEdit($this->login);
         }
 
@@ -263,7 +268,11 @@ class EventsController extends AbstractPluginController
         $event = new Event($this->zdb, $this->login, $this->history);
         $can = $event->canCreate($this->login);
         if (isset($post['id']) && !empty($post['id'])) {
-            $event->load((int)$post['id']);
+            try {
+                $event->load((int)$post['id']);
+            } catch (NotFoundException) {
+                return $this->redirectNotFound($response, (int)$post['id']);
+            }
             $can = $event->canEdit($this->login);
         }
 
@@ -364,6 +373,34 @@ class EventsController extends AbstractPluginController
     }
 
     /**
+     * Get the message for an event that does not exist
+     *
+     * @param int $id Requested event identifier
+     */
+    private function getNotFoundMessage(int $id): string
+    {
+        return sprintf(
+            //TRANS: %1$s is the event identifier
+            _T('No event #%1$s.', 'events'),
+            $id
+        );
+    }
+
+    /**
+     * Redirect when requested event does not exist
+     *
+     * @param int $id Requested event identifier
+     */
+    private function redirectNotFound(Response $response, int $id): Response
+    {
+        return $this->redirectWithErrors(
+            response: $response,
+            errors: [$this->getNotFoundMessage($id)],
+            redirect_url: $this->routeparser->urlFor('events_events')
+        );
+    }
+
+    /**
      * Redirect when current logged-in user cannot edit an event
      *
      * @param Event $event Event
@@ -416,7 +453,11 @@ class EventsController extends AbstractPluginController
      */
     public function confirmRemoveTitle(array $args): string
     {
-        $event = new Event($this->zdb, $this->login, $this->history, (int)$args['id']);
+        try {
+            $event = new Event($this->zdb, $this->login, $this->history, (int)$args['id']);
+        } catch (NotFoundException) {
+            return $this->getNotFoundMessage((int)$args['id']);
+        }
         return sprintf(
             //TRANS: %1$s is the event name
             _T('Remove event \'%1$s\'', 'events'),

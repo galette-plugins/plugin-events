@@ -67,49 +67,36 @@ class Event
         $this->zdb = $zdb;
         $this->login = $login;
         $this->history = $history;
-        if ($args == null || is_int($args)) {
-            if (is_int($args) && $args > 0) {
-                $this->load($args);
-            } else {
-                $now = date('Y-m-d');
-                $this->begin_date = $now;
-                $this->end_date = $now;
-            }
-        } elseif (is_object($args)) {
+        if (is_int($args)) {
+            $this->load($args);
+        } elseif ($args !== null) {
             $this->loadFromRS($args);
             $this->loadActivities();
+        } else {
+            $now = date('Y-m-d');
+            $this->begin_date = $now;
+            $this->end_date = $now;
         }
     }
 
     /**
-     * Loads an event from its id
+     * Load an event from its id
      *
-     * @param int $id the identifiant for the event to load
+     * @param int $id Event identifier
      *
-     * @return bool true if query succeed, false otherwise
+     * @throws NotFoundException
      */
-    public function load(int $id): bool
+    public function load(int $id): void
     {
-        try {
-            $select = $this->zdb->select($this->getTableName());
-            $select->where([self::PK => $id]);
+        $select = $this->zdb->select($this->getTableName());
+        $select->where([self::PK => $id]);
+        $results = $this->zdb->execute($select);
 
-            $results = $this->zdb->execute($select);
-
-            if ($results->count() > 0) {
-                $this->loadFromRS($results->current());
-                $this->loadActivities();
-                return true;
-            } else {
-                return false;
-            }
-        } catch (\Exception $e) {
-            Analog::log(
-                'Cannot load event form id `' . $id . '` | ' . $e->getMessage(),
-                Analog::WARNING
-            );
-            throw $e;
+        if ($results->count() === 0) {
+            throw new NotFoundException('No event #' . $id);
         }
+        $this->loadFromRS($results->current());
+        $this->loadActivities();
     }
 
     /**
@@ -409,8 +396,12 @@ class Event
      */
     private function getActiveActivity(int $id): ?Activity
     {
-        $activity = new Activity($this->zdb, $this->login, $this->history, $id);
-        return $activity->getId() !== null && $activity->isActive() ? $activity : null;
+        try {
+            $activity = new Activity($this->zdb, $this->login, $this->history, $id);
+        } catch (NotFoundException) {
+            return null;
+        }
+        return $activity->isActive() ? $activity : null;
     }
 
     /**

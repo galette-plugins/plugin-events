@@ -521,6 +521,35 @@ class BookingsController extends GaletteRoutingTestCase
     }
 
     /**
+     * Unknown bookings are reported, as well as events removed since they have been filtered
+     */
+    public function testUnknownBooking(): void
+    {
+        $member_one = $this->getMemberOne();
+        $event = $this->insertEvent('Event');
+        $id = $this->insertBooking($event, $member_one->id);
+        $this->logSuperAdmin();
+
+        //event is remembered in list filters
+        $test_response = $this->app->handle($this->createRequest('events_bookings', ['event' => (string)$event]));
+        $this->assertSame(200, $test_response->getStatusCode());
+        $this->cleanEvents();
+
+        $expected = ['Location' => [$this->routeparser->urlFor('events_bookings', ['event' => 'all'])]];
+        $this->assertSame($expected, $this->getBookingForm($id)->getHeaders());
+        $this->expectFlashData(['error_detected' => ['No booking #' . $id . '.']]);
+
+        $test_response = $this->app->handle($this->createRequest('events_bookings', ['event' => 'guess']));
+        $this->assertSame($expected, $test_response->getHeaders());
+        $this->expectFlashData(['error_detected' => ['No event #' . $event . '.']]);
+        $this->assertNull($this->session->plugin_events_bookings_filter->event_filter);
+
+        $test_response = $this->app->handle($this->createRequest('events_bookings', ['event' => 'guess']));
+        $this->assertSame(200, $test_response->getStatusCode());
+        $this->expectNoLogEntry();
+    }
+
+    /**
      * Bookings list filters are stored in session
      */
     public function testFilter(): void

@@ -163,7 +163,7 @@ class Event extends GaletteTestCase
 
         //reloading does not keep activities of the previous event
         $other = (int)$this->insertEvent('Other event');
-        $this->assertTrue($event->load($other));
+        $event->load($other);
         $this->assertSame([], $event->getActivities());
     }
 
@@ -266,7 +266,8 @@ class Event extends GaletteTestCase
         $event->remove();
         $this->assertSame(0, $this->countBookings($id));
         $this->assertSame([], $this->getEventActivities($id));
-        $this->assertFalse((new \GaletteEvents\Event($this->zdb, $this->login, $this->history))->load($id));
+        $this->expectException(\GaletteEvents\NotFoundException::class);
+        (new \GaletteEvents\Event($this->zdb, $this->login, $this->history))->load($id);
     }
 
     /**
