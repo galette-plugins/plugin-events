@@ -26,6 +26,8 @@ use Analog\Analog;
  */
 class Booking
 {
+    use EntityTrait;
+
     public const string TABLE = 'bookings';
     public const string PK = 'id_booking';
 
@@ -72,30 +74,9 @@ class Booking
             $this->load($args);
         } elseif ($args !== null) {
             $this->loadFromRS($args);
-            $this->loadActivities();
         } else {
             $this->date = date('Y-m-d');
         }
-    }
-
-    /**
-     * Load a booking from its id
-     *
-     * @param int $id Booking identifier
-     *
-     * @throws NotFoundException
-     */
-    public function load(int $id): void
-    {
-        $select = $this->zdb->select($this->getTableName());
-        $select->where([self::PK => $id]);
-        $results = $this->zdb->execute($select);
-
-        if ($results->count() === 0) {
-            throw new NotFoundException('No booking #' . $id);
-        }
-        $this->loadFromRS($results->current());
-        $this->loadActivities();
     }
 
     /**
@@ -117,16 +98,7 @@ class Booking
         $this->number_people = (int)($r['number_people'] ?? 1);
         $this->comment = $r['comment'] ?? '';
         $this->creation_date = $r['creation_date'];
-    }
-
-    /**
-     * Remove booking, with its activities
-     */
-    public function remove(): void
-    {
-        $delete = $this->zdb->delete($this->getTableName());
-        $delete->where([self::PK => $this->id]);
-        $this->zdb->execute($delete);
+        $this->loadActivities();
     }
 
     /**
@@ -235,30 +207,9 @@ class Booking
         if (!isset($values['booking_date']) || empty($values['booking_date'])) {
             $this->errors[] = _T('Booking date is mandatory!', 'events');
         } else {
-            $value = $values['booking_date'];
-            try {
-                $d = \DateTime::createFromFormat(__("Y-m-d"), $value);
-                if ($d === false) {
-                    //try with non localized date
-                    $d = \DateTime::createFromFormat("Y-m-d", $value);
-                    if ($d === false) {
-                        throw new \Exception('Incorrect format');
-                    }
-                }
-                $this->date = $d->format('Y-m-d');
-            } catch (\Exception $e) {
-                Analog::log(
-                    'Wrong date format. field: booking_date'
-                    . ', value: ' . $value . ', expected fmt: '
-                    . __("Y-m-d") . ' | ' . $e->getMessage(),
-                    Analog::INFO
-                );
-                $this->errors[] = sprintf(
-                    //TRANS %1$s is the expected date format, %2$s is the field label
-                    _T('- Wrong date format (%1$s) for %2$s!'),
-                    __("Y-m-d"),
-                    __('booking date', 'events')
-                );
+            $date = $this->parseDate((string)$values['booking_date'], __('booking date', 'events'));
+            if ($date !== null) {
+                $this->date = $date;
             }
         }
 
@@ -345,13 +296,7 @@ class Booking
      */
     public function store(): void
     {
-        $new = $this->id === null;
-        $transaction = !$this->zdb->connection->inTransaction();
-        if ($transaction) {
-            $this->zdb->connection->beginTransaction();
-        }
-
-        try {
+        $this->transactional(function (): void {
             $values = [
                 Event::PK           => $this->event,
                 Adherent::PK        => $this->member,
@@ -366,7 +311,7 @@ class Booking
                 'comment'           => $this->comment
             ];
 
-            if ($new) {
+            if ($this->id === null) {
                 //we're inserting a new booking
                 $this->creation_date = date("Y-m-d");
                 $values['creation_date'] = $this->creation_date;
@@ -374,30 +319,21 @@ class Booking
                 $insert = $this->zdb->insert($this->getTableName());
                 $insert->values($values);
                 $add = $this->zdb->execute($insert);
-                if ($add->count() > 0) {
-                    if ($this->zdb->isPostgres()) {
-                        /** @phpstan-ignore-next-line */
-                        $this->id = (int)$this->zdb->driver->getLastGeneratedValue(
-                            PREFIX_DB . EVENTS_PREFIX . Booking::TABLE . '_id_seq'
-                        );
-                    } else {
-                        $this->id = (int)$this->zdb->driver->getLastGeneratedValue();
-                    }
-
-                    // logging
-                    $this->history->add(
-                        _T("Booking added", "events"),
-                        $this->getEvent()->getName()
-                    );
-                } else {
+                if ($add->count() === 0) {
                     $this->history->add(_T("Fail to add new booking.", "events"));
                     throw new \RuntimeException(
                         'An error occurred inserting new booking!'
                     );
                 }
+                $this->id = $this->getLastInsertId();
+
+                // logging
+                $this->history->add(
+                    _T("Booking added", "events"),
+                    $this->getEvent()->getName()
+                );
             } else {
                 //we're editing an existing booking
-                $values[self::PK] = $this->id;
                 $update = $this->zdb->update($this->getTableName());
                 $update
                     ->set($values)
@@ -524,20 +460,7 @@ class Booking
                     Analog::INFO
                 );
             }
-
-            if ($transaction) {
-                $this->zdb->connection->commit();
-            }
-        } catch (\Throwable $e) {
-            if ($transaction) {
-                $this->zdb->connection->rollBack();
-            }
-            if ($new) {
-                //nothing has been stored
-                $this->id = null;
-            }
-            throw $e;
-        }
+        });
     }
 
     /**
@@ -682,14 +605,6 @@ class Booking
     {
         $this->member = $member;
         return $this;
-    }
-
-    /**
-     * Get table's name
-     */
-    protected function getTableName(): string
-    {
-        return EVENTS_PREFIX . self::TABLE;
     }
 
     /**

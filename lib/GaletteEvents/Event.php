@@ -26,6 +26,8 @@ use Laminas\Db\Sql\Expression;
  */
 class Event
 {
+    use EntityTrait;
+
     public const string TABLE = 'events';
     public const string PK = 'id_event';
 
@@ -71,32 +73,11 @@ class Event
             $this->load($args);
         } elseif ($args !== null) {
             $this->loadFromRS($args);
-            $this->loadActivities();
         } else {
             $now = date('Y-m-d');
             $this->begin_date = $now;
             $this->end_date = $now;
         }
-    }
-
-    /**
-     * Load an event from its id
-     *
-     * @param int $id Event identifier
-     *
-     * @throws NotFoundException
-     */
-    public function load(int $id): void
-    {
-        $select = $this->zdb->select($this->getTableName());
-        $select->where([self::PK => $id]);
-        $results = $this->zdb->execute($select);
-
-        if ($results->count() === 0) {
-            throw new NotFoundException('No event #' . $id);
-        }
-        $this->loadFromRS($results->current());
-        $this->loadActivities();
     }
 
     /**
@@ -119,16 +100,7 @@ class Event
         $this->group = $r['id_group'] === null ? null : (int)$r['id_group'];
         $this->comment = $r['comment'] ?? '';
         $this->color = $r['color'];
-    }
-
-    /**
-     * Remove event, with its bookings and activities links
-     */
-    public function remove(): void
-    {
-        $delete = $this->zdb->delete($this->getTableName());
-        $delete->where([self::PK => $this->id]);
-        $this->zdb->execute($delete);
+        $this->loadActivities();
     }
 
     /**
@@ -144,38 +116,15 @@ class Event
         if (empty($values['begin_date'])) {
             $this->errors[] = _T('Begin date is mandatory', 'events');
         } else {
-            //handle dates
-            foreach (['begin_date', 'end_date'] as $datefield) {
+            $labels = [
+                'begin_date'    => _T('Begin date', 'events'),
+                'end_date'      => _T('End date', 'events'),
+            ];
+            foreach ($labels as $datefield => $label) {
                 if (isset($values[$datefield])) {
-                    $value = $values[$datefield];
-                    try {
-                        $d = \DateTime::createFromFormat(__("Y-m-d"), $value);
-                        if ($d === false) {
-                            //try with non localized date
-                            $d = \DateTime::createFromFormat("Y-m-d", $value);
-                            if ($d === false) {
-                                throw new \Exception('Incorrect format');
-                            }
-                        }
-                        $this->$datefield = $d->format('Y-m-d');
-                    } catch (\Exception $e) {
-                        Analog::log(
-                            'Wrong date format. field: ' . $datefield
-                            . ', value: ' . $value . ', expected fmt: '
-                            . __("Y-m-d") . ' | ' . $e->getMessage(),
-                            Analog::INFO
-                        );
-                        if ($datefield == 'begin_date') {
-                            $label = _T('Begin date', 'events');
-                        } else {
-                            $label = _T('End date', 'events');
-                        }
-                        $this->errors[] = sprintf(
-                            //TRANS %1$s is the expected date format, %2$s is the field label
-                            _T('- Wrong date format (%1$s) for %2$s!'),
-                            __("Y-m-d"),
-                            $label
-                        );
+                    $date = $this->parseDate((string)$values[$datefield], $label);
+                    if ($date !== null) {
+                        $this->$datefield = $date;
                     }
                 }
             }
@@ -301,13 +250,7 @@ class Event
      */
     public function store(): void
     {
-        $new = $this->id === null;
-        $transaction = !$this->zdb->connection->inTransaction();
-        if ($transaction) {
-            $this->zdb->connection->beginTransaction();
-        }
-
-        try {
+        $this->transactional(function (): void {
             $values = [
                 'name'                  => $this->name,
                 'address'               => $this->address,
@@ -323,7 +266,7 @@ class Event
                 'color'                 => $this->color
             ];
 
-            if ($new) {
+            if ($this->id === null) {
                 //we're inserting a new event
                 $this->creation_date = date("Y-m-d");
                 $values['creation_date'] = $this->creation_date;
@@ -331,29 +274,20 @@ class Event
                 $insert = $this->zdb->insert($this->getTableName());
                 $insert->values($values);
                 $add = $this->zdb->execute($insert);
-                if ($add->count() > 0) {
-                    if ($this->zdb->isPostgres()) {
-                        /** @phpstan-ignore-next-line */
-                        $this->id = (int)$this->zdb->driver->getLastGeneratedValue(
-                            PREFIX_DB . EVENTS_PREFIX . Event::TABLE . '_id_seq'
-                        );
-                    } else {
-                        $this->id = (int)$this->zdb->driver->getLastGeneratedValue();
-                    }
-
-                    // logging
-                    $this->history->add(
-                        _T("Event added", "events"),
-                        $this->name
-                    );
-                } else {
+                if ($add->count() === 0) {
                     $this->history->add(_T("Fail to add new event.", "events"));
                     throw new \RuntimeException(
                         'An error occurred inserting new event!'
                     );
                 }
+                $this->id = $this->getLastInsertId();
+
+                // logging
+                $this->history->add(
+                    _T("Event added", "events"),
+                    $this->name
+                );
             } else {
-                $values['id_event'] = $this->id;
                 //we're editing an existing event
                 $update = $this->zdb->update($this->getTableName());
                 $update
@@ -373,20 +307,7 @@ class Event
             }
 
             $this->storeActivities();
-
-            if ($transaction) {
-                $this->zdb->connection->commit();
-            }
-        } catch (\Throwable $e) {
-            if ($transaction) {
-                $this->zdb->connection->rollBack();
-            }
-            if ($new) {
-                //nothing has been stored
-                $this->id = null;
-            }
-            throw $e;
-        }
+        });
     }
 
     /**
@@ -603,14 +524,6 @@ class Event
             }
         }
         return false;
-    }
-
-    /**
-     * Get table's name
-     */
-    protected function getTableName(): string
-    {
-        return EVENTS_PREFIX . self::TABLE;
     }
 
     /**

@@ -23,6 +23,8 @@ use Laminas\Db\Sql\Expression;
  */
 class Activity
 {
+    use EntityTrait;
+
     public const string TABLE = 'activities';
     public const string PK = 'id_activity';
 
@@ -63,25 +65,6 @@ class Activity
     }
 
     /**
-     * Load an activity from its id
-     *
-     * @param int $id Activity identifier
-     *
-     * @throws NotFoundException
-     */
-    public function load(int $id): void
-    {
-        $select = $this->zdb->select($this->getTableName());
-        $select->where([self::PK => $id]);
-        $results = $this->zdb->execute($select);
-
-        if ($results->count() === 0) {
-            throw new NotFoundException('No activity #' . $id);
-        }
-        $this->loadFromRS($results->current());
-    }
-
-    /**
      * Populate object from a resultset row
      *
      * @param ArrayObject<string, mixed> $r the resultset row
@@ -93,16 +76,6 @@ class Activity
         $this->active = (bool)$r['is_active'];
         $this->creation_date = $r['creation_date'];
         $this->comment = $r['comment'] ?? '';
-    }
-
-    /**
-     * Remove activity, with its links to events and bookings
-     */
-    public function remove(): void
-    {
-        $delete = $this->zdb->delete($this->getTableName());
-        $delete->where([self::PK => $this->id]);
-        $this->zdb->execute($delete);
     }
 
     /**
@@ -152,65 +125,58 @@ class Activity
      */
     public function store(): void
     {
-        $values = [
-            'name'                  => $this->name,
-            'is_active'             => ($this->active ? $this->active
-                                            : ($this->zdb->isPostgres() ? 'false' : 0)),
-            'comment'               => $this->comment
-        ];
+        $this->transactional(function (): void {
+            $values = [
+                'name'                  => $this->name,
+                'is_active'             => ($this->active ? $this->active
+                                                : ($this->zdb->isPostgres() ? 'false' : 0)),
+                'comment'               => $this->comment
+            ];
 
-        if ($this->id === null) {
-            //we're inserting a new activity
-            $this->creation_date = date("Y-m-d");
-            $values['creation_date'] = $this->creation_date;
+            if ($this->id === null) {
+                //we're inserting a new activity
+                $this->creation_date = date("Y-m-d");
+                $values['creation_date'] = $this->creation_date;
 
-            $insert = $this->zdb->insert($this->getTableName());
-            $insert->values($values);
-            $add = $this->zdb->execute($insert);
-            if ($add->count() === 0) {
-                $this->history->add(_T("Fail to add new activity.", "events"));
-                throw new \RuntimeException(
-                    'An error occurred inserting new activity!'
-                );
-            }
+                $insert = $this->zdb->insert($this->getTableName());
+                $insert->values($values);
+                $add = $this->zdb->execute($insert);
+                if ($add->count() === 0) {
+                    $this->history->add(_T("Fail to add new activity.", "events"));
+                    throw new \RuntimeException(
+                        'An error occurred inserting new activity!'
+                    );
+                }
+                $this->id = $this->getLastInsertId();
 
-            if ($this->zdb->isPostgres()) {
-                /** @phpstan-ignore-next-line */
-                $this->id = (int)$this->zdb->driver->getLastGeneratedValue(
-                    PREFIX_DB . $this->getTableName() . '_id_seq'
-                );
-            } else {
-                $this->id = (int)$this->zdb->driver->getLastGeneratedValue();
-            }
-
-            // logging
-            $this->history->add(
-                _T("Activity added", "events"),
-                $this->name
-            );
-        } else {
-            //we're editing an existing activity
-            $values[self::PK] = $this->id;
-            $update = $this->zdb->update($this->getTableName());
-            $update
-                ->set($values)
-                ->where([self::PK => $this->id]);
-
-            $edit = $this->zdb->execute($update);
-
-            //edit == 0 does not mean there were an error, but that there
-            //were nothing to change
-            if ($edit->count() > 0) {
+                // logging
                 $this->history->add(
-                    _T("Activity updated", "events"),
+                    _T("Activity added", "events"),
                     $this->name
                 );
+            } else {
+                //we're editing an existing activity
+                $update = $this->zdb->update($this->getTableName());
+                $update
+                    ->set($values)
+                    ->where([self::PK => $this->id]);
+
+                $edit = $this->zdb->execute($update);
+
+                //edit == 0 does not mean there were an error, but that there
+                //were nothing to change
+                if ($edit->count() > 0) {
+                    $this->history->add(
+                        _T("Activity updated", "events"),
+                        $this->name
+                    );
+                }
             }
-        }
+        });
     }
 
     /**
-     * Get event id
+     * Get activity id
      */
     public function getId(): ?int
     {
@@ -218,7 +184,7 @@ class Activity
     }
 
     /**
-     * Get event name
+     * Get activity name
      */
     public function getName(): string
     {
@@ -239,14 +205,6 @@ class Activity
     public function isActive(): bool
     {
         return $this->active;
-    }
-
-    /**
-     * Get table's name
-     */
-    protected function getTableName(): string
-    {
-        return EVENTS_PREFIX . self::TABLE;
     }
 
     /**
