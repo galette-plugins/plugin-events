@@ -174,10 +174,10 @@ class Bookings extends AbstractRepository
         try {
             switch ($this->filters->paid_filter) {
                 case self::FILTER_PAID:
-                    $select->where('is_paid = true');
+                    $select->where(['b.is_paid' => 1]);
                     break;
                 case self::FILTER_NOT_PAID:
-                    $select->where('is_paid = false');
+                    $select->where(['b.is_paid' => 0]);
                     break;
                 case self::FILTER_DC_PAID:
                     //nothing to do here.

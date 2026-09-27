@@ -281,6 +281,24 @@ class Event extends GaletteTestCase
     }
 
     /**
+     * Closed events are stored closed, and reopened
+     */
+    public function testStoreOpenFlag(): void
+    {
+        $this->logSuperAdmin();
+        $event = new \GaletteEvents\Event($this->zdb, $this->login, $this->history);
+        $this->assertTrue($event->check($this->getFormValues(['open' => null])));
+        $event->store();
+        $event = new \GaletteEvents\Event($this->zdb, $this->login, $this->history, (int)$event->getId());
+        $this->assertFalse($event->isOpenFlag());
+
+        $this->assertTrue($event->check($this->getFormValues()));
+        $event->store();
+        $event = new \GaletteEvents\Event($this->zdb, $this->login, $this->history, (int)$event->getId());
+        $this->assertTrue($event->isOpenFlag());
+    }
+
+    /**
      * Events are stored in the running transaction, and nothing is kept when storage fails
      */
     public function testStoreTransactions(): void

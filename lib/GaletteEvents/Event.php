@@ -258,8 +258,7 @@ class Event
                 'country'               => ($this->country ?: new Expression('NULL')),
                 'begin_date'            => $this->begin_date,
                 'end_date'              => $this->end_date,
-                'is_open'               => ($this->open
-                                                ?: ($this->zdb->isPostgres() ? 'false' : 0)),
+                'is_open'               => (int)$this->open,
                 Group::PK               => ($this->group ?: new Expression('NULL')),
                 'comment'               => $this->comment,
                 'color'                 => $this->color
@@ -533,7 +532,7 @@ class Event
     public function availableActivities(): array
     {
         $select = $this->zdb->select(EVENTS_PREFIX . Activity::TABLE, 'ac');
-        $select->where->equalTo('is_active', true);
+        $select->where->equalTo('is_active', 1);
         $results = $this->zdb->execute($select);
 
         $activities = [];
