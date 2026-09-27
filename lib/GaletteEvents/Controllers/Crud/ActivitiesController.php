@@ -10,29 +10,61 @@ declare(strict_types=1);
 
 namespace GaletteEvents\Controllers\Crud;
 
-use Analog\Analog;
-use Galette\Controllers\Crud\AbstractPluginController;
+use Galette\Core\Pagination;
 use GaletteEvents\Filters\ActivitiesList;
 use GaletteEvents\Activity;
 use GaletteEvents\NotFoundException;
 use GaletteEvents\Repository\Activities;
 use Slim\Psr7\Request;
 use Slim\Psr7\Response;
-use DI\Attribute\Inject;
 
 /**
  * Activities controller
  *
  * @author Johan Cwiklinski <johan@x-tnd.be>
+ *
+ * @extends AbstractController<ActivitiesList>
  */
 
-class ActivitiesController extends AbstractPluginController
+class ActivitiesController extends AbstractController
 {
     /**
-     * @var array<string,mixed>
+     * Entity name, for session keys and logs
      */
-    #[Inject("Plugin Galette Events")]
-    protected array $module_info;
+    protected function getEntityName(): string
+    {
+        return 'activity';
+    }
+
+    /**
+     * List name, for filters session key
+     */
+    protected function getListName(): string
+    {
+        return 'activities';
+    }
+
+    /**
+     * Create empty list filters
+     */
+    protected function createFilters(): Pagination
+    {
+        return new ActivitiesList();
+    }
+
+    /**
+     * Get the message for an activity that does not exist
+     *
+     * @param int $id Requested activity identifier
+     */
+    protected function getNotFoundMessage(int $id): string
+    {
+        return sprintf(
+            //TRANS: %1$s is the activity identifier
+            _T('No activity #%1$s.', 'events'),
+            $id
+        );
+    }
 
     // CRUD - Create
 
@@ -63,73 +95,19 @@ class ActivitiesController extends AbstractPluginController
      */
     public function list(Request $request, Response $response, ?string $option = null, string|int|null $value = null): Response
     {
-        if (isset($this->session->{$this->getFilterName('activities')})) {
-            $filters = $this->session->{$this->getFilterName('activities')};
-        } else {
-            $filters = new ActivitiesList();
-        }
-
-        if ($option !== null) {
-            switch ($option) {
-                case 'page':
-                    $filters->current_page = (int)$value;
-                    break;
-                case 'order':
-                    $filters->orderby = $value;
-                    break;
-            }
-        }
-
+        $filters = $this->getFilters($option, $value);
         $activities = new Activities($this->zdb, $this->login, $this->history, $this->preferences, $filters);
-        $list = $activities->getList();
 
-        //assign pagination variables to the template and add pagination links
-        $filters->setViewPagination($this->routeparser, $this->view, false);
-
-        $this->session->{$this->getFilterName('activities')} = $filters;
-
-        // display page
-        $this->view->render(
+        return $this->renderList(
             $response,
-            $this->getTemplate('activities'),
+            'activities',
+            $filters,
             [
                 'page_title'            => _T("Activities management", "events"),
-                'require_dialog'        => true,
-                'activities'            => $list,
+                'activities'            => $activities->getList(),
                 'nb_activities'         => $activities->getCount(),
-                'filters'               => $filters
             ]
         );
-        return $response;
-    }
-
-    /**
-     * Filtering
-     */
-    public function filter(Request $request, Response $response): Response
-    {
-        $post = $request->getParsedBody();
-        if (isset($this->session->{$this->getFilterName('activities')})) {
-            $filters = $this->session->{$this->getFilterName('activities')};
-        } else {
-            $filters = new ActivitiesList();
-        }
-
-        //reinitialize filters
-        if (isset($post['clear_filter'])) {
-            $filters->reinit();
-        } else {
-            //number of rows to show
-            if (isset($post['nbshow'])) {
-                $filters->show = $post['nbshow'];
-            }
-        }
-
-        $this->session->{$this->getFilterName('activities')} = $filters;
-
-        return $response
-            ->withStatus(301)
-            ->withHeader('Location', $this->routeparser->urlFor('events_activities'));
     }
 
     // /CRUD - Read
@@ -154,15 +132,14 @@ class ActivitiesController extends AbstractPluginController
         }
 
         //values posted before an error
-        $data = $this->session->plugin_events_activity_data ?? null;
-        unset($this->session->plugin_events_activity_data);
-        if (is_array($data) && $data['id'] === $activity->getId()) {
-            $activity->check($data['values']);
+        $values = $this->getPostedValues($activity->getId());
+        if ($values !== null) {
+            $activity->check($values);
         }
 
         // template variable declaration
         $title = _T("Activity", "events");
-        if ($activity->getId() != '') {
+        if ($activity->getId() !== null) {
             $title .= ' (' . _T("modification") . ')';
         } else {
             $title .= ' (' . _T("creation") . ')';
@@ -193,7 +170,7 @@ class ActivitiesController extends AbstractPluginController
     {
         $post = $request->getParsedBody();
         $activity = new Activity($this->zdb, $this->history);
-        if (isset($post['id']) && !empty($post['id'])) {
+        if (!empty($post['id'])) {
             try {
                 $activity->load((int)$post['id']);
             } catch (NotFoundException) {
@@ -201,100 +178,35 @@ class ActivitiesController extends AbstractPluginController
             }
         }
 
-        $success_detected = [];
-        $error_detected = [];
-
-        // Validation
-        if (!$activity->check($post)) {
-            $error_detected = array_merge($error_detected, $activity->getErrors());
+        $successes = [];
+        $errors = [];
+        if ($activity->check($post)) {
+            $this->storeEntity(
+                $activity,
+                _T("New activity has been successfully added.", "events"),
+                _T("Activity has been modified.", "events"),
+                _T("An error occurred while storing the activity.", "events"),
+                $successes,
+                $errors
+            );
+        } else {
+            $errors = $activity->getErrors();
         }
 
-        if (count($error_detected) == 0) {
-            //all goes well, we can proceed
-            $new = $activity->getId() === null;
-            try {
-                $activity->store();
-                if ($new) {
-                    $success_detected[] = _T("New activity has been successfully added.", "events");
-                } else {
-                    $success_detected[] = _T("Activity has been modified.", "events");
-                }
-            } catch (\Throwable $e) {
-                Analog::log(
-                    'Unable to store activity #' . ($activity->getId() ?? 'new') . ' | ' . $e->getMessage(),
-                    Analog::ERROR
-                );
-                $error_detected[] = _T("An error occurred while storing the activity.", "events");
-            }
-        }
-
-        if (count($error_detected) > 0) {
-            foreach ($error_detected as $error) {
-                $this->flash->addMessage(
-                    'error_detected',
-                    $error
-                );
-            }
-        }
-
-        if (count($success_detected) > 0) {
-            foreach ($success_detected as $success) {
-                $this->flash->addMessage(
-                    'success_detected',
-                    $success
-                );
-            }
-        }
-
-        if (count($error_detected) == 0) {
+        if (count($errors) === 0) {
             $redirect_url = $this->routeparser->urlFor('events_activities');
         } else {
-            //keep posted values for the form
-            $this->session->plugin_events_activity_data = [
-                'id'        => $activity->getId(),
-                'values'    => $post
-            ];
-
-            if ($activity->getId()) {
-                $redirect_url = $this->routeparser->urlFor(
-                    'events_activity_edit',
-                    ['id' => (string)$activity->getId()]
-                );
-            } else {
-                $redirect_url = $this->routeparser->urlFor('events_activity_add');
-            }
+            $this->keepPostedValues($activity->getId(), $post);
+            $redirect_url = $activity->getId() !== null
+                ? $this->routeparser->urlFor('events_activity_edit', ['id' => (string)$activity->getId()])
+                : $this->routeparser->urlFor('events_activity_add');
         }
 
-        return $response
-            ->withStatus(301)
-            ->withHeader('Location', $redirect_url);
-    }
-
-    /**
-     * Get the message for an activity that does not exist
-     *
-     * @param int $id Requested activity identifier
-     */
-    private function getNotFoundMessage(int $id): string
-    {
-        return sprintf(
-            //TRANS: %1$s is the activity identifier
-            _T('No activity #%1$s.', 'events'),
-            $id
-        );
-    }
-
-    /**
-     * Redirect when requested activity does not exist
-     *
-     * @param int $id Requested activity identifier
-     */
-    private function redirectNotFound(Response $response, int $id): Response
-    {
-        return $this->redirectWithErrors(
+        return $this->redirect(
             response: $response,
-            errors: [$this->getNotFoundMessage($id)],
-            redirect_url: $this->routeparser->urlFor('events_activities')
+            redirect_url: $redirect_url,
+            successes: $successes,
+            errors: $errors
         );
     }
 

@@ -611,6 +611,7 @@ class BookingsController extends GaletteRoutingTestCase
             $test_response->getHeaders()
         );
 
+        $this->expectLogEntry(Analog::WARNING, 'Invalid value for group_filter');
         $filters = $this->session->plugin_events_bookings_filter;
         $this->assertSame(20, $filters->show);
         $this->assertEquals(\GaletteEvents\Repository\Bookings::FILTER_PAID, $filters->paid_filter);
@@ -626,5 +627,37 @@ class BookingsController extends GaletteRoutingTestCase
             $test_response->getHeaders()
         );
         $this->assertNull($this->session->plugin_events_bookings_filter->event_filter);
+    }
+
+    /**
+     * Filtering on an event shows its bookings, and all bookings drop the event filter
+     */
+    public function testFilterOnEvent(): void
+    {
+        $member_one = $this->getMemberOne();
+        $member_two = $this->getMemberTwo();
+        $event = $this->insertEvent('Event');
+        $other = $this->insertEvent('Other event');
+        $this->insertBooking($event, $member_one->id);
+        $this->insertBooking($other, $member_two->id);
+        $this->logSuperAdmin();
+
+        $request = $this->createRequest('filter-bookingslist', ['event' => 'all'], 'POST')
+            ->withParsedBody(['event_filter' => (string)$event]);
+        $test_response = $this->app->handle($request);
+        $this->assertSame(
+            ['Location' => [$this->routeparser->urlFor('events_bookings', ['event' => (string)$event])]],
+            $test_response->getHeaders()
+        );
+
+        $body = (string)$this->app->handle($this->createRequest('events_bookings', ['event' => 'guess']))->getBody();
+        $this->assertStringContainsString($member_one->sfullname, $body);
+        $this->assertStringNotContainsString($member_two->sfullname, $body);
+
+        $body = (string)$this->app->handle($this->createRequest('events_bookings', ['event' => 'all']))->getBody();
+        $this->assertStringContainsString($member_one->sfullname, $body);
+        $this->assertStringContainsString($member_two->sfullname, $body);
+        $this->assertNull($this->session->plugin_events_bookings_filter->event_filter);
+        $this->expectNoLogEntry();
     }
 }

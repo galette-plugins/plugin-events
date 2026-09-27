@@ -141,8 +141,8 @@ class EventsController extends GaletteRoutingTestCase
             $test_response->getHeaders()
         );
         $this->expectFlashData([
-            'warning_detected' => ['Do not forget to store the event'],
             'success_detected' => ['Activity has been detached from event.'],
+            'warning_detected' => ['Do not forget to store the event'],
         ]);
         $this->assertSame([$dinner => 1, $lodging => 1], $this->getEventActivities($event));
 
@@ -173,8 +173,8 @@ class EventsController extends GaletteRoutingTestCase
             $test_response->getHeaders()
         );
         $this->expectFlashData([
-            'warning_detected' => ['Do not forget to store the event'],
             'success_detected' => ['Activity has been attached to event.'],
+            'warning_detected' => ['Do not forget to store the event'],
         ]);
         $this->expectLogEntry(Analog::ERROR, 'Some errors has been threw attempting to edit/store an event');
         //form shows posted values, with the attached activity
