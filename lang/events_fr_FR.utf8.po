@@ -10,7 +10,7 @@ msgstr ""
 "Project-Id-Version: Galette Events plugin\n"
 "Report-Msgid-Bugs-To: translations@galette.eu\n"
 "POT-Creation-Date: 2026-09-27 18:14+0200\n"
-"PO-Revision-Date: 2026-09-28 04:23+0000\n"
+"PO-Revision-Date: 2026-09-28 04:39+0000\n"
 "Last-Translator: Johan Cwiklinski <trasher@x-tnd.be>\n"
 "Language-Team: French <https://hosted.weblate.org/projects/galette/events-"
 "plugin/fr/>\n"
@@ -100,10 +100,9 @@ msgstr "Nombre de personnes"
 #: ../lib/GaletteEvents/Controllers/CsvController.php:110
 #: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:72
 #: ../lib/GaletteEvents/Controllers/Crud/BookingsController.php:128
-#, fuzzy, php-format
-#| msgid "Remove event '%1$s'"
+#, php-format
 msgid "No event #%1$s."
-msgstr "Supprimer l'évènement «%1$s»"
+msgstr "Pas d'évènement #%1$s."
 
 #: ../lib/GaletteEvents/Controllers/CsvController.php:125
 #: ../templates/default/booking.html.twig:115
@@ -177,10 +176,9 @@ msgstr "Supprimer l'évènement «%1$s»"
 
 #. TRANS: %1$s is the booking identifier
 #: ../lib/GaletteEvents/Controllers/Crud/BookingsController.php:71
-#, fuzzy, php-format
-#| msgid "No booking selected"
+#, php-format
 msgid "No booking #%1$s."
-msgstr "Aucune réservation sélectionnée"
+msgstr "Pas de réservation #%1$s."
 
 #: ../lib/GaletteEvents/Controllers/Crud/BookingsController.php:152
 msgid "Bookings management"
@@ -223,10 +221,9 @@ msgstr "Supprimer la réservation pour %1$s sur %2$s"
 
 #. TRANS: %1$s is the activity identifier
 #: ../lib/GaletteEvents/Controllers/Crud/ActivitiesController.php:64
-#, fuzzy, php-format
-#| msgid "Remove activity %1$s"
+#, php-format
 msgid "No activity #%1$s."
-msgstr "Supprimer l'activité %1$s"
+msgstr "Pas d'activité #%1$s."
 
 #: ../lib/GaletteEvents/Controllers/Crud/ActivitiesController.php:106
 msgid "Activities management"
