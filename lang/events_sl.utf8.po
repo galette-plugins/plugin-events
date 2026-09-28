@@ -6,10 +6,10 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"Report-Msgid-Bugs-To: \n"
+"Report-Msgid-Bugs-To: translations@galette.eu\n"
 "POT-Creation-Date: 2026-09-27 18:14+0200\n"
-"PO-Revision-Date: 2026-09-25 22:08+0000\n"
-"Last-Translator: Jože Felicijan <joze@felicijan.com>\n"
+"PO-Revision-Date: 2026-09-28 08:56+0000\n"
+"Last-Translator: Johan Cwiklinski <trasher@x-tnd.be>\n"
 "Language-Team: Slovenian <https://hosted.weblate.org/projects/galette/events-"
 "plugin/sl/>\n"
 "Language: sl\n"
@@ -115,6 +115,7 @@ msgstr "Ime banke"
 #. TRANS: Bank check number
 #: ../lib/GaletteEvents/Controllers/CsvController.php:129
 #: ../templates/default/booking.html.twig:133
+#, fuzzy
 msgid "Check number"
 msgstr "Preverite številko"
 
