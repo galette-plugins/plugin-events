@@ -9,7 +9,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: translations@galette.eu\n"
 "POT-Creation-Date: 2026-09-27 18:14+0200\n"
 "PO-Revision-Date: 2026-09-28 08:56+0000\n"
-"Last-Translator: Johan Cwiklinski <trasher@x-tnd.be>\n"
+"Last-Translator: Jože Felicijan <joze@felicijan.com>\n"
 "Language-Team: Slovenian <https://hosted.weblate.org/projects/galette/events-"
 "plugin/sl/>\n"
 "Language: sl\n"
@@ -70,9 +70,17 @@ msgid_plural ""
 "Group \"%1$s\" is used by %2$s events, it cannot be deleted. Remove the "
 "events or change their group first."
 msgstr[0] ""
+"Skupino »%1$s« uporablja dogodek »%2$s«, zato je ni mogoče izbrisati. "
+"Najprej odstranite dogodek ali spremenite njegovo skupino."
 msgstr[1] ""
+"Skupini »%1$s« uporabljata dogodek »%2$s«, zato jih ni mogoče izbrisati. "
+"Najprej odstranite dogodek ali spremenite njegovo skupino."
 msgstr[2] ""
+"Skupine »%1$s« uporabljajo dogodek »%2$s«, zato jih ni mogoče izbrisati. "
+"Najprej odstranite dogodek ali spremenite njegovo skupino."
 msgstr[3] ""
+"Skupin »%1$s« uporabljajo dogodek »%2$s«, zato jih ni mogoče izbrisati. "
+"Najprej odstranite dogodek ali spremenite njegovo skupino."
 
 #: ../lib/GaletteEvents/Controllers/CsvController.php:87
 #: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:224
@@ -97,10 +105,9 @@ msgstr "Število oseb"
 #: ../lib/GaletteEvents/Controllers/CsvController.php:110
 #: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:72
 #: ../lib/GaletteEvents/Controllers/Crud/BookingsController.php:128
-#, fuzzy, php-format
-#| msgid "Remove event '%1$s'"
+#, php-format
 msgid "No event #%1$s."
-msgstr "Odstrani dogodek '%1$s'"
+msgstr "Ni dogodka št. %1$s."
 
 #: ../lib/GaletteEvents/Controllers/CsvController.php:125
 #: ../templates/default/booking.html.twig:115
@@ -115,9 +122,8 @@ msgstr "Ime banke"
 #. TRANS: Bank check number
 #: ../lib/GaletteEvents/Controllers/CsvController.php:129
 #: ../templates/default/booking.html.twig:133
-#, fuzzy
 msgid "Check number"
-msgstr "Preverite številko"
+msgstr "Številka čeka"
 
 #. TRANS: this is a filename: all lowercase, no special character, no space.
 #: ../lib/GaletteEvents/Controllers/CsvController.php:184
@@ -175,10 +181,9 @@ msgstr "Odstrani dogodek '%1$s'"
 
 #. TRANS: %1$s is the booking identifier
 #: ../lib/GaletteEvents/Controllers/Crud/BookingsController.php:71
-#, fuzzy, php-format
-#| msgid "No booking selected"
+#, php-format
 msgid "No booking #%1$s."
-msgstr "Ni izbrane rezervacije"
+msgstr "Brez rezervacije št. %1$s."
 
 #: ../lib/GaletteEvents/Controllers/Crud/BookingsController.php:152
 msgid "Bookings management"
@@ -221,10 +226,9 @@ msgstr "Odstrani rezervacijo za %1$s na %2$s"
 
 #. TRANS: %1$s is the activity identifier
 #: ../lib/GaletteEvents/Controllers/Crud/ActivitiesController.php:64
-#, fuzzy, php-format
-#| msgid "Remove activity %1$s"
+#, php-format
 msgid "No activity #%1$s."
-msgstr "Odstrani dejavnost %1$s"
+msgstr "Ni aktivnosti #%1$s."
 
 #: ../lib/GaletteEvents/Controllers/Crud/ActivitiesController.php:106
 msgid "Activities management"
@@ -258,11 +262,11 @@ msgstr "Dogodek je obvezen"
 
 #: ../lib/GaletteEvents/Booking.php:125
 msgid "This event cannot be booked."
-msgstr ""
+msgstr "Tega dogodka ni mogoče rezervirati."
 
 #: ../lib/GaletteEvents/Booking.php:149
 msgid "Amount must be a number."
-msgstr ""
+msgstr "Znesek mora biti številka."
 
 #: ../lib/GaletteEvents/Booking.php:154
 msgid "Please specify amount if booking has been paid ;)"
@@ -275,6 +279,7 @@ msgstr "Članstvo je obvezno"
 #: ../lib/GaletteEvents/Booking.php:189
 msgid "You can only book other members on events of groups you manage."
 msgstr ""
+"Druge člane lahko na dogodke prijavite le v skupinah, ki jih upravljate."
 
 #: ../lib/GaletteEvents/Booking.php:199
 msgid "There must be at least one person"
