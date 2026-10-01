@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: translations@galette.eu\n"
 "POT-Creation-Date: 2026-09-30 08:40+0200\n"
-"PO-Revision-Date: 2026-09-03 10:59+0000\n"
+"PO-Revision-Date: 2026-10-01 18:51+0000\n"
 "Last-Translator: Johan Cwiklinski <trasher@x-tnd.be>\n"
 "Language-Team: Italian <https://hosted.weblate.org/projects/galette/events-"
 "plugin/it/>\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 2026.9\n"
+"X-Generator: Weblate 2026.10\n"
 
 #: ../lib/GaletteEvents/Event.php:116
 msgid "Begin date is mandatory"
@@ -266,7 +266,7 @@ msgstr "Specificare l'importo se la prenotazione è stata pagata ;)"
 
 #: ../lib/GaletteEvents/Booking.php:175
 msgid "Member is mandatory"
-msgstr "Il socio è obbligatorio"
+msgstr "Il membro è obbligatorio"
 
 #: ../lib/GaletteEvents/Booking.php:189
 msgid "You can only book other members on events of groups you manage."
