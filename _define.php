@@ -16,7 +16,7 @@ $this->register(
     version: '2.3.0',           //Version
     compver: '1.3.0',           //Galette compatible version
     route: 'events',            //routing name and translation domain
-    date: '2026-09-30',         //Release date
+    date: '2026-10-03',         //Release date
     acls: [                     //Permissions needed
         'events_events'             => 'member',
         'events_bookings'           => 'member',
