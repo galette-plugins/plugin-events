@@ -1,11 +1,8 @@
 {
   "name": "plugin-events",
-  "version": "1.0.0",
+  "version": "2.2.1",
   "description": "A [Galette](https://galette.eu) plugin to manage events and bookings",
   "main": "index.js",
-  "directories": {
-    "lib": "lib"
-  },
   "scripts": {
     "build": "webpack",
     "build-dist": "webpack --mode=production",
@@ -14,20 +11,18 @@
   },
   "repository": {
     "type": "git",
-    "url": "ssh://git.tuxfamily.org/gitroot/galette/plugin-events.git"
+    "url": "https://github.com/galette-plugins/plugin-events.git"
   },
   "author": "Johan Cwiklinski <johan AT x-tnd DOT be>",
   "license": "GPL-3.0-or-later",
   "dependencies": {
-    "@fullcalendar/core": "^6.1.9",
-    "@fullcalendar/daygrid": "^6.1.9",
-    "@fullcalendar/interaction": "^6.1.9",
-    "@fullcalendar/list": "^6.1.9",
-    "moment": "^2.29.4"
+    "fullcalendar": "^7.1.0",
+    "temporal-polyfill": "^1.0.5"
   },
   "devDependencies": {
-    "copy-webpack-plugin": "^13.0.1",
-    "webpack": "^5.94.0",
-    "webpack-cli": "^6.0.1"
+    "css-loader": "^7.1.5",
+    "style-loader": "^4.0.0",
+    "webpack": "^5.111.1",
+    "webpack-cli": "^7.2.3"
   }
 }

@@ -1,22 +1,9 @@
 <?php
 
 /**
- * Copyright © 2003-2025 The Galette Team
- *
- * This file is part of Galette (https://galette.eu).
- *
- * Galette is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * Galette is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with Galette. If not, see <http://www.gnu.org/licenses/>.
+ * This file is part of Galette Events plugin (https://galette.eu).
+ * SPDX-FileCopyrightText: Copyright © 2018-2026 The Galette Team
+ * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
 declare(strict_types=1);
@@ -25,10 +12,12 @@ namespace GaletteEvents;
 
 use ArrayObject;
 use Galette\Core\Db;
+use Galette\Core\History;
 use Galette\Core\Login;
 use Galette\Entity\Adherent;
 use Galette\Entity\PaymentType;
 use Analog\Analog;
+use GaletteEvents\Repository\Events;
 
 /**
  * Booking entity
@@ -37,17 +26,22 @@ use Analog\Analog;
  */
 class Booking
 {
-    public const TABLE = 'bookings';
-    public const PK = 'id_booking';
+    use EntityTrait;
+
+    public const string TABLE = 'bookings';
+    public const string PK = 'id_booking';
 
     private Db $zdb;
     private Login $login;
+    private History $history;
     /** @var array<string> */
-    private array $errors;
+    private array $errors = [];
 
-    private int $id;
-    private int $event;
-    private int $member;
+    private ?int $id = null;
+    private ?int $event = null;
+    private ?int $member = null;
+    private ?Event $event_entity = null;
+    private ?Adherent $member_entity = null;
     private string $date = '';
     private bool $paid = false;
     private ?float $amount = null;
@@ -59,120 +53,52 @@ class Booking
 
     /** @var array<int, array<string,mixed>> */
     private array $activities = [];
-    /** @var array<int, array<string,mixed>> */
-    private array $activities_removed = [];
-    private string $creation_date;
+    private ?string $creation_date = null;
 
     /**
      * Default constructor
      *
-     * @param Db                                      $zdb   Database instance
-     * @param Login                                   $login Login instance
-     * @param null|int|ArrayObject<string,int|string> $args  Either a ResultSet row or its id for to load
-     *                                                       a specific event, or null to just
-     *                                                       instanciate object
+     * @param Db                                  $zdb     Database instance
+     * @param Login                               $login   Login instance
+     * @param History                             $history History instance
+     * @param null|int|ArrayObject<string, mixed> $args    Either a ResultSet row or its id for to load
+     *                                                     a specific event, or null to just
+     *                                                     instanciate object
      */
-    public function __construct(Db $zdb, Login $login, int|ArrayObject|null $args = null)
+    public function __construct(Db $zdb, Login $login, History $history, int|ArrayObject|null $args = null)
     {
         $this->zdb = $zdb;
         $this->login = $login;
+        $this->history = $history;
         if (is_int($args)) {
             $this->load($args);
-        } elseif (is_object($args)) {
+        } elseif ($args !== null) {
             $this->loadFromRS($args);
-            $this->loadActivities();
-        }
-    }
-
-    /**
-     * Loads an event from its id
-     *
-     * @param int $id the identifiant for the event to load
-     *
-     * @return bool true if query succeed, false otherwise
-     */
-    public function load(int $id): bool
-    {
-        try {
-            $select = $this->zdb->select($this->getTableName());
-            $select->where([self::PK => $id]);
-
-            $results = $this->zdb->execute($select);
-
-            if ($results->count() > 0) {
-                $this->loadFromRS($results->current());
-                $this->loadActivities();
-                return true;
-            } else {
-                return false;
-            }
-        } catch (\Exception $e) {
-            Analog::log(
-                'Cannot load booking form id `' . $id . '` | ' . $e->getMessage(),
-                Analog::WARNING
-            );
-            throw $e;
+        } else {
+            $this->date = date('Y-m-d');
         }
     }
 
     /**
      * Populate object from a resultset row
      *
-     * @param ArrayObject<string, int|string> $r the resultset row
-     *
-     * @return void
+     * @param ArrayObject<string, mixed> $r the resultset row
      */
     private function loadFromRS(ArrayObject $r): void
     {
-        $this->id = (int)$r->id_booking;
-        $this->event = (int)$r->id_event;
-        $this->member = (int)$r->id_adh;
-        $this->date = $r->booking_date;
-        $this->paid = (bool)$r->is_paid;
-        $this->amount = (float)$r->payment_amount;
-        $this->payment_method = (int)$r->payment_method;
-        $this->bank_name = $r->bank_name;
-        $this->check_number = $r->check_number;
-        $this->number_people = (int)$r->number_people;
-        $this->comment = $r->comment;
-    }
-
-    /**
-     * Remove specified event
-     *
-     * @return bool
-     */
-    public function remove(): bool
-    {
-        $transaction = false;
-
-        try {
-            if (!$this->zdb->connection->inTransaction()) {
-                $this->zdb->connection->beginTransaction();
-                $transaction = true;
-            }
-
-            $delete = $this->zdb->delete($this->getTableName());
-            $delete->where([self::PK => $this->id]);
-            $this->zdb->execute($delete);
-
-            //commit all changes
-            if ($transaction) {
-                $this->zdb->connection->commit();
-            }
-
-            return true;
-        } catch (\Exception $e) {
-            if ($transaction) {
-                $this->zdb->connection->rollBack();
-            }
-            Analog::log(
-                'Unable to delete booking '
-                . ' (' . $this->id . ') |' . $e->getMessage(),
-                Analog::ERROR
-            );
-            return false;
-        }
+        $this->id = (int)$r['id_booking'];
+        $this->event = (int)$r['id_event'];
+        $this->member = (int)$r['id_adh'];
+        $this->date = $r['booking_date'];
+        $this->paid = (bool)$r['is_paid'];
+        $this->amount = $r['payment_amount'] === null ? null : (float)$r['payment_amount'];
+        $this->payment_method = (int)$r['payment_method'];
+        $this->bank_name = $r['bank_name'];
+        $this->check_number = $r['check_number'];
+        $this->number_people = (int)($r['number_people'] ?? 1);
+        $this->comment = $r['comment'] ?? '';
+        $this->creation_date = $r['creation_date'];
+        $this->loadActivities();
     }
 
     /**
@@ -180,10 +106,8 @@ class Booking
      *
      * @param array<string,mixed> $values All values to check, basically the $_POST array
      *                                    after sending the form
-     *
-     * @return true|array<string>
      */
-    public function check(array $values): array|bool
+    public function check(array $values): bool
     {
         $this->errors = [];
 
@@ -191,35 +115,18 @@ class Booking
         if (!isset($values['event']) || empty($values['event']) || $values['event'] == -1) {
             $this->errors[] = _T('Event is mandatory', 'events');
         } else {
-            $this->event = (int)$values['event'];
-            $event = $this->getEvent();
-            $activities = $event->getActivities();
-            foreach ($activities as $aid => $entry) {
-                if (
-                    $event->isActivityRequired($aid)
-                    && (!isset($values['activities']) || !in_array($aid, $values['activities']))
-                ) {
-                    $this->errors[] = sprintf(
-                        //TRANS: %1$s is activity name
-                        _T('%1$s is mandatory for this event!', 'events'),
-                        $entry['activity']->getName()
-                    );
-                } else {
-                    $act = [
-                        'activity'  => $entry['activity'],
-                        'checked'   => (isset($values['activities']) && in_array($aid, $values['activities']))
-                    ];
-                    $this->activities[$aid] = $act;
-                }
+            $event_changed = $this->getId() === null || $this->getEventId() !== (int)$values['event'];
+            try {
+                $event = new Event($this->zdb, $this->login, $this->history, (int)$values['event']);
+            } catch (NotFoundException) {
+                $event = null;
             }
-            foreach (array_keys($this->activities) as $aid) {
-                if (!isset($activities[$aid])) {
-                    $this->activities_removed[$aid] = [
-                        Activity::PK    => $aid,
-                        self::PK        => $this->id
-                    ];
-                    unset($this->activities[$aid]);
-                }
+            if ($event === null || ($event_changed && !$this->canBook($event))) {
+                $this->errors[] = _T('This event cannot be booked.', 'events');
+            }
+            if ($event !== null) {
+                $this->useEvent($event);
+                $this->checkActivities($event, $values['activities'] ?? []);
             }
         }
 
@@ -231,11 +138,19 @@ class Booking
                 $this->paid = false;
             }
 
-            if (isset($values['amount']) && !empty($values['amount'])) {
-                $this->amount = (float)$values['amount'];
+            if (isset($values['amount'])) {
+                //accept comma as decimal separator
+                $amount = strtr(trim((string)$values['amount']), ',', '.');
+                if ($amount === '') {
+                    $this->amount = null;
+                } elseif (is_numeric($amount)) {
+                    $this->amount = (float)$amount;
+                } else {
+                    $this->errors[] = _T('Amount must be a number.', 'events');
+                }
             }
 
-            if ($this->paid && !$this->amount) {
+            if ($this->paid && $this->amount === null) {
                 $this->errors[] = _T('Please specify amount if booking has been paid ;)', 'events');
             }
 
@@ -253,18 +168,28 @@ class Booking
         }
 
         //booking information
-        if (!isset($values['member']) || empty($values['member'])) {
-            if (
-                $this->login->isAdmin()
-                || $this->login->isStaff()
-                || $this->login->isGroupManager()
-            ) {
-                $this->errors[] = _T('Member is mandatory', 'events');
-            } else {
-                $this->member = $this->login->id;
-            }
+        if (!$this->login->isAdmin() && !$this->login->isStaff() && !$this->login->isGroupManager()) {
+            //members book for themselves only
+            $this->member = $this->login->id;
+        } elseif (!isset($values['member']) || empty($values['member'])) {
+            $this->errors[] = _T('Member is mandatory', 'events');
         } else {
-            $this->member = (int)$values['member'];
+            $member = (int)$values['member'];
+            if (
+                !$this->login->isAdmin()
+                && !$this->login->isStaff()
+                && $member !== $this->login->id
+                && $member !== $this->getMemberId()
+            ) {
+                //group managers book for members of the groups they manage, on events of those groups
+                $group = $this->getEvent()?->getGroup();
+                if (!(new Adherent($this->zdb, $member))->canShow($this->login)) {
+                    $this->errors[] = _T("- Please select a member from a group you manage.");
+                } elseif ($group === null || !$this->login->isGroupManager($group)) {
+                    $this->errors[] = _T('You can only book other members on events of groups you manage.', 'events');
+                }
+            }
+            $this->member = $member;
         }
 
         if (isset($values['number_people'])) {
@@ -282,30 +207,9 @@ class Booking
         if (!isset($values['booking_date']) || empty($values['booking_date'])) {
             $this->errors[] = _T('Booking date is mandatory!', 'events');
         } else {
-            $value = $values['booking_date'];
-            try {
-                $d = \DateTime::createFromFormat(__("Y-m-d"), $value);
-                if ($d === false) {
-                    //try with non localized date
-                    $d = \DateTime::createFromFormat("Y-m-d", $value);
-                    if ($d === false) {
-                        throw new \Exception('Incorrect format');
-                    }
-                }
-                $this->date = $d->format('Y-m-d');
-            } catch (\Exception $e) {
-                Analog::log(
-                    'Wrong date format. field: booking_date'
-                    . ', value: ' . $value . ', expected fmt: '
-                    . __("Y-m-d") . ' | ' . $e->getMessage(),
-                    Analog::INFO
-                );
-                $this->errors[] = sprintf(
-                    //TRANS %1$s is the expected date format, %2$s is the field label
-                    _T('- Wrong date format (%1$s) for %2$s!'),
-                    __("Y-m-d"),
-                    __('booking date', 'events')
-                );
+            $date = $this->parseDate((string)$values['booking_date'], __('booking date', 'events'));
+            if ($date !== null) {
+                $this->date = $date;
             }
         }
 
@@ -316,7 +220,7 @@ class Booking
                 Event::PK       => $this->event,
                 Adherent::PK    => $this->member
             ]);
-            if (isset($this->id)) {
+            if ($this->id !== null) {
                 $select->where->notEqualTo(
                     self::PK,
                     $this->id
@@ -339,7 +243,7 @@ class Booking
                 . print_r($this->errors, true),
                 Analog::ERROR
             );
-            return $this->errors;
+            return false;
         } else {
             Analog::log(
                 'Event checked successfully.',
@@ -350,22 +254,50 @@ class Booking
     }
 
     /**
-     * Store the booking
+     * Check activities of the booking against the ones of its event
      *
-     * @return bool
+     * @param Event        $event   Booked event
+     * @param array<mixed> $checked Checked activities identifiers
      */
-    public function store(): bool
+    private function checkActivities(Event $event, array $checked): void
     {
-        global $hist;
+        $activities = $event->getActivities();
+        foreach ($activities as $aid => $entry) {
+            if (
+                $event->isActivityRequired($aid)
+                && !in_array($aid, $checked)
+            ) {
+                $this->errors[] = sprintf(
+                    //TRANS: %1$s is activity name
+                    _T('%1$s is mandatory for this event!', 'events'),
+                    $entry['activity']->getName()
+                );
+            } else {
+                $act = [
+                    'activity'  => $entry['activity'],
+                    'checked'   => in_array($aid, $checked)
+                ];
+                $this->activities[$aid] = $act;
+            }
+        }
+        foreach (array_keys($this->activities) as $aid) {
+            if (!isset($activities[$aid])) {
+                unset($this->activities[$aid]);
+            }
+        }
+    }
 
-        try {
-            $this->zdb->connection->beginTransaction();
+    /**
+     * Store the booking
+     */
+    public function store(): void
+    {
+        $this->transactional(function (): void {
             $values = [
                 Event::PK           => $this->event,
                 Adherent::PK        => $this->member,
                 'booking_date'      => $this->date,
-                'is_paid'           => ($this->paid ? $this->paid
-                                            : ($this->zdb->isPostgres() ? 'false' : 0)),
+                'is_paid'           => (int)$this->paid,
                 'payment_method'    => $this->payment_method,
                 'payment_amount'    => $this->amount,
                 'bank_name'         => $this->bank_name,
@@ -374,38 +306,29 @@ class Booking
                 'comment'           => $this->comment
             ];
 
-            if (empty($this->id)) {
-                //we're inserting a new event
-                $this->creation_date = date("Y-m-d H:i:s");
+            if ($this->id === null) {
+                //we're inserting a new booking
+                $this->creation_date = date("Y-m-d");
                 $values['creation_date'] = $this->creation_date;
 
                 $insert = $this->zdb->insert($this->getTableName());
                 $insert->values($values);
                 $add = $this->zdb->execute($insert);
-                if ($add->count() > 0) {
-                    if ($this->zdb->isPostgres()) {
-                        /** @phpstan-ignore-next-line */
-                        $this->id = (int)$this->zdb->driver->getLastGeneratedValue(
-                            PREFIX_DB . EVENTS_PREFIX . Booking::TABLE . '_id_seq'
-                        );
-                    } else {
-                        $this->id = (int)$this->zdb->driver->getLastGeneratedValue();
-                    }
-
-                    // logging
-                    $hist->add(
-                        _T("Booking added", "events"),
-                        $this->getEvent()->getName()
-                    );
-                } else {
-                    $hist->add(_T("Fail to add new booking.", "events"));
-                    throw new \Exception(
+                if ($add->count() === 0) {
+                    $this->history->add(_T("Fail to add new booking.", "events"));
+                    throw new \RuntimeException(
                         'An error occurred inserting new booking!'
                     );
                 }
+                $this->id = $this->getLastInsertId();
+
+                // logging
+                $this->history->add(
+                    _T("Booking added", "events"),
+                    $this->getEvent()->getName()
+                );
             } else {
                 //we're editing an existing booking
-                $values[self::PK] = $this->id;
                 $update = $this->zdb->update($this->getTableName());
                 $update
                     ->set($values)
@@ -416,210 +339,134 @@ class Booking
                 //edit == 0 does not mean there were an error, but that there
                 //were nothing to change
                 if ($edit->count() > 0) {
-                    $hist->add(
+                    $this->history->add(
                         _T("Booking updated", "events")
                     );
                 }
             }
 
-            //store booking activities
-            $void   = [];
-            $update = [];
-            $insert = [];
-            $delete = $this->activities_removed;
+            $this->storeActivities();
+        });
+    }
 
-            foreach ($this->activities as $aid => $data) {
-                $activity = $data['activity'];
-                $checked = $data['checked'];
-                $key_values = [
+    /**
+     * Store activities of the booking, compared to the stored ones
+     */
+    private function storeActivities(): void
+    {
+        $table = EVENTS_PREFIX . 'activitiesbookings';
+
+        $stored = [];
+        $select = $this->zdb->select($table);
+        $select->where([self::PK => $this->id]);
+        foreach ($this->zdb->execute($select) as $row) {
+            $stored[(int)$row[Activity::PK]] = (bool)$row['checked'];
+        }
+
+        $counts = ['added' => 0, 'updated' => 0, 'removed' => 0];
+        foreach ($this->activities as $aid => $data) {
+            $checked = (bool)$data['checked'];
+            if (!isset($stored[$aid])) {
+                $insert = $this->zdb->insert($table);
+                $insert->values([
                     self::PK        => $this->id,
-                    $activity::PK   => $activity->getId()
-                ];
-
-                $select = $this->zdb->select(EVENTS_PREFIX . 'activitiesbookings', 'acb');
-                $select->where($key_values);
-                $results = $this->zdb->execute($select);
-
-                foreach ($results as $result) {
-                    if (!isset($this->activities[$result[Activity::PK]])) {
-                        $delete[$result[Activity::PK]] = [
-                            Activity::PK    => $result[Activity::PK],
-                            self::PK        => $this->id,
-                        ];
-                    } elseif ($result['checked'] != $this->activities[$result[Activity::PK]]['checked']) {
-                        $update[$result[Activity::PK]] = [
-                            'checked'   => ($checked ? $checked
-                                            : ($this->zdb->isPostgres() ? 'false' : 0))
-                        ];
-                    } else {
-                        $void[$result[Activity::PK]] = true;
-                    }
-                }
-
-                if (!isset($void[$aid]) && !isset($update[$aid]) && !isset($delete[$aid])) {
-                    $insert[$aid] = [
-                        Activity::PK    => $aid,
-                        self::PK        => $this->id,
-                        'checked'       => ($checked ? $checked
-                                            : ($this->zdb->isPostgres() ? 'false' : 0))
-                    ];
-                }
-            }
-
-            if (count($delete)) {
-                $prepare = $this->zdb->delete(EVENTS_PREFIX . 'activitiesbookings');
-                $prepare->where([
-                    self::PK        => $this->id,
-                    Activity::PK    => ':aid'
+                    Activity::PK    => $aid,
+                    'checked'       => (int)$checked
                 ]);
-                $stmt = $this->zdb->sql->prepareStatementForSqlObject($prepare);
+                $this->zdb->execute($insert);
+                ++$counts['added'];
+            } elseif ($stored[$aid] !== $checked) {
+                $update = $this->zdb->update($table);
+                $update->set(['checked' => (int)$checked])->where([
+                    self::PK        => $this->id,
+                    Activity::PK    => $aid
+                ]);
+                $this->zdb->execute($update);
+                ++$counts['updated'];
+            }
+        }
 
-                $count = 0;
-                foreach ($delete as $values) {
-                    $stmt->execute([':aid' => $values[Activity::PK]]);
-                    ++$count;
-                }
+        foreach (array_keys($stored) as $aid) {
+            if (!isset($this->activities[$aid])) {
+                $delete = $this->zdb->delete($table);
+                $delete->where([
+                    self::PK        => $this->id,
+                    Activity::PK    => $aid
+                ]);
+                $this->zdb->execute($delete);
+                ++$counts['removed'];
+            }
+        }
+
+        foreach ($counts as $action => $count) {
+            if ($count > 0) {
                 Analog::log(
-                    sprintf('%1$s activities removed', $count),
+                    sprintf('%1$s activities %2$s', $count, $action),
                     Analog::INFO
                 );
             }
-
-            if (count($update)) {
-                $prepare = $this->zdb->update(EVENTS_PREFIX . 'activitiesbookings');
-                $prepare->set([
-                    'checked'       => ':checked'
-                ])->where([
-                    self::PK        => $this->id,
-                    Activity::PK    => ':aid'
-                ]);
-                $stmt = $this->zdb->sql->prepareStatementForSqlObject($prepare);
-                $count = 0;
-                foreach ($update as $aid => $values) {
-                    $params = [
-                        'where2'    => $aid,
-                        ':checked'  => $values['checked']
-                    ];
-                    $stmt->execute($params);
-                    ++$count;
-                }
-                Analog::log(
-                    sprintf('%1$s activities updated', $count),
-                    Analog::INFO
-                );
-            }
-
-            if (count($insert)) {
-                $prepare = $this->zdb->insert(EVENTS_PREFIX . 'activitiesbookings');
-                $prepare->values([
-                    self::PK        => ':id',
-                    Activity::PK    => ':aid',
-                    'checked'       => ':checked'
-                ]);
-                $stmt = $this->zdb->sql->prepareStatementForSqlObject($prepare);
-                $count = 0;
-                foreach ($insert as $aid => $values) {
-                    $params = [
-                        $this->id,
-                        $aid,
-                        $values['checked']
-                    ];
-                    $stmt->execute($params);
-                    ++$count;
-                }
-                Analog::log(
-                    sprintf('%1$s activities added', $count),
-                    Analog::INFO
-                );
-            }
-
-            $this->zdb->connection->commit();
-            return true;
-        } catch (\Exception $e) {
-            $this->zdb->connection->rollBack();
-            Analog::log(
-                'Something went wrong :\'( | ' . $e->getMessage() . "\n"
-                . $e->getTraceAsString(),
-                Analog::ERROR
-            );
-            throw $e;
         }
     }
 
     /**
      * Get event id
-     *
-     * @return ?int
      */
     public function getId(): ?int
     {
-        return $this->id ?? null;
+        return $this->id;
     }
 
     /**
      * Get event id
-     *
-     * @return ?int
      */
     public function getEventId(): ?int
     {
-        return $this->event ?? null;
+        return $this->event;
     }
 
     /**
      * Get event
-     *
-     * @return ?Event
      */
     public function getEvent(): ?Event
     {
-        if (isset($this->event)) {
-            return new Event($this->zdb, $this->login, $this->event);
+        if ($this->event === null) {
+            return null;
         }
-        return null;
+        if ($this->event_entity?->getId() !== $this->event) {
+            $this->event_entity = new Event($this->zdb, $this->login, $this->history, $this->event);
+        }
+        return $this->event_entity;
     }
 
     /**
      * Get member id
-     *
-     * @return ?int
      */
     public function getMemberId(): ?int
     {
-        return $this->member ?? null;
+        return $this->member;
     }
 
     /**
-     * Get member
-     *
-     * @return Adherent
+     * Get member, empty if booking has no member yet
      */
     public function getMember(): Adherent
     {
-        return new Adherent($this->zdb, $this->member);
+        if ($this->member_entity === null || $this->member_entity->id !== $this->member) {
+            $this->member_entity = new Adherent($this->zdb, $this->member);
+        }
+        return $this->member_entity;
     }
 
     /**
-     * Get date
-     *
-     * @param bool $formatted Return date formatted, raw if false
-     *
-     * @return string
+     * Get booking date, as Y-m-d
      */
-    public function getDate(bool $formatted = true): string
+    public function getDate(): string
     {
-        if ($formatted === true) {
-            $date = new \DateTime($this->date);
-            return $date->format(__("Y-m-d"));
-        } else {
-            return $this->date;
-        }
+        return $this->date;
     }
 
     /**
      * Is booking paid?
-     *
-     * @return bool
      */
     public function isPaid(): bool
     {
@@ -628,8 +475,6 @@ class Booking
 
     /**
      * Get amount
-     *
-     * @return ?float
      */
     public function getAmount(): ?float
     {
@@ -638,8 +483,6 @@ class Booking
 
     /**
      * Get payment method
-     *
-     * @return int
      */
     public function getPaymentMethod(): int
     {
@@ -648,19 +491,21 @@ class Booking
 
     /**
      * Get payment method name
-     *
-     * @return string
      */
     public function getPaymentMethodName(): string
     {
-        $pt = new PaymentType($this->zdb, (int)$this->payment_method);
-        return $pt->getname();
+        //payment method may be missing: 0 is the column default, and types can be removed
+        $select = $this->zdb->select(PaymentType::TABLE);
+        $select->where([PaymentType::PK => $this->payment_method]);
+        if ($this->zdb->execute($select)->count() === 0) {
+            return '';
+        }
+        $pt = new PaymentType($this->zdb, $this->payment_method);
+        return $pt->getName();
     }
 
     /**
      * Get bank name
-     *
-     * @return ?string
      */
     public function getBankName(): ?string
     {
@@ -669,8 +514,6 @@ class Booking
 
     /**
      * Get check number
-     *
-     * @return ?string
      */
     public function getCheckNumber(): ?string
     {
@@ -679,8 +522,6 @@ class Booking
 
     /**
      * Get number of persons
-     *
-     * @return int
      */
     public function getNumberPeople(): int
     {
@@ -688,28 +529,17 @@ class Booking
     }
 
     /**
-     * Get creation date
-     *
-     * @param bool $formatted Return date formatted, raw if false
-     *
-     * @return string
+     * Get creation date, as Y-m-d
      */
-    public function getCreationDate(bool $formatted = true): string
+    public function getCreationDate(): string
     {
-        if ($formatted === true) {
-            $date = new \DateTime($this->creation_date);
-            return $date->format(__("Y-m-d"));
-        } else {
-            return $this->creation_date;
-        }
+        return $this->creation_date ?? '';
     }
 
     /**
      * Set event
      *
      * @param int $event Event id
-     *
-     * @return self
      */
     public function setEvent(int $event): self
     {
@@ -718,11 +548,21 @@ class Booking
     }
 
     /**
+     * Set event from an already loaded one
+     *
+     * @param Event $event Event
+     */
+    public function useEvent(Event $event): self
+    {
+        $this->event = $event->getId();
+        $this->event_entity = $event;
+        return $this;
+    }
+
+    /**
      * Set member
      *
      * @param int $member Member id
-     *
-     * @return self
      */
     public function setMember(int $member): self
     {
@@ -731,19 +571,7 @@ class Booking
     }
 
     /**
-     * Get table's name
-     *
-     * @return string
-     */
-    protected function getTableName(): string
-    {
-        return EVENTS_PREFIX . self::TABLE;
-    }
-
-    /**
      * Get comment
-     *
-     * @return string
      */
     public function getComment(): string
     {
@@ -754,8 +582,6 @@ class Booking
      * Has Activity
      *
      * @param int $activity Activity
-     *
-     * @return bool
      */
     public function has(int $activity): bool
     {
@@ -764,21 +590,22 @@ class Booking
 
     /**
      * Load linked activities
-     *
-     * @return void
      */
     public function loadActivities(): void
     {
+        $this->activities = [];
         $select = $this->zdb->select(EVENTS_PREFIX . 'activitiesbookings', 'acb');
-        $select->where([self::PK => $this->id]);
+        //activities are loaded along with their links
+        $select->join(
+            ['ac' => PREFIX_DB . EVENTS_PREFIX . Activity::TABLE],
+            'acb.' . Activity::PK . ' = ac.' . Activity::PK,
+            ['name', 'is_active', 'creation_date', 'comment']
+        );
+        $select->where(['acb.' . self::PK => $this->id]);
         $results = $this->zdb->execute($select);
         foreach ($results as $result) {
             $this->activities[$result[Activity::PK]] = [
-                'activity'  => new Activity(
-                    $this->zdb,
-                    $this->login,
-                    (int)$result[Activity::PK]
-                ),
+                'activity'  => new Activity($this->zdb, $this->history, $result),
                 'checked'    => $result['checked']
             ];
         }
@@ -792,6 +619,55 @@ class Booking
     public function getActivities(): array
     {
         return $this->activities;
+    }
+
+    /**
+     * Can current logged-in user book an event
+     *
+     * Admins and staff members can book any event, others open events
+     * that are public or restricted to one of their groups.
+     *
+     * @param Event $event Event
+     */
+    private function canBook(Event $event): bool
+    {
+        if ($this->login->isAdmin() || $this->login->isStaff()) {
+            return true;
+        }
+
+        return $event->isOpen() && Events::isVisible($event->getGroup(), $this->login);
+    }
+
+    /**
+     * Can current logged-in user edit booking
+     *
+     * Admins and staff members can edit any booking, members their own ones,
+     * and group managers the ones on events of the groups they manage.
+     *
+     * @param Login $login Login instance
+     */
+    public function canEdit(Login $login): bool
+    {
+        if ($login->isAdmin() || $login->isStaff()) {
+            return true;
+        }
+
+        if ($this->getMemberId() !== null && $this->getMemberId() === $login->id) {
+            return true;
+        }
+
+        $group = $this->getEvent()?->getGroup();
+        return $group !== null && $login->isGroupManager($group);
+    }
+
+    /**
+     * Get errors
+     *
+     * @return array<string>
+     */
+    public function getErrors(): array
+    {
+        return $this->errors;
     }
 
     /**

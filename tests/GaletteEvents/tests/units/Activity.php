@@ -1,61 +1,44 @@
 <?php
 
 /**
- * Copyright © 2003-2025 The Galette Team
- *
- * This file is part of Galette (https://galette.eu).
- *
- * Galette is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * Galette is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with Galette. If not, see <http://www.gnu.org/licenses/>.
+ * This file is part of Galette Events plugin (https://galette.eu).
+ * SPDX-FileCopyrightText: Copyright © 2018-2026 The Galette Team
+ * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
 declare(strict_types=1);
 
 namespace GaletteEvents\tests\units;
 
-use Galette\GaletteTestCase;
-
-use function PHPUnit\Framework\assertSame;
+use Galette\Tests\GaletteTestCase;
+use GaletteEvents\tests\EventsFixtures;
 
 /**
- * Color tests
+ * Activity entity tests
  *
  * @author Johan Cwiklinski <johan@x-tnd.be>
  */
 class Activity extends GaletteTestCase
 {
+    use EventsFixtures;
+
     protected int $seed = 20240517203521;
 
     /**
      * Cleanup after each test method
-     *
-     * @return void
      */
     public function tearDown(): void
     {
-        $delete = $this->zdb->delete(EVENTS_PREFIX . \GaletteEvents\Activity::TABLE);
-        $this->zdb->execute($delete);
+        $this->cleanEvents();
         parent::tearDown();
     }
 
     /**
      * Test empty
-     *
-     * @return void
      */
     public function testEmpty(): void
     {
-        $activity = new \GaletteEvents\Activity($this->zdb, $this->login);
+        $activity = new \GaletteEvents\Activity($this->zdb, $this->history);
 
         $this->assertNull($activity->getId());
         $this->assertSame('', $activity->getName());
@@ -67,13 +50,11 @@ class Activity extends GaletteTestCase
 
     /**
      * Test add and update
-     *
-     * @return void
      */
     public function testCrud(): void
     {
-        $activity = new \GaletteEvents\Activity($this->zdb, $this->login);
-        $activities = new \GaletteEvents\Repository\Activities($this->zdb, $this->login, $this->preferences);
+        $activity = new \GaletteEvents\Activity($this->zdb, $this->history);
+        $activities = new \GaletteEvents\Repository\Activities($this->zdb, $this->login, $this->history, $this->preferences);
 
         //ensure the table is empty
         $this->assertCount(0, $activities->getList());
@@ -85,7 +66,7 @@ class Activity extends GaletteTestCase
         $this->assertFalse($activity->check($data));
         $this->assertSame(['Name is mandatory'], $activity->getErrors());
         $this->expectLogEntry(
-            \Analog::ERROR,
+            \Analog\Analog::ERROR,
             'Name is mandatory',
         );
 
@@ -95,18 +76,19 @@ class Activity extends GaletteTestCase
             'comment' => 'Test comment',
         ];
         $this->assertTrue($activity->check($data));
-        $this->assertTrue($activity->store());
+        $activity->store();
         $first_id = $activity->getId();
         $this->assertGreaterThan(0, $first_id);
+        //creation date column holds no time
+        $this->assertSame(date('Y-m-d'), $activity->getCreationDate());
 
-        $this->assertTrue($activity->load($first_id));
+        $activity->load($first_id);
         $this->assertSame('Test activity', $activity->getName());
         $this->assertSame('Test comment', $activity->getComment());
         $this->assertFalse($activity->isActive());
         $this->assertSame(0, $activity->countEvents());
-        //FIXME: lang must be changed to have a different date format
-        $this->assertNotSame('', $activity->getCreationDate());
-        $this->assertNotSame('', $activity->getCreationDate(false));
+        $this->assertSame(date('Y-m-d'), $activity->getCreationDate());
+        $this->assertSame(date('Y-m-d'), $activity->getCreationDate());
 
         $activities_list = $activities->getList();
         $this->assertCount(1, $activities_list);
@@ -119,54 +101,58 @@ class Activity extends GaletteTestCase
         $data['active'] = true;
         $data['name'] = 'Test activity edited';
         $this->assertTrue($activity->check($data));
-        $this->assertTrue($activity->store());
-        $this->assertTrue($activity->load($first_id));
+        $activity->store();
+        $activity->load($first_id);
 
         $this->assertSame('Test activity edited', $activity->getName());
         $this->assertTrue($activity->isActive());
-
-        /*$color = new \GaletteAuto\Color($this->zdb);
-
-        $this->assertCount(1, $color->getList());
-        $listed_color = $color->getList()[0];
-        $this->assertInstanceOf(\ArrayObject::class, $listed_color);
-        $this->assertGreaterThan(0, $listed_color->id_color);
-        $this->assertSame('Red', $listed_color->color);
-        $this->assertSame('1 color', $color->displayCount());
-
-        //add another one
-        $color = new \GaletteAuto\Color($this->zdb);
-        $color->value = 'Blu';
-        $this->assertTrue($color->store(true));
-        $id = $color->id;
-
-        $this->assertCount(2, $color->getList());
-        $this->assertSame('2 colors', $color->displayCount());
-
-        $color = new \GaletteAuto\Color($this->zdb);
-        $this->assertTrue($color->load($id));
-        $color->value = 'Blue';
-        $this->assertTrue($color->store());
-
-        $this->assertCount(2, $color->getList());
-        $this->assertSame('2 colors', $color->displayCount());
-
-        $color = new \GaletteAuto\Color($this->zdb);
-        $this->assertTrue($color->delete([$first_id]));
-        $list = $color->getList();
-        $this->assertCount(1, $list);
-        $last_color = $list[0];
-        $this->assertSame($id, $last_color->id_color);*/
     }
 
     /**
      * Test load error
-     *
-     * @return void
      */
     public function testLoadError(): void
     {
-        $activity = new \GaletteEvents\Activity($this->zdb, $this->login);
-        $this->assertFalse($activity->load(999));
+        $activity = new \GaletteEvents\Activity($this->zdb, $this->history);
+        $this->expectException(\GaletteEvents\NotFoundException::class);
+        $activity->load(999);
+    }
+
+    /**
+     * Activities are stored without comment, and loaded with a NULL one
+     */
+    public function testNoComment(): void
+    {
+        $activity = new \GaletteEvents\Activity($this->zdb, $this->history);
+        $this->assertTrue($activity->check(['name' => 'Dinner', 'active' => '1']));
+        $activity->store();
+
+        $update = $this->zdb->update(EVENTS_PREFIX . \GaletteEvents\Activity::TABLE);
+        $update->set(['comment' => null])->where([\GaletteEvents\Activity::PK => $activity->getId()]);
+        $this->zdb->execute($update);
+
+        $activity = new \GaletteEvents\Activity($this->zdb, $this->history, (int)$activity->getId());
+        $this->assertSame('Dinner', $activity->getName());
+        $this->assertSame('', $activity->getComment());
+    }
+
+    /**
+     * Activities count their events, and are removed with their links
+     */
+    public function testCountAndRemove(): void
+    {
+        $id = $this->insertActivity('Dinner');
+        $this->linkActivity($this->insertEvent('First event'), $id);
+        $this->linkActivity($this->insertEvent('Second event'), $id);
+
+        $activity = new \GaletteEvents\Activity($this->zdb, $this->history, $id);
+        $this->assertSame(2, $activity->countEvents());
+        $activity->remove();
+        $this->expectException(\GaletteEvents\NotFoundException::class);
+        (new \GaletteEvents\Activity($this->zdb, $this->history))->load($id);
+
+        $select = $this->zdb->select(EVENTS_PREFIX . 'activitiesevents');
+        $select->where([\GaletteEvents\Activity::PK => $id]);
+        $this->assertSame(0, $this->zdb->execute($select)->count());
     }
 }

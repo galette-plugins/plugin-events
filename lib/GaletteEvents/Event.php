@@ -1,22 +1,9 @@
 <?php
 
 /**
- * Copyright © 2003-2025 The Galette Team
- *
- * This file is part of Galette (https://galette.eu).
- *
- * Galette is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * Galette is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with Galette. If not, see <http://www.gnu.org/licenses/>.
+ * This file is part of Galette Events plugin (https://galette.eu).
+ * SPDX-FileCopyrightText: Copyright © 2018-2026 The Galette Team
+ * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
 declare(strict_types=1);
@@ -25,10 +12,10 @@ namespace GaletteEvents;
 
 use ArrayObject;
 use Galette\Core\Db;
+use Galette\Core\History;
 use Galette\Core\Login;
 use Galette\Entity\Group;
 use Analog\Analog;
-use Laminas\Db\ResultSet\ResultSet;
 use Laminas\Db\Sql\Expression;
 
 /**
@@ -38,155 +25,81 @@ use Laminas\Db\Sql\Expression;
  */
 class Event
 {
-    public const TABLE = 'events';
-    public const PK = 'id_event';
+    use EntityTrait;
 
-    public const ACTIVITY_NO = 0;
-    public const ACTIVITY_YES = 1;
-    public const ACTIVITY_REQUIRED = 2;
+    public const string TABLE = 'events';
+    public const string PK = 'id_event';
 
     private Db $zdb;
     private Login $login;
+    private History $history;
     /** @var array<string> */
-    private array $errors;
+    private array $errors = [];
 
-    private int $id;
-    private string $name;
-    private string $address;
-    private string $zip;
-    private string $town;
-    private ?string $country;
+    private ?int $id = null;
+    private string $name = '';
+    private string $address = '';
+    private string $zip = '';
+    private string $town = '';
+    private ?string $country = null;
     private string $begin_date;
     private string $end_date;
-    private string $creation_date;
+    private ?string $creation_date = null;
     private bool $open = true;
-    private ?int $group;
+    private ?int $group = null;
     private string $comment = '';
-    private ?string $color;
+    private ?string $color = null;
 
     /** @var array<int, array<string, mixed>> */
     private array $activities = [];
-    /** @var array<int, array<string, mixed>> */
-    private array $activities_removed = [];
 
     /**
      * Default constructor
      *
-     * @param Db                                      $zdb   Database instance
-     * @param Login                                   $login Login instance
-     * @param null|int|ArrayObject<string,int|string> $args  Either a ResultSet row or its id for to load
-     *                                                       a specific event, or null to just
-     *                                                       instanciate object
+     * @param Db                                  $zdb     Database instance
+     * @param Login                               $login   Login instance
+     * @param History                             $history History instance
+     * @param null|int|ArrayObject<string, mixed> $args    Either a ResultSet row or its id for to load
+     *                                                     a specific event, or null to just
+     *                                                     instanciate object
      */
-    public function __construct(Db $zdb, Login $login, int|ArrayObject|null $args = null)
+    public function __construct(Db $zdb, Login $login, History $history, int|ArrayObject|null $args = null)
     {
         $this->zdb = $zdb;
         $this->login = $login;
-        if ($args == null || is_int($args)) {
-            if (is_int($args) && $args > 0) {
-                $this->load($args);
-            } else {
-                $now = date('Y-m-d');
-                $this->begin_date = $now;
-                $this->end_date = $now;
-            }
-        } elseif (is_object($args)) {
+        $this->history = $history;
+        if (is_int($args)) {
+            $this->load($args);
+        } elseif ($args !== null) {
             $this->loadFromRS($args);
-            $this->loadActivities();
-        }
-    }
-
-    /**
-     * Loads an event from its id
-     *
-     * @param int $id the identifiant for the event to load
-     *
-     * @return bool true if query succeed, false otherwise
-     */
-    public function load(int $id): bool
-    {
-        try {
-            $select = $this->zdb->select($this->getTableName());
-            $select->where([self::PK => $id]);
-
-            $results = $this->zdb->execute($select);
-
-            if ($results->count() > 0) {
-                $this->loadFromRS($results->current());
-                $this->loadActivities();
-                return true;
-            } else {
-                return false;
-            }
-        } catch (\Exception $e) {
-            Analog::log(
-                'Cannot load event form id `' . $id . '` | ' . $e->getMessage(),
-                Analog::WARNING
-            );
-            throw $e;
+        } else {
+            $now = date('Y-m-d');
+            $this->begin_date = $now;
+            $this->end_date = $now;
         }
     }
 
     /**
      * Populate object from a resultset row
      *
-     * @param ArrayObject<string, int|string> $r the resultset row
-     *
-     * @return void
+     * @param ArrayObject<string, mixed> $r the resultset row
      */
     private function loadFromRS(ArrayObject $r): void
     {
-        $this->id = (int)$r->id_event;
-        $this->name = $r->name;
-        $this->address = $r->address;
-        $this->zip = $r->zip;
-        $this->town = $r->town;
-        $this->country = $r->country;
-        $this->begin_date = $r->begin_date;
-        $this->end_date = $r->end_date;
-        $this->creation_date = $r->creation_date;
-        $this->open = (bool)$r->is_open;
-        $this->group = (int)$r->id_group;
-        $this->comment = $r->comment;
-        $this->color = $r->color;
-    }
-
-    /**
-     * Remove specified event
-     *
-     * @return bool
-     */
-    public function remove(): bool
-    {
-        $transaction = false;
-
-        try {
-            if (!$this->zdb->connection->inTransaction()) {
-                $this->zdb->connection->beginTransaction();
-                $transaction = true;
-            }
-
-            $delete = $this->zdb->delete($this->getTableName());
-            $delete->where([self::PK => $this->id]);
-            $this->zdb->execute($delete);
-
-            //commit all changes
-            if ($transaction) {
-                $this->zdb->connection->commit();
-            }
-
-            return true;
-        } catch (\Exception $e) {
-            if ($transaction) {
-                $this->zdb->connection->rollBack();
-            }
-            Analog::log(
-                'Unable to delete event ' . $this->name
-                . ' (' . $this->id . ') |' . $e->getMessage(),
-                Analog::ERROR
-            );
-            return false;
-        }
+        $this->id = (int)$r['id_event'];
+        $this->name = $r['name'];
+        $this->address = $r['address'];
+        $this->zip = $r['zip'];
+        $this->town = $r['town'];
+        $this->country = $r['country'];
+        $this->begin_date = $r['begin_date'];
+        $this->end_date = $r['end_date'];
+        $this->creation_date = $r['creation_date'];
+        $this->open = (bool)$r['is_open'];
+        $this->group = $r['id_group'] === null ? null : (int)$r['id_group'];
+        $this->comment = $r['comment'] ?? '';
+        $this->color = $r['color'];
+        $this->loadActivities();
     }
 
     /**
@@ -194,48 +107,23 @@ class Event
      *
      * @param array<string, mixed> $values All values to check, basically the $_POST array
      *                                     after sending the form
-     *
-     * @return true|array<string>
      */
-    public function check(array $values): bool|array
+    public function check(array $values): bool
     {
         $this->errors = [];
 
         if (empty($values['begin_date'])) {
             $this->errors[] = _T('Begin date is mandatory', 'events');
         } else {
-            //handle dates
-            foreach (['begin_date', 'end_date'] as $datefield) {
+            $labels = [
+                'begin_date'    => _T('Begin date', 'events'),
+                'end_date'      => _T('End date', 'events'),
+            ];
+            foreach ($labels as $datefield => $label) {
                 if (isset($values[$datefield])) {
-                    $value = $values[$datefield];
-                    try {
-                        $d = \DateTime::createFromFormat(__("Y-m-d"), $value);
-                        if ($d === false) {
-                            //try with non localized date
-                            $d = \DateTime::createFromFormat("Y-m-d", $value);
-                            if ($d === false) {
-                                throw new \Exception('Incorrect format');
-                            }
-                        }
-                        $this->$datefield = $d->format('Y-m-d');
-                    } catch (\Exception $e) {
-                        Analog::log(
-                            'Wrong date format. field: ' . $datefield
-                            . ', value: ' . $value . ', expected fmt: '
-                            . __("Y-m-d") . ' | ' . $e->getMessage(),
-                            Analog::INFO
-                        );
-                        if ($datefield == 'begin_date') {
-                            $label = _T('Begin date', 'events');
-                        } else {
-                            $label = _T('End date', 'events');
-                        }
-                        $this->errors[] = sprintf(
-                            //TRANS %1$s is the expected date format, %2$s is the field label
-                            _T('- Wrong date format (%1$s) for %2$s!'),
-                            __("Y-m-d"),
-                            $label
-                        );
+                    $date = $this->parseDate((string)$values[$datefield], $label);
+                    if ($date !== null) {
+                        $this->$datefield = $date;
                     }
                 }
             }
@@ -266,11 +154,11 @@ class Event
         } else {
             if (
                 empty($values['group'])
-                || !in_array($values['group'], $this->login->managed_groups)
+                || !in_array((int)$values['group'], array_map('intval', $this->login->managed_groups), true)
             ) {
                 $this->errors[] = _T('Please select a group you own!', 'events');
             } else {
-                $this->group = $values['group'];
+                $this->group = (int)$values['group'];
             }
         }
 
@@ -293,48 +181,46 @@ class Event
             }
         }
 
-        if (
-            isset($values['add_activity'])
-            && !empty($values['attach_activity'])
-        ) {
-            $this->activities[$values['attach_activity']] = [
-                'activity'  => new Activity(
-                    $this->zdb,
-                    $this->login,
-                    (int)$values['attach_activity']
-                ),
-                'status'    => Activity::YES
-            ];
-        }
-
+        //the form posts every linked activity: posted list replaces the current one
+        $detached = null;
         if (
             isset($values['remove_activity'])
             && !empty($values['detach_activity'])
         ) {
-            unset($this->activities[$values['detach_activity']]);
-            $this->activities_removed[$values['detach_activity']] = [
-                self::PK        => $this->id,
-                Activity::PK    => $values['detach_activity']
-            ];
+            $detached = (int)$values['detach_activity'];
+        }
 
-            if (count($values['activities_ids'])) {
-                unset($values['activities_ids'][array_search($values['detach_activity'], $values['activities_ids'])]);
+        $activities = [];
+        foreach ($values['activities_ids'] ?? [] as $row => $activity_id) {
+            $activity_id = (int)$activity_id;
+            $status = (int)($values['activities_status'][$row] ?? Activity::YES);
+            if ($activity_id === $detached || !in_array($status, [Activity::NO, Activity::YES, Activity::REQUIRED], true)) {
+                continue;
+            }
+            //already linked activities stay, even if they have been deactivated since
+            $activity = $this->activities[$activity_id]['activity'] ?? $this->getActiveActivity($activity_id);
+            if ($activity !== null) {
+                $activities[$activity_id] = [
+                    'activity'  => $activity,
+                    'status'    => $status
+                ];
             }
         }
 
-        if (isset($values['activities_ids'])) {
-            foreach ($values['activities_ids'] as $row => $activity_id) {
-                if (isset($this->activities[$activity_id])) {
-                    $this->activities[$activity_id]['status'] = $values['activities_status'][$row];
-                } else {
-                    $activity = new Activity($this->zdb, $this->login, (int)$activity_id);
-                    $this->activities[$activity_id] = [
-                        'activity'  => $activity,
-                        'status'    => $values['activities_status'][$row]
-                    ];
-                }
+        if (
+            isset($values['add_activity'])
+            && !empty($values['attach_activity'])
+            && !isset($activities[(int)$values['attach_activity']])
+        ) {
+            $activity = $this->getActiveActivity((int)$values['attach_activity']);
+            if ($activity !== null) {
+                $activities[(int)$values['attach_activity']] = [
+                    'activity'  => $activity,
+                    'status'    => Activity::YES
+                ];
             }
         }
+        $this->activities = $activities;
 
         if (isset($values['open'])) {
             $this->open = true;
@@ -348,7 +234,7 @@ class Event
                 . print_r($this->errors, true),
                 Analog::ERROR
             );
-            return $this->errors;
+            return false;
         } else {
             Analog::log(
                 'Event checked successfully.',
@@ -360,15 +246,10 @@ class Event
 
     /**
      * Store the event
-     *
-     * @return bool
      */
-    public function store(): bool
+    public function store(): void
     {
-        global $hist;
-
-        try {
-            $this->zdb->connection->beginTransaction();
+        $this->transactional(function (): void {
             $values = [
                 'name'                  => $this->name,
                 'address'               => $this->address,
@@ -377,44 +258,34 @@ class Event
                 'country'               => ($this->country ?: new Expression('NULL')),
                 'begin_date'            => $this->begin_date,
                 'end_date'              => $this->end_date,
-                'is_open'               => ($this->open
-                                                ?: ($this->zdb->isPostgres() ? 'false' : 0)),
+                'is_open'               => (int)$this->open,
                 Group::PK               => ($this->group ?: new Expression('NULL')),
                 'comment'               => $this->comment,
                 'color'                 => $this->color
             ];
 
-            if (empty($this->id)) {
+            if ($this->id === null) {
                 //we're inserting a new event
-                $this->creation_date = date("Y-m-d H:i:s");
+                $this->creation_date = date("Y-m-d");
                 $values['creation_date'] = $this->creation_date;
 
                 $insert = $this->zdb->insert($this->getTableName());
                 $insert->values($values);
                 $add = $this->zdb->execute($insert);
-                if ($add->count() > 0) {
-                    if ($this->zdb->isPostgres()) {
-                        /** @phpstan-ignore-next-line */
-                        $this->id = (int)$this->zdb->driver->getLastGeneratedValue(
-                            PREFIX_DB . EVENTS_PREFIX . Event::TABLE . '_id_seq'
-                        );
-                    } else {
-                        $this->id = (int)$this->zdb->driver->getLastGeneratedValue();
-                    }
-
-                    // logging
-                    $hist->add(
-                        _T("Event added", "events"),
-                        $this->name
-                    );
-                } else {
-                    $hist->add(_T("Fail to add new event.", "events"));
-                    throw new \Exception(
+                if ($add->count() === 0) {
+                    $this->history->add(_T("Fail to add new event.", "events"));
+                    throw new \RuntimeException(
                         'An error occurred inserting new event!'
                     );
                 }
+                $this->id = $this->getLastInsertId();
+
+                // logging
+                $this->history->add(
+                    _T("Event added", "events"),
+                    $this->name
+                );
             } else {
-                $values['id_event'] = $this->id;
                 //we're editing an existing event
                 $update = $this->zdb->update($this->getTableName());
                 $update
@@ -426,186 +297,149 @@ class Event
                 //edit == 0 does not mean there were an error, but that there
                 //were nothing to change
                 if ($edit->count() > 0) {
-                    $hist->add(
+                    $this->history->add(
                         _T("Event updated", "events"),
                         $this->name
                     );
                 }
             }
 
-            $void   = [];
-            $update = [];
-            $insert = [];
-            $key_values = [];
-            $delete = $this->activities_removed;
+            $this->storeActivities();
+        });
+    }
 
-            foreach ($this->activities as $aid => $data) {
-                $activity = $data['activity'];
-                $status = $data['status'];
-                $key_values = [
+    /**
+     * Get an activity that can be attached to the event
+     *
+     * @param int $id Activity ID
+     */
+    private function getActiveActivity(int $id): ?Activity
+    {
+        try {
+            $activity = new Activity($this->zdb, $this->history, $id);
+        } catch (NotFoundException) {
+            return null;
+        }
+        return $activity->isActive() ? $activity : null;
+    }
+
+    /**
+     * Store activities linked to the event, compared to the stored ones
+     */
+    private function storeActivities(): void
+    {
+        $table = EVENTS_PREFIX . 'activitiesevents';
+
+        $stored = [];
+        $select = $this->zdb->select($table);
+        $select->where([self::PK => $this->id]);
+        foreach ($this->zdb->execute($select) as $row) {
+            $stored[(int)$row[Activity::PK]] = (int)$row['status'];
+        }
+
+        $counts = ['added' => 0, 'updated' => 0, 'removed' => 0];
+        foreach ($this->activities as $aid => $data) {
+            $status = (int)$data['status'];
+            if (!isset($stored[$aid])) {
+                $insert = $this->zdb->insert($table);
+                $insert->values([
                     self::PK        => $this->id,
-                    $activity::PK   => $activity->getId()
-                ];
-
-                $select = $this->zdb->select(EVENTS_PREFIX . 'activitiesevents', 'ace');
-                $select->where($key_values);
-                $results = $this->zdb->execute($select);
-
-                foreach ($results as $result) {
-                    $values = [
-                        Activity::PK    => $result[Activity::PK],
-                        self::PK        => $this->id,
-                        'status'        => $status
-                    ];
-                    if (!isset($this->activities[$result[Activity::PK]])) {
-                        $delete[$result[Activity::PK]] = $values;
-                    } elseif ($result['status'] != $this->activities[$result[Activity::PK]]['status']) {
-                        $update[$result[Activity::PK]] = $values;
-                    } else {
-                        $void[$result[Activity::PK]] = $values;
-                    }
-                }
-
-                if (!isset($void[$aid]) && !isset($update[$aid]) && !isset($delete[$aid])) {
-                    $insert[$aid] = [
-                        Activity::PK    => $aid,
-                        self::PK        => $this->id,
-                        'status'        => $status
-                    ];
-                }
+                    Activity::PK    => $aid,
+                    'status'        => $status
+                ]);
+                $this->zdb->execute($insert);
+                ++$counts['added'];
+            } elseif ($stored[$aid] !== $status) {
+                $update = $this->zdb->update($table);
+                $update->set(['status' => $status])->where([
+                    self::PK        => $this->id,
+                    Activity::PK    => $aid
+                ]);
+                $this->zdb->execute($update);
+                ++$counts['updated'];
             }
+        }
 
-            if (count($delete)) {
-                $stmt = $this->zdb->delete(EVENTS_PREFIX . 'activitiesevents');
-                $count = 0;
-                foreach ($delete as $values) {
-                    $stmt->where($values);
-                    $this->zdb->execute($stmt);
-                    ++$count;
-                }
+        foreach (array_keys($stored) as $aid) {
+            if (!isset($this->activities[$aid])) {
+                $delete = $this->zdb->delete($table);
+                $delete->where([
+                    self::PK        => $this->id,
+                    Activity::PK    => $aid
+                ]);
+                $this->zdb->execute($delete);
+                ++$counts['removed'];
+            }
+        }
+
+        foreach ($counts as $action => $count) {
+            if ($count > 0) {
                 Analog::log(
-                    sprintf('%1$s activities removed', $count),
+                    sprintf('%1$s activities %2$s', $count, $action),
                     Analog::INFO
                 );
             }
-
-            if (count($update)) {
-                $stmt = $this->zdb->update(EVENTS_PREFIX . 'activitiesevents');
-                $count = 0;
-                foreach ($update as $values) {
-                    $stmt
-                        ->set($values)
-                        ->where($key_values);
-                    $this->zdb->execute($stmt);
-                    ++$count;
-                }
-                Analog::log(
-                    sprintf('%1$s activities updated', $count),
-                    Analog::INFO
-                );
-            }
-
-            if (count($insert)) {
-                $stmt = $this->zdb->insert(EVENTS_PREFIX . 'activitiesevents');
-                $count = 0;
-                foreach ($insert as $values) {
-                    $stmt->values(array_merge($key_values, $values));
-                    $this->zdb->execute($stmt);
-                    ++$count;
-                }
-                Analog::log(
-                    sprintf('%1$s activities added', $count),
-                    Analog::INFO
-                );
-            }
-
-            $this->zdb->connection->commit();
-            return true;
-        } catch (\Exception $e) {
-            $this->zdb->connection->rollBack();
-            Analog::log(
-                'Something went wrong :\'( | ' . $e->getMessage() . "\n"
-                . $e->getTraceAsString(),
-                Analog::ERROR
-            );
-            throw $e;
         }
     }
 
     /**
      * Get event id
-     *
-     * @return ?int
      */
     public function getId(): ?int
     {
-        return $this->id ?? null;
+        return $this->id;
     }
 
     /**
      * Get event name
-     *
-     * @return ?string
      */
-    public function getName(): ?string
+    public function getName(): string
     {
-        return $this->name ?? null;
+        return $this->name;
     }
 
     /**
      * Get event address
-     *
-     * @return ?string
      */
-    public function getAddress(): ?string
+    public function getAddress(): string
     {
-        return $this->address ?? null;
+        return $this->address;
     }
 
     /**
      * Get event zip
-     *
-     * @return ?string
      */
-    public function getZip(): ?string
+    public function getZip(): string
     {
-        return $this->zip ?? null;
+        return $this->zip;
     }
 
     /**
      * Get event town
-     *
-     * @return ?string
      */
-    public function getTown(): ?string
+    public function getTown(): string
     {
-        return $this->town ?? null;
+        return $this->town;
     }
 
     /**
      * Get event country
-     *
-     * @return ?string
      */
     public function getCountry(): ?string
     {
-        return $this->country ?? null;
+        return $this->country;
     }
 
     /**
      * Get event group
-     *
-     * @return ?int
      */
     public function getGroup(): ?int
     {
-        return $this->group ?? null;
+        return $this->group;
     }
 
     /**
      * Get group name
-     *
-     * @return string
      */
     public function getGroupName(): string
     {
@@ -618,65 +452,33 @@ class Event
     }
 
     /**
-     * Get date
-     *
-     * @param string $prop      Property to use
-     * @param bool   $formatted Return date formatted, raw if false
-     *
-     * @return string
+     * Get creation date, as Y-m-d
      */
-    private function getDate(string $prop, bool $formatted = true): string
+    public function getCreationDate(): string
     {
-        if ($formatted === true) {
-            $date = new \DateTime($this->$prop);
-            return $date->format(__("Y-m-d"));
-        } else {
-            return $this->$prop;
-        }
+        return $this->creation_date ?? '';
     }
 
     /**
-     * Get creation date
-     *
-     * @param bool $formatted Return date formatted, raw if false
-     *
-     * @return string
+     * Get begin date, as Y-m-d
      */
-    public function getCreationDate(bool $formatted = true): string
+    public function getBeginDate(): string
     {
-        return $this->getDate('creation_date', $formatted);
+        return $this->begin_date;
     }
 
     /**
-     * Get begin date
-     *
-     * @param bool $formatted Return date formatted, raw if false
-     *
-     * @return string
+     * Get end date, as Y-m-d
      */
-    public function getBeginDate(bool $formatted = true): string
+    public function getEndDate(): string
     {
-        return $this->getDate('begin_date', $formatted);
-    }
-
-    /**
-     * Get end date
-     *
-     * @param bool $formatted Return date formatted, raw if false
-     *
-     * @return string
-     */
-    public function getEndDate(bool $formatted = true): string
-    {
-        return $this->getDate('end_date', $formatted);
+        return $this->end_date;
     }
 
     /**
      * Is activity required
      *
      * @param int $activity Activity ID
-     *
-     * @return bool
      */
     public function isActivityRequired(int $activity): bool
     {
@@ -687,8 +489,6 @@ class Event
      * Does current event propose activity
      *
      * @param int $activity Activity ID
-     *
-     * @return bool
      */
     public function hasActivity(int $activity): bool
     {
@@ -696,10 +496,17 @@ class Event
     }
 
     /**
+     * Has event been flagged as open?
+     * Unlike isOpen(), whatever its dates
+     */
+    public function isOpenFlag(): bool
+    {
+        return $this->open;
+    }
+
+    /**
      * Is event open?
      * Will return false once the begin date has been exceeded
-     *
-     * @return bool
      */
     public function isOpen(): bool
     {
@@ -718,28 +525,6 @@ class Event
     }
 
     /**
-     * Set name
-     *
-     * @param string $name Event name
-     *
-     * @return void
-     */
-    public function setName(string $name): void
-    {
-        $this->name = $name;
-    }
-
-    /**
-     * Get table's name
-     *
-     * @return string
-     */
-    protected function getTableName(): string
-    {
-        return EVENTS_PREFIX . self::TABLE;
-    }
-
-    /**
      * Get activities list
      *
      * @return array<int, array<string, mixed>>
@@ -747,6 +532,7 @@ class Event
     public function availableActivities(): array
     {
         $select = $this->zdb->select(EVENTS_PREFIX . Activity::TABLE, 'ac');
+        $select->where->equalTo('is_active', 1);
         $results = $this->zdb->execute($select);
 
         $activities = [];
@@ -761,21 +547,22 @@ class Event
 
     /**
      * Load linked activities
-     *
-     * @return void
      */
     public function loadActivities(): void
     {
+        $this->activities = [];
         $select = $this->zdb->select(EVENTS_PREFIX . 'activitiesevents', 'ace');
-        $select->where([self::PK => $this->id]);
+        //activities are loaded along with their links
+        $select->join(
+            ['ac' => PREFIX_DB . EVENTS_PREFIX . Activity::TABLE],
+            'ace.' . Activity::PK . ' = ac.' . Activity::PK,
+            ['name', 'is_active', 'creation_date', 'comment']
+        );
+        $select->where(['ace.' . self::PK => $this->id]);
         $results = $this->zdb->execute($select);
         foreach ($results as $result) {
             $this->activities[$result[Activity::PK]] = [
-                'activity'  => new Activity(
-                    $this->zdb,
-                    $this->login,
-                    (int)$result[Activity::PK]
-                ),
+                'activity'  => new Activity($this->zdb, $this->history, $result),
                 'status'    => $result['status']
             ];
         }
@@ -794,8 +581,6 @@ class Event
 
     /**
      * Get comment
-     *
-     * @return string
      */
     public function getComment(): string
     {
@@ -804,8 +589,6 @@ class Event
 
     /**
      * Get color
-     *
-     * @return string
      */
     public function getColor(): string
     {
@@ -813,36 +596,9 @@ class Event
     }
 
     /**
-     * Count attendees per event
-     *
-     * @return ResultSet
-     */
-    public function countAttendees(): ResultSet
-    {
-        $select = $this->zdb->select(EVENTS_PREFIX . Booking::TABLE, 'b');
-        $select->columns(
-            [
-                'count' => new Expression('SUM(b.number_people)'),
-                'is_paid'
-            ]
-        );
-        $select->where([
-            self::PK    => $this->id,
-        ]);
-
-        $select->group('is_paid');
-
-        $results = $this->zdb->execute($select);
-
-        return $results;
-    }
-
-    /**
      * Can member edit event
      *
      * @param Login $login Login instance
-     *
-     * @return bool
      */
     public function canEdit(Login $login): bool
     {
@@ -854,20 +610,13 @@ class Event
             return false;
         }
 
-        if ($this->group) {
-            $groups = $this->login->getManagedGroups();
-            return (in_array($this->group, $groups));
-        }
-
-        return false;
+        return $this->group !== null && $login->isGroupManager($this->group);
     }
 
     /**
      * Can memebr create an event
      *
      * @param Login $login Login instance
-     *
-     * @return bool
      */
     public function canCreate(Login $login): bool
     {
@@ -875,11 +624,19 @@ class Event
     }
 
     /**
-     * Get foreground contrasted color for current background color
+     * Get errors
      *
-     * @return string
+     * @return array<string>
      */
-    public function getForegoundColor(): string
+    public function getErrors(): array
+    {
+        return $this->errors;
+    }
+
+    /**
+     * Get foreground contrasted color for current background color
+     */
+    public function getForegroundColor(): string
     {
         $bgcolor = trim($this->color ?? '#ffffff', '#');
         $r = hexdec(substr($bgcolor, 0, 2));

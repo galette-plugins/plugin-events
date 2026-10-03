@@ -1,0 +1,680 @@
+<?php
+
+/**
+ * This file is part of Galette Events plugin (https://galette.eu).
+ * SPDX-FileCopyrightText: Copyright © 2018-2026 The Galette Team
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
+declare(strict_types=1);
+
+namespace GaletteEvents\Controllers\Crud\tests\units;
+
+use Analog\Analog;
+use Galette\Tests\GaletteRoutingTestCase;
+use GaletteEvents\tests\EventsFixtures;
+
+/**
+ * Bookings controller tests
+ *
+ * @author Johan Cwiklinski <johan@x-tnd.be>
+ */
+class BookingsController extends GaletteRoutingTestCase
+{
+    use EventsFixtures;
+
+    protected int $seed = 20260926101512;
+    protected bool $load_plugins = true;
+
+    /**
+     * Cleanup after each test method
+     */
+    public function tearDown(): void
+    {
+        $this->login->logout();
+        $this->preferences->pref_bool_groupsmanagers_exports = true;
+        $this->preferences->pref_bool_groupsmanagers_mailings = false;
+        $this->cleanEvents();
+        parent::tearDown();
+    }
+
+    /**
+     * Get booking form
+     *
+     * @param int $id Booking ID
+     */
+    private function getBookingForm(int $id): \Psr\Http\Message\ResponseInterface
+    {
+        return $this->app->handle($this->createRequest('events_booking_edit', ['id' => (string)$id]));
+    }
+
+    /**
+     * Post a booking
+     *
+     * @param ?int                 $id   Booking ID, null to add a new one
+     * @param array<string,string> $data Posted data
+     */
+    private function postBooking(?int $id, array $data): \Psr\Http\Message\ResponseInterface
+    {
+        if ($id === null) {
+            $request = $this->createRequest('events_storebooking_add', [], 'POST');
+        } else {
+            $request = $this->createRequest('events_storebooking_edit', ['id' => (string)$id], 'POST');
+            $data += ['id' => (string)$id];
+        }
+        return $this->app->handle($request->withParsedBody($data + [
+            'booking_date'  => date('Y-m-d'),
+            'number_people' => '1',
+            'comment'       => '',
+            'save'          => '1',
+        ]));
+    }
+
+    /**
+     * Assert access to a booking has been refused
+     *
+     * @param \Psr\Http\Message\ResponseInterface $test_response Response
+     * @param int                                 $id            Booking ID
+     */
+    private function expectBookingRefused(\Psr\Http\Message\ResponseInterface $test_response, int $id): void
+    {
+        $this->assertSame(
+            ['Location' => [$this->routeparser->urlFor('events_bookings', ['event' => 'all'])]],
+            $test_response->getHeaders()
+        );
+        $this->assertSame(301, $test_response->getStatusCode());
+        //message comes in the language of the logged-in member
+        $this->expectFlashData(['error_detected' => [_T('You do not have permission for requested URL.')]]);
+        $this->expectLogEntry(Analog::WARNING, 'has tried to edit booking #' . $id);
+        $this->expectNoLogEntry();
+    }
+
+    /**
+     * Assert booking form is displayed
+     *
+     * @param \Psr\Http\Message\ResponseInterface $test_response Response
+     */
+    private function expectBookingForm(\Psr\Http\Message\ResponseInterface $test_response): void
+    {
+        $this->assertSame(200, $test_response->getStatusCode());
+        $this->assertStringContainsString('name="save"', (string)$test_response->getBody());
+        $this->expectNoLogEntry();
+    }
+
+    /**
+     * Get member of the only booking of an event
+     *
+     * @param int $event Event ID
+     */
+    private function getBookedMember(int $event): int
+    {
+        $this->assertSame(1, $this->countBookings($event));
+        $select = $this->zdb->select(EVENTS_PREFIX . \GaletteEvents\Booking::TABLE);
+        $select->where([\GaletteEvents\Event::PK => $event]);
+        return (int)$this->zdb->execute($select)->current()['id_adh'];
+    }
+
+    /**
+     * Assert new booking has been refused by validation
+     *
+     * @param \Psr\Http\Message\ResponseInterface $test_response Response
+     * @param string                              $error         Expected error message
+     */
+    private function expectBookingInvalid(\Psr\Http\Message\ResponseInterface $test_response, string $error): void
+    {
+        $this->assertSame(
+            ['Location' => [$this->routeparser->urlFor('events_booking_add')]],
+            $test_response->getHeaders()
+        );
+        $this->expectFlashData(['error_detected' => [$error]]);
+        $this->expectLogEntry(Analog::ERROR, 'Some errors has been threw attempting to edit/store a booking');
+        $this->expectNoLogEntry();
+    }
+
+    /**
+     * Visitors cannot list bookings
+     */
+    public function testVisitorCannotListBookings(): void
+    {
+        $member_one = $this->getMemberOne();
+        $this->insertBooking($this->insertEvent('Public event'), $member_one->id);
+
+        foreach (['all', 'guess'] as $event) {
+            $request = $this->createRequest('events_bookings', ['event' => $event]);
+            $this->expectLogin($this->app->handle($request));
+        }
+    }
+
+    /**
+     * Members can neither display nor change bookings of other members
+     */
+    public function testMemberCannotEditOtherMemberBooking(): void
+    {
+        //member two speaks Catalan, member one gets messages in English
+        $this->getMemberOne();
+        $member_two = $this->getMemberTwo();
+        $event = $this->insertEvent('Public event');
+        $booking = $this->insertBooking($event, $member_two->id, ['comment' => 'Vegetarian']);
+
+        $this->logMember($this->dataAdherentOne());
+        $this->expectBookingRefused($this->getBookingForm($booking), $booking);
+        $this->expectBookingRefused(
+            $this->postBooking(
+                $booking,
+                [
+                    'event'         => (string)$event,
+                    'member'        => (string)$member_two->id,
+                    'number_people' => '5',
+                    'comment'       => 'Changed',
+                ]
+            ),
+            $booking
+        );
+
+        $row = $this->getBookingRow($booking);
+        $this->assertSame('Vegetarian', $row['comment']);
+        $this->assertSame(1, (int)$row['number_people']);
+    }
+
+    /**
+     * Members display and change their own bookings
+     */
+    public function testMemberEditsOwnBooking(): void
+    {
+        $member_one = $this->getMemberOne();
+        $event = $this->insertEvent('Public event');
+        $booking = $this->insertBooking($event, $member_one->id);
+
+        $this->logMember($this->dataAdherentOne());
+        $this->expectBookingForm($this->getBookingForm($booking));
+
+        $test_response = $this->postBooking($booking, ['event' => (string)$event, 'comment' => 'Changed']);
+        $this->assertSame(
+            ['Location' => [$this->routeparser->urlFor('events_bookings', ['event' => (string)$event])]],
+            $test_response->getHeaders()
+        );
+        $this->expectFlashData(['success_detected' => ['Booking has been modified.']]);
+        $this->assertSame('Changed', $this->getBookingRow($booking)['comment']);
+    }
+
+    /**
+     * Group managers display bookings on events of the groups they manage only
+     */
+    public function testManagerEditsBookingsOfManagedGroupsOnly(): void
+    {
+        $member_one = $this->getMemberOne();
+        $member_two = $this->getMemberTwo();
+        $managed = $this->createGroup('Managed group', [$member_two], [$member_one]);
+        //member two belongs to this one, but does not manage it
+        $other = $this->createGroup('Other group', [], [$member_one, $member_two]);
+
+        $managed_booking = $this->insertBooking(
+            $this->insertEvent('Managed event', ['id_group' => $managed->getId()]),
+            $member_one->id
+        );
+        $other_booking = $this->insertBooking(
+            $this->insertEvent('Other event', ['id_group' => $other->getId()]),
+            $member_one->id
+        );
+        $public_booking = $this->insertBooking($this->insertEvent('Public event'), $member_one->id);
+
+        $this->logMember($this->dataAdherentTwo());
+        $this->expectBookingForm($this->getBookingForm($managed_booking));
+        $this->expectBookingRefused($this->getBookingForm($other_booking), $other_booking);
+        $this->expectBookingRefused($this->getBookingForm($public_booking), $public_booking);
+    }
+
+    /**
+     * Staff members display any booking
+     */
+    public function testStaffEditsAnyBooking(): void
+    {
+        $staff = $this->getStaffMember($this->getMemberOne());
+        $member_two = $this->getMemberTwo();
+        $group = $this->createGroup('Group', [], [$member_two]);
+        $booking = $this->insertBooking(
+            $this->insertEvent('Group event', ['id_group' => $group->getId()]),
+            $member_two->id
+        );
+
+        $this->logMember($this->dataAdherentOne());
+        $this->assertTrue($this->login->isStaff());
+        $this->expectBookingForm($this->getBookingForm($booking));
+        $this->resetStaffStatus($staff, $this->getMemberTwo());
+    }
+
+    /**
+     * Members book for themselves, whatever member is posted
+     */
+    public function testMemberBooksForThemselvesOnly(): void
+    {
+        $member_one = $this->getMemberOne();
+        $member_two = $this->getMemberTwo();
+        $event = $this->insertEvent('Public event');
+
+        $this->logMember($this->dataAdherentOne());
+        $test_response = $this->postBooking(null, ['event' => (string)$event, 'member' => (string)$member_two->id]);
+        $this->assertSame(
+            ['Location' => [$this->routeparser->urlFor('events_bookings', ['event' => (string)$event])]],
+            $test_response->getHeaders()
+        );
+        $this->expectFlashData(['success_detected' => ['New booking has been successfully added.']]);
+        $this->assertSame($member_one->id, $this->getBookedMember($event));
+    }
+
+    /**
+     * Group managers book members of the groups they manage, on events of those groups
+     */
+    public function testManagerBooksMembersOfManagedGroups(): void
+    {
+        $member_one = $this->getMemberOne();
+        $member_two = $this->getMemberTwo();
+        $managed = $this->createGroup('Managed group', [$member_two], [$member_one]);
+        $managed_event = $this->insertEvent('Managed event', ['id_group' => $managed->getId()]);
+        $public_event = $this->insertEvent('Public event');
+
+        $this->logMember($this->dataAdherentTwo());
+
+        //a public event is not an event of a managed group
+        $test_response = $this->postBooking(
+            null,
+            ['event' => (string)$public_event, 'member' => (string)$member_one->id]
+        );
+        $this->expectBookingInvalid(
+            $test_response,
+            _T('You can only book other members on events of groups you manage.', 'events')
+        );
+        $this->assertSame(0, $this->countBookings($public_event));
+
+        //but group managers can still book for themselves
+        $this->postBooking(null, ['event' => (string)$public_event, 'member' => (string)$member_two->id]);
+        $this->flash_data = [];
+        $this->assertSame($member_two->id, $this->getBookedMember($public_event));
+
+        $this->postBooking(null, ['event' => (string)$managed_event, 'member' => (string)$member_one->id]);
+        $this->expectFlashData(['success_detected' => [_T('New booking has been successfully added.', 'events')]]);
+        $this->assertSame($member_one->id, $this->getBookedMember($managed_event));
+    }
+
+    /**
+     * Group managers cannot book members out of the groups they manage
+     */
+    public function testManagerCannotBookOtherMembers(): void
+    {
+        $member_one = $this->getMemberOne();
+        $member_two = $this->getMemberTwo();
+        $managed = $this->createGroup('Managed group', [$member_two]);
+        $this->createGroup('Other group', [], [$member_one, $member_two]);
+        $managed_event = $this->insertEvent('Managed event', ['id_group' => $managed->getId()]);
+
+        $this->logMember($this->dataAdherentTwo());
+        $test_response = $this->postBooking(
+            null,
+            ['event' => (string)$managed_event, 'member' => (string)$member_one->id]
+        );
+        $this->expectBookingInvalid($test_response, _T('- Please select a member from a group you manage.'));
+        $this->assertSame(0, $this->countBookings($managed_event));
+    }
+
+    /**
+     * Members book open events that are public or restricted to their groups
+     */
+    public function testMemberBooksVisibleOpenEventsOnly(): void
+    {
+        $member_one = $this->getMemberOne();
+        $member_two = $this->getMemberTwo();
+        $own_group = $this->createGroup('Own group', [], [$member_one]);
+        $other_group = $this->createGroup('Other group', [], [$member_two]);
+
+        $refused = [
+            'closed'    => $this->insertEvent('Closed event', ['is_open' => false]),
+            'past'      => $this->insertEvent(
+                'Past event',
+                ['begin_date' => date('Y-m-d', strtotime('-2 days')), 'end_date' => date('Y-m-d', strtotime('-1 day'))]
+            ),
+            'other'     => $this->insertEvent('Other group event', ['id_group' => $other_group->getId()]),
+        ];
+        $own_event = $this->insertEvent('Own group event', ['id_group' => $own_group->getId()]);
+
+        $this->logMember($this->dataAdherentOne());
+        foreach ($refused + ['unknown' => $own_event + 1000] as $event) {
+            $this->expectBookingInvalid(
+                $this->postBooking(null, ['event' => (string)$event]),
+                'This event cannot be booked.'
+            );
+        }
+        foreach ($refused as $event) {
+            $this->assertSame(0, $this->countBookings($event));
+        }
+
+        $this->postBooking(null, ['event' => (string)$own_event]);
+        $this->expectFlashData(['success_detected' => ['New booking has been successfully added.']]);
+        $this->assertSame($member_one->id, $this->getBookedMember($own_event));
+    }
+
+    /**
+     * Members still change their bookings once the event has been closed
+     */
+    public function testMemberEditsBookingOfClosedEvent(): void
+    {
+        $member_one = $this->getMemberOne();
+        $event = $this->insertEvent('Closed event', ['is_open' => false]);
+        $booking = $this->insertBooking($event, $member_one->id);
+
+        $this->logMember($this->dataAdherentOne());
+        $this->postBooking($booking, ['event' => (string)$event, 'comment' => 'Changed']);
+        $this->expectFlashData(['success_detected' => ['Booking has been modified.']]);
+        $this->assertSame('Changed', $this->getBookingRow($booking)['comment']);
+    }
+
+    /**
+     * Staff members book closed events
+     */
+    public function testStaffBooksClosedEvent(): void
+    {
+        $staff = $this->getStaffMember($this->getMemberOne());
+        $member_two = $this->getMemberTwo();
+        $event = $this->insertEvent('Closed event', ['is_open' => false]);
+
+        $this->logMember($this->dataAdherentOne());
+        $this->postBooking(null, ['event' => (string)$event, 'member' => (string)$member_two->id]);
+        $this->expectFlashData(['success_detected' => ['New booking has been successfully added.']]);
+        $this->assertSame($member_two->id, $this->getBookedMember($event));
+        $this->resetStaffStatus($staff, $member_two);
+    }
+
+    /**
+     * Group managers run batch actions on bookings of the groups they manage only
+     */
+    public function testManagerBatchOnManagedGroupsBookingsOnly(): void
+    {
+        $member_one = $this->getMemberOne();
+        $member_two = $this->getMemberTwo();
+        $managed = $this->createGroup('Managed group', [$member_two], [$member_one]);
+        $other = $this->createGroup('Other group', [], [$member_one, $member_two]);
+        $managed_booking = $this->insertBooking(
+            $this->insertEvent('Managed event', ['id_group' => $managed->getId()]),
+            $member_one->id
+        );
+        $other_booking = $this->insertBooking(
+            $this->insertEvent('Other event', ['id_group' => $other->getId()]),
+            $member_one->id
+        );
+
+        $this->logMember($this->dataAdherentTwo());
+        $batch = function (array $selected): \Psr\Http\Message\ResponseInterface {
+            $request = $this->createRequest('batch-eventslist', [], 'POST')->withParsedBody([
+                'entries_sel'   => array_map('strval', $selected),
+                'csv'           => '1',
+            ]);
+            return $this->app->handle($request);
+        };
+
+        $test_response = $batch([$other_booking]);
+        $this->assertSame(
+            ['Location' => [$this->routeparser->urlFor('events_events')]],
+            $test_response->getHeaders()
+        );
+        $this->expectFlashData(['error_detected' => [_T('No booking was selected, please check at least one.', 'events')]]);
+        $this->assertFalse(isset($this->session->{'plugin-events-members'}));
+
+        $test_response = $batch([$other_booking, $managed_booking]);
+        $this->assertSame(307, $test_response->getStatusCode());
+        $this->assertSame([$member_one->id], $this->session->{'plugin-events-members'}->selected);
+    }
+
+    /**
+     * Group managers run exports and mailings as core preferences allow them to
+     */
+    public function testManagerBatchAsCoreAllows(): void
+    {
+        $member_one = $this->getMemberOne();
+        $member_two = $this->getMemberTwo();
+        $managed = $this->createGroup('Managed group', [$member_two], [$member_one]);
+        $booking = $this->insertBooking(
+            $this->insertEvent('Managed event', ['id_group' => $managed->getId()]),
+            $member_one->id
+        );
+        $this->preferences->pref_bool_groupsmanagers_exports = false;
+
+        $this->logMember($this->dataAdherentTwo());
+        $batch = function (string $action) use ($booking): \Psr\Http\Message\ResponseInterface {
+            $request = $this->createRequest('batch-eventslist', [], 'POST')->withParsedBody([
+                'entries_sel'   => [(string)$booking],
+                $action         => '1',
+            ]);
+            return $this->app->handle($request);
+        };
+
+        foreach (['mailing', 'csv', 'csvbooking', 'labels'] as $action) {
+            $test_response = $batch($action);
+            $this->assertSame(
+                ['Location' => [$this->routeparser->urlFor('events_bookings', ['event' => 'all'])]],
+                $test_response->getHeaders(),
+                $action
+            );
+            $this->expectFlashData(['error_detected' => [_T('You do not have permission for requested URL.')]]);
+            $this->expectLogEntry(Analog::WARNING, 'has tried to run "' . $action . '" batch action on bookings');
+            $this->expectNoLogEntry();
+        }
+
+        $this->preferences->pref_bool_groupsmanagers_exports = true;
+        $this->preferences->pref_bool_groupsmanagers_mailings = true;
+        $this->assertSame(
+            [$this->routeparser->urlFor('mailing') . '?mailing_new=true'],
+            $batch('mailing')->getHeader('Location')
+        );
+        $this->assertSame(307, $batch('csv')->getStatusCode());
+    }
+
+    /**
+     * Bookings list of an event keeps the event in its pagination
+     */
+    public function testListPaginationKeepsEvent(): void
+    {
+        $member_one = $this->getMemberOne();
+        $member_two = $this->getMemberTwo();
+        $event = $this->insertEvent('Event');
+        $this->insertBooking($event, $member_one->id);
+        $this->insertBooking($event, $member_two->id);
+
+        $this->logSuperAdmin();
+        $filters = new \GaletteEvents\Filters\BookingsList();
+        $filters->show = 1;
+        $this->session->plugin_events_bookings_filter = $filters;
+
+        $test_response = $this->app->handle($this->createRequest('events_bookings', ['event' => (string)$event]));
+        $this->assertSame(200, $test_response->getStatusCode());
+        $this->assertStringContainsString(
+            'href="' . $this->routeparser->urlFor(
+                'events_bookings',
+                ['event' => (string)$event, 'option' => 'page', 'value' => '2']
+            ) . '"',
+            (string)$test_response->getBody()
+        );
+    }
+
+    /**
+     * Bookings list shows bookings current user can see
+     */
+    public function testList(): void
+    {
+        $member_one = $this->getMemberOne();
+        $member_two = $this->getMemberTwo();
+        $event = $this->insertEvent('Public event');
+        $this->insertBooking($event, $member_one->id);
+        $this->insertBooking($event, $member_two->id);
+
+        $this->logMember($this->dataAdherentOne());
+        $test_response = $this->app->handle($this->createRequest('events_bookings', ['event' => 'all']));
+        $this->assertSame(200, $test_response->getStatusCode());
+        $body = (string)$test_response->getBody();
+        $this->assertStringContainsString($member_one->sfullname, $body);
+        $this->assertStringNotContainsString($member_two->sfullname, $body);
+        $this->expectNoLogEntry();
+        $this->login->logout();
+
+        $this->logSuperAdmin();
+        $body = (string)$this->app->handle($this->createRequest('events_bookings', ['event' => (string)$event]))->getBody();
+        $this->assertStringContainsString($member_one->sfullname, $body);
+        $this->assertStringContainsString($member_two->sfullname, $body);
+    }
+
+    /**
+     * Changing the event of a booking shows its activities, before the booking is stored
+     */
+    public function testChangeEventShowsItsActivities(): void
+    {
+        $this->getMemberOne();
+        $event = $this->insertEvent('Event');
+        $dinner = $this->insertActivity('Dinner');
+        $this->linkActivity($event, $dinner);
+        $this->logMember($this->dataAdherentOne());
+
+        $data = ['event' => (string)$event, 'booking_date' => date('Y-m-d'), 'number_people' => '1', 'comment' => ''];
+        $test_response = $this->app->handle(
+            $this->createRequest('events_storebooking_add', [], 'POST')->withParsedBody($data)
+        );
+        $this->assertSame(
+            ['Location' => [$this->routeparser->urlFor('events_booking_add', ['action' => 'add'])]],
+            $test_response->getHeaders()
+        );
+        $this->expectFlashData(['warning_detected' => ['Do not forget to store the booking']]);
+        $this->assertSame(0, $this->countBookings($event));
+
+        $test_response = $this->app->handle($this->createRequest('events_booking_add'));
+        $this->assertSame(200, $test_response->getStatusCode());
+        $this->assertStringContainsString('id="activity_' . $dinner . '"', (string)$test_response->getBody());
+        $this->expectNoLogEntry();
+    }
+
+    /**
+     * New bookings are dated from today
+     */
+    public function testNewBookingIsDatedToday(): void
+    {
+        $this->logSuperAdmin();
+        $test_response = $this->app->handle($this->createRequest('events_booking_add'));
+        $this->assertSame(200, $test_response->getStatusCode());
+        $this->assertMatchesRegularExpression(
+            '/id="booking_date"[^>]* value="' . date('Y-m-d') . '"/',
+            (string)$test_response->getBody()
+        );
+    }
+
+    /**
+     * Unknown bookings are reported, as well as events removed since they have been filtered
+     */
+    public function testUnknownBooking(): void
+    {
+        $member_one = $this->getMemberOne();
+        $event = $this->insertEvent('Event');
+        $id = $this->insertBooking($event, $member_one->id);
+        $this->logSuperAdmin();
+
+        //event is remembered in list filters
+        $test_response = $this->app->handle($this->createRequest('events_bookings', ['event' => (string)$event]));
+        $this->assertSame(200, $test_response->getStatusCode());
+        $this->cleanEvents();
+
+        $expected = ['Location' => [$this->routeparser->urlFor('events_bookings', ['event' => 'all'])]];
+        $this->assertSame($expected, $this->getBookingForm($id)->getHeaders());
+        $this->expectFlashData(['error_detected' => ['No booking #' . $id . '.']]);
+
+        $test_response = $this->app->handle($this->createRequest('events_bookings', ['event' => 'guess']));
+        $this->assertSame($expected, $test_response->getHeaders());
+        $this->expectFlashData(['error_detected' => ['No event #' . $event . '.']]);
+        $this->assertNull($this->session->plugin_events_bookings_filter->event_filter);
+
+        $test_response = $this->app->handle($this->createRequest('events_bookings', ['event' => 'guess']));
+        $this->assertSame(200, $test_response->getStatusCode());
+        $this->expectNoLogEntry();
+    }
+
+    /**
+     * Bookings list filters are stored in session
+     */
+    public function testFilter(): void
+    {
+        $this->logSuperAdmin();
+        $event = $this->insertEvent('Event');
+        $request = $this->createRequest('filter-bookingslist', ['event' => (string)$event], 'POST')->withParsedBody([
+            'nbshow'                => '20',
+            'paid_filter'           => (string)\GaletteEvents\Repository\Bookings::FILTER_PAID,
+            'payment_type_filter'   => (string)\Galette\Entity\PaymentType::CASH,
+            'event_filter'          => (string)$event,
+            'group_filter'          => 'not a number',
+        ]);
+        $test_response = $this->app->handle($request);
+        $this->assertSame(
+            ['Location' => [$this->routeparser->urlFor('events_bookings', ['event' => (string)$event])]],
+            $test_response->getHeaders()
+        );
+
+        $this->expectLogEntry(Analog::WARNING, 'Invalid value for group_filter');
+        $filters = $this->session->plugin_events_bookings_filter;
+        $this->assertSame(20, $filters->show);
+        $this->assertEquals(\GaletteEvents\Repository\Bookings::FILTER_PAID, $filters->paid_filter);
+        $this->assertEquals(\Galette\Entity\PaymentType::CASH, $filters->payment_type_filter);
+        $this->assertEquals($event, $filters->event_filter);
+        $this->assertNull($filters->group_filter);
+
+        $request = $this->createRequest('filter-bookingslist', ['event' => (string)$event], 'POST')
+            ->withParsedBody(['clear_filter' => '1']);
+        $test_response = $this->app->handle($request);
+        $this->assertSame(
+            ['Location' => [$this->routeparser->urlFor('events_bookings', ['event' => 'all'])]],
+            $test_response->getHeaders()
+        );
+        $this->assertNull($this->session->plugin_events_bookings_filter->event_filter);
+    }
+
+    /**
+     * Filtering on an event shows its bookings, and all bookings drop the event filter
+     */
+    public function testFilterOnEvent(): void
+    {
+        $member_one = $this->getMemberOne();
+        $member_two = $this->getMemberTwo();
+        $event = $this->insertEvent('Event');
+        $other = $this->insertEvent('Other event');
+        $this->insertBooking($event, $member_one->id);
+        $this->insertBooking($other, $member_two->id);
+        $this->logSuperAdmin();
+
+        $request = $this->createRequest('filter-bookingslist', ['event' => 'all'], 'POST')
+            ->withParsedBody(['event_filter' => (string)$event]);
+        $test_response = $this->app->handle($request);
+        $this->assertSame(
+            ['Location' => [$this->routeparser->urlFor('events_bookings', ['event' => (string)$event])]],
+            $test_response->getHeaders()
+        );
+
+        $body = (string)$this->app->handle($this->createRequest('events_bookings', ['event' => 'guess']))->getBody();
+        $this->assertStringContainsString($member_one->sfullname, $body);
+        $this->assertStringNotContainsString($member_two->sfullname, $body);
+
+        $body = (string)$this->app->handle($this->createRequest('events_bookings', ['event' => 'all']))->getBody();
+        $this->assertStringContainsString($member_one->sfullname, $body);
+        $this->assertStringContainsString($member_two->sfullname, $body);
+        $this->assertNull($this->session->plugin_events_bookings_filter->event_filter);
+        $this->expectNoLogEntry();
+    }
+
+    /**
+     * Bookings list shows the total amount of listed bookings
+     */
+    public function testListTotal(): void
+    {
+        $member_one = $this->getMemberOne();
+        $member_two = $this->getMemberTwo();
+        $event = $this->insertEvent('Event');
+        $this->insertBooking($event, $member_one->id, ['payment_amount' => 12.5]);
+        $this->insertBooking($event, $member_two->id, ['payment_amount' => 7]);
+        $this->logSuperAdmin();
+
+        $body = (string)$this->app->handle($this->createRequest('events_bookings', ['event' => (string)$event]))->getBody();
+        $this->assertStringContainsString('Found bookings total 19.5', $body);
+        $this->expectNoLogEntry();
+    }
+}

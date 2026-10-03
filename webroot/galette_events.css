@@ -1,12 +1,13 @@
-a.fc-col-header-cell-cushion,
-a.fc-daygrid-day-number,
-a.fc-list-day-text,
-a.fc-list-day-side-text {
-    color: #636b70;
-}
+/*!
+ * This file is part of Galette Events plugin (https://galette.eu).
+ * SPDX-FileCopyrightText: Copyright © 2018-2026 The Galette Team
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
 
-.fc-event-title-container {
-    cursor: pointer;
+/* calendar week numbers and days of other months are readable */
+#calendar {
+    --fc-classic-faint-foreground: #4b5563;
+    --fc-classic-muted-foreground: #4b5563;
 }
 
 .event-notpaid {

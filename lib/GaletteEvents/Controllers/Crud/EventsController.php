@@ -1,68 +1,83 @@
 <?php
 
 /**
- * Copyright © 2003-2025 The Galette Team
- *
- * This file is part of Galette (https://galette.eu).
- *
- * Galette is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * Galette is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with Galette. If not, see <http://www.gnu.org/licenses/>.
+ * This file is part of Galette Events plugin (https://galette.eu).
+ * SPDX-FileCopyrightText: Copyright © 2018-2026 The Galette Team
+ * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
 declare(strict_types=1);
 
 namespace GaletteEvents\Controllers\Crud;
 
-use Analog\Analog;
+use ArrayObject;
 use Galette\Repository\Groups;
-use Galette\Controllers\Crud\AbstractPluginController;
+use Galette\Core\Pagination;
 use GaletteEvents\Filters\EventsList;
 use GaletteEvents\Event;
+use GaletteEvents\NotFoundException;
 use GaletteEvents\Repository\Events;
 use Slim\Psr7\Request;
 use Slim\Psr7\Response;
-use DI\Attribute\Inject;
 
 /**
  * Events controller
  *
  * @category  Controllers
  * @name      EventsController
- * @package   GaletteEvents
  * @author    Johan Cwiklinski <johan@x-tnd.be>
  * @copyright 2021-2025 The Galette Team
  * @license   http://www.gnu.org/licenses/gpl-3.0.html GPL License 3.0 or (at your option) any later version
  * @link      https://galette.eu
  * @since     2021-05-09
+ *
+ * @extends AbstractController<EventsList>
  */
 
-class EventsController extends AbstractPluginController
+class EventsController extends AbstractController
 {
     /**
-     * @var array<string, mixed>
+     * Entity name, for session keys and logs
      */
-    #[Inject("Plugin Galette Events")]
-    protected array $module_info;
+    protected function getEntityName(): string
+    {
+        return 'event';
+    }
+
+    /**
+     * List name, for filters session key
+     */
+    protected function getListName(): string
+    {
+        return 'events';
+    }
+
+    /**
+     * Create empty list filters
+     */
+    protected function createFilters(): Pagination
+    {
+        return new EventsList();
+    }
+
+    /**
+     * Get the message for an event that does not exist
+     *
+     * @param int $id Requested event identifier
+     */
+    protected function getNotFoundMessage(int $id): string
+    {
+        return sprintf(
+            //TRANS: %1$s is the event identifier
+            _T('No event #%1$s.', 'events'),
+            $id
+        );
+    }
 
     // CRUD - Create
 
     /**
      * Add page
-     *
-     * @param Request  $request  PSR Request
-     * @param Response $response PSR Response
-     *
-     * @return Response
      */
     public function add(Request $request, Response $response): Response
     {
@@ -71,11 +86,6 @@ class EventsController extends AbstractPluginController
 
     /**
      * Add action
-     *
-     * @param Request  $request  PSR Request
-     * @param Response $response PSR Response
-     *
-     * @return Response
      */
     public function doAdd(Request $request, Response $response): Response
     {
@@ -88,64 +98,31 @@ class EventsController extends AbstractPluginController
     /**
      * List page
      *
-     * @param Request         $request  PSR Request
-     * @param Response        $response PSR Response
-     * @param string|null     $option   One of 'page' or 'order'
-     * @param string|int|null $value    Value of the option
-     *
-     * @return Response
+     * @param string|null     $option One of 'page' or 'order'
+     * @param string|int|null $value  Value of the option
      */
     public function list(Request $request, Response $response, ?string $option = null, string|int|null $value = null): Response
     {
-        if (isset($this->session->filter_events)) {
-            $filters = $this->session->filter_events;
-        } else {
-            $filters = new EventsList();
-        }
+        $filters = $this->getFilters($option, $value);
+        $events = new Events($this->zdb, $this->login, $this->history, $this->preferences, $filters);
 
-        if ($option !== null) {
-            switch ($option) {
-                case 'page':
-                    $filters->current_page = (int)$value;
-                    break;
-                case 'order':
-                    $filters->orderby = $value;
-                    break;
-            }
-        }
-
-        $events = new Events($this->zdb, $this->login, $filters);
-        $events_list = $events->getList();
-
-        //assign pagination variables to the template and add pagination links
-        $filters->setViewPagination($this->routeparser, $this->view, false);
-
-        $this->session->filter_events = $filters;
-
-        // display page
-        $this->view->render(
+        return $this->renderList(
             $response,
-            $this->getTemplate('events'),
+            'events',
+            $filters,
             [
                 'page_title'            => _T("Events management", "events"),
-                'require_dialog'        => true,
-                'events'                => $events_list,
+                'events'                => $events->getList(),
                 'nb_events'             => $events->getCount(),
-                'filters'               => $filters
             ]
         );
-        return $response;
     }
 
     /**
      * Calendar view
      *
-     * @param Request         $request  PSR Request
-     * @param Response        $response PSR Response
-     * @param string|null     $option   One of 'page' or 'order'
-     * @param string|int|null $value    Value of the option
-     *
-     * @return Response
+     * @param string|null     $option One of 'page' or 'order'
+     * @param string|int|null $value  Value of the option
      */
     public function calendar(
         Request $request,
@@ -153,31 +130,6 @@ class EventsController extends AbstractPluginController
         ?string $option = null,
         string|int|null $value = null
     ): Response {
-        if (isset($this->session->filter_events_calendar)) {
-            $filters = $this->session->filter_events_calendar;
-        } else {
-            $filters = new EventsList();
-        }
-        $filters->calendar_filter = true;
-
-        if ($option !== null) {
-            switch ($option) {
-                case 'page':
-                    $filters->current_page = (int)$value;
-                    break;
-                case 'order':
-                    $filters->orderby = $value;
-                    break;
-            }
-        }
-
-        $events = new Events($this->zdb, $this->login, $filters);
-
-        //assign pagination variables to the template and add pagination links
-        $filters->setViewPagination($this->routeparser, $this->view, false);
-
-        $this->session->filter_events_calendar = $filters;
-
         //check if JS has been generated
         if (!file_exists(__DIR__ . '/../../../../webroot/js/calendar.bundle.js')) {
             $this->flash->addMessageNow(
@@ -193,9 +145,6 @@ class EventsController extends AbstractPluginController
             [
                 'page_title'            => _T("Events calendar", "events"),
                 'require_dialog'        => true,
-                'events'                => $events->getList(),
-                'nb_events'             => $events->getCount(),
-                'filters'               => $filters,
                 'module_id'             => $this->getModuleId()
             ]
         );
@@ -204,57 +153,37 @@ class EventsController extends AbstractPluginController
 
     /**
      * Calendar view
-     *
-     * @param Request  $request  PSR Request
-     * @param Response $response PSR Response
-     *
-     * @return Response
      */
     public function ajaxCalendar(Request $request, Response $response): Response
     {
         $get = $request->getQueryParams();
-        $filters = $this->session->filter_events_calendar ?? new EventsList();
+        $start = strtotime((string)($get['start'] ?? ''));
+        $end = strtotime((string)($get['end'] ?? ''));
+        if ($start === false || $end === false) {
+            return $this->withJson($response, [], 400);
+        }
+
+        $filters = new EventsList();
         $filters->calendar_filter = true;
-        $filters->start_date_filter = date(__("Y-m-d"), strtotime($get['start']));
-        $filters->end_date_filter = date(__("Y-m-d"), strtotime($get['end']));
+        $filters->start_date_filter = date(__("Y-m-d"), $start);
+        $filters->end_date_filter = date(__("Y-m-d"), $end);
 
-        $events = new Events($this->zdb, $this->login, $filters);
+        $events = new Events($this->zdb, $this->login, $this->history, $this->preferences, $filters);
+        $list = $events->getList(false, true);
 
-        return $this->withJson($response, $events->getList(false, true));
-    }
-
-    /**
-     * Filtering
-     *
-     * @param Request  $request  PSR Request
-     * @param Response $response PSR Response
-     *
-     * @return Response
-     */
-    public function filter(Request $request, Response $response): Response
-    {
-        $post = $request->getParsedBody();
-        if (isset($this->session->filter_events)) {
-            $filters = $this->session->filter_events;
-        } else {
-            $filters = new EventsList();
-        }
-
-        //reintialize filters
-        if (isset($post['clear_filter'])) {
-            $filters->reinit();
-        } else {
-            //number of rows to show
-            if (isset($post['nbshow'])) {
-                $filters->show = $post['nbshow'];
+        //links of the event modal
+        foreach ($list as $row) {
+            if (!$row instanceof ArrayObject) {
+                continue;
             }
+            $id = (string)$row[Event::PK];
+            if ($row['can_edit']) {
+                $row['edit_url'] = $this->routeparser->urlFor('events_event_edit', ['id' => $id]);
+            }
+            $row['booking_url'] = $this->routeparser->urlFor('events_booking_add') . '?event=' . $id;
         }
 
-        $this->session->filter_events = $filters;
-
-        return $response
-            ->withStatus(301)
-            ->withHeader('Location', $this->routeparser->urlFor('events_events'));
+        return $this->withJson($response, $list);
     }
 
     // /CRUD - Read
@@ -263,45 +192,37 @@ class EventsController extends AbstractPluginController
     /**
      * Edit page
      *
-     * @param Request  $request  PSR Request
-     * @param Response $response PSR Response
-     * @param int|null $id       Model id
-     * @param string   $action   Action
-     *
-     * @return Response
+     * @param int|null $id     Model id
+     * @param string   $action Action
      */
     public function edit(Request $request, Response $response, ?int $id = null, string $action = 'edit'): Response
     {
-        if ($this->session->event !== null) {
-            $event = $this->session->event;
-            $this->session->event = null;
-        } else {
-            $event = new Event($this->zdb, $this->login);
-        }
+        $event = new Event($this->zdb, $this->login, $this->history);
         $can = $event->canCreate($this->login);
 
-        if ($id !== null && $event->getId() != $id) {
-            $event->load($id);
+        if ($id !== null) {
+            try {
+                $event->load($id);
+            } catch (NotFoundException) {
+                return $this->redirectNotFound($response, $id);
+            }
             $can = $event->canEdit($this->login);
         }
 
         //check if logged-in user can edit event
         if (!$can) {
-            $redirect_url = $this->routeparser->urlFor('events_events');
-            Analog::log(
-                sprintf(
-                    'Member %1$s cannot edit event %2$s',
-                    $this->login->id,
-                    $event->getId()
-                )
-            );
-            return $response
-                ->withHeader('Location', $redirect_url);
+            return $this->redirectForbidden($response, $event->getId());
+        }
+
+        //values posted before an error, or before activities have been changed
+        $values = $this->getPostedValues($event->getId());
+        if ($values !== null) {
+            $event->check($values);
         }
 
         // template variable declaration
         $title = _T("Event", "events");
-        if ($event->getId() != '') {
+        if ($event->getId() !== null) {
             $title .= ' (' . _T("modification") . ')';
         } else {
             $title .= ' (' . _T("creation") . ')';
@@ -316,7 +237,6 @@ class EventsController extends AbstractPluginController
             $response,
             $this->getTemplate('event'),
             [
-                'autocomplete'      => true,
                 'page_title'        => $title,
                 'event'             => $event,
                 'require_calendar'  => true,
@@ -331,35 +251,26 @@ class EventsController extends AbstractPluginController
     /**
      * Edit action
      *
-     * @param Request  $request  PSR Request
-     * @param Response $response PSR Response
-     * @param null|int $id       Model id for edit
-     * @param string   $action   Either add or edit
-     *
-     * @return Response
+     * @param null|int $id     Model id for edit
+     * @param string   $action Either add or edit
      */
     public function doEdit(Request $request, Response $response, ?int $id = null, string $action = 'edit'): Response
     {
         $post = $request->getParsedBody();
-        $event = new Event($this->zdb, $this->login);
+        $event = new Event($this->zdb, $this->login, $this->history);
         $can = $event->canCreate($this->login);
-        if (isset($post['id']) && !empty($post['id'])) {
-            $event->load((int)$post['id']);
+        if (!empty($post['id'])) {
+            try {
+                $event->load((int)$post['id']);
+            } catch (NotFoundException) {
+                return $this->redirectNotFound($response, (int)$post['id']);
+            }
             $can = $event->canEdit($this->login);
         }
 
         //check if logged-in user can edit event
         if (!$can) {
-            $redirect_url = $this->routeparser->urlFor('events_events');
-            Analog::log(
-                sprintf(
-                    'Member %1$s cannot edit event %2$s',
-                    $this->login->id,
-                    $event->getId()
-                )
-            );
-            return $response
-                ->withHeader('Location', $redirect_url);
+            return $this->redirectForbidden($response, $event->getId());
         }
 
         $success_detected = [];
@@ -369,94 +280,52 @@ class EventsController extends AbstractPluginController
 
         // Validation
         $valid = $event->check($post);
-        if ($valid !== true) {
-            $error_detected = array_merge($error_detected, $valid);
-        }
 
-        if (count($error_detected) == 0) {
-            //all goes well, we can proceed
-            $new = false;
-            if ($event->getId() == '') {
-                $new = true;
-            }
-
-            if (isset($post['add_activity']) || isset($post['remove_activity'])) {
-                $this->session->event = $event;
-                if (isset($post['add_activity'])) {
+        if (isset($post['add_activity']) || isset($post['remove_activity'])) {
+            //activities are changed on a form that may not be complete yet, event is stored later
+            $goto_list = false;
+            if (isset($post['add_activity'])) {
+                if (isset($event->getActivities()[(int)($post['attach_activity'] ?? 0)])) {
                     $success_detected[] = _T("Activity has been attached to event.", "events");
                     $warning_detected[] = _T('Do not forget to store the event', 'events');
                 } else {
-                    $success_detected[] = _T("Activity has been detached from event.", "events");
+                    $error_detected[] = _T("Please choose an activity to add", "events");
                 }
-                $goto_list = false;
+            } else {
+                $success_detected[] = _T("Activity has been detached from event.", "events");
+                $warning_detected[] = _T('Do not forget to store the event', 'events');
             }
-            if (isset($post['save']) || isset($post['remove_activity'])) {
-                $store = $event->store();
-                if ($store === true) {
-                    //member has been stored :)
-                    if ($new) {
-                        $success_detected[] = _T("New event has been successfully added.", "events");
-                    } else {
-                        $success_detected[] = _T("Event has been modified.", "events");
-                    }
-                } else {
-                    //something went wrong :'(
-                    $error_detected[] = _T("An error occurred while storing the event.", "events");
-                }
-            }
-        }
-
-        if (!isset($post['save'])) {
-            $this->session->event = $event;
-            $error_detected = [];
+        } elseif (!$valid) {
+            $error_detected = array_merge($error_detected, $event->getErrors());
+        } elseif (isset($post['save'])) {
+            $this->storeEntity(
+                $event,
+                _T("New event has been successfully added.", "events"),
+                _T("Event has been modified.", "events"),
+                _T("An error occurred while storing the event.", "events"),
+                $success_detected,
+                $error_detected
+            );
+        } else {
             $goto_list = false;
-        }
-
-        if (count($error_detected) > 0) {
-            foreach ($error_detected as $error) {
-                $this->flash->addMessage(
-                    'error_detected',
-                    $error
-                );
-            }
-        }
-
-        if (count($warning_detected) > 0) {
-            foreach ($warning_detected as $warning) {
-                $this->flash->addMessage(
-                    'warning_detected',
-                    $warning
-                );
-            }
-        }
-        if (count($success_detected) > 0) {
-            foreach ($success_detected as $success) {
-                $this->flash->addMessage(
-                    'success_detected',
-                    $success
-                );
-            }
         }
 
         if (count($error_detected) == 0 && $goto_list) {
             $redirect_url = $this->routeparser->urlFor('events_events');
         } else {
-            //store entity in session
-            $this->session->event = $event;
-
-            if ($event->getId()) {
-                $redirect_url = $this->routeparser->urlFor(
-                    'events_event_edit',
-                    ['id' => (string)$event->getId()]
-                );
-            } else {
-                $redirect_url = $this->routeparser->urlFor('events_event_add');
-            }
+            $this->keepPostedValues($event->getId(), $post);
+            $redirect_url = $event->getId() !== null
+                ? $this->routeparser->urlFor('events_event_edit', ['id' => (string)$event->getId()])
+                : $this->routeparser->urlFor('events_event_add');
         }
 
-        return $response
-            ->withStatus(301)
-            ->withHeader('Location', $redirect_url);
+        return $this->redirect(
+            response: $response,
+            redirect_url: $redirect_url,
+            successes: $success_detected,
+            warnings: $warning_detected,
+            errors: $error_detected
+        );
     }
 
     // /CRUD - Update
@@ -465,9 +334,7 @@ class EventsController extends AbstractPluginController
     /**
      * Get redirection URI
      *
-     * @param array $args Route arguments
-     *
-     * @return string
+     * @param array<string,mixed> $args Route arguments
      */
     public function redirectUri(array $args): string
     {
@@ -477,9 +344,7 @@ class EventsController extends AbstractPluginController
     /**
      * Get form URI
      *
-     * @param array $args Route arguments
-     *
-     * @return string
+     * @param array<string,mixed> $args Route arguments
      */
     public function formUri(array $args): string
     {
@@ -492,16 +357,18 @@ class EventsController extends AbstractPluginController
     /**
      * Get confirmation removal page title
      *
-     * @param array $args Route arguments
-     *
-     * @return string
+     * @param array<string,mixed> $args Route arguments
      */
     public function confirmRemoveTitle(array $args): string
     {
-        $event = new Event($this->zdb, $this->login, (int)$args['id']);
+        try {
+            $event = new Event($this->zdb, $this->login, $this->history, (int)$args['id']);
+        } catch (NotFoundException) {
+            return $this->getNotFoundMessage((int)$args['id']);
+        }
         return sprintf(
             //TRANS: %1$s is the event name
-            _T('Remove event \'%1$s\'"', 'events'),
+            _T('Remove event \'%1$s\'', 'events'),
             $event->getName()
         );
     }
@@ -509,15 +376,14 @@ class EventsController extends AbstractPluginController
     /**
      * Remove object
      *
-     * @param array $args Route arguments
-     * @param array $post POST values
-     *
-     * @return bool
+     * @param array<string,mixed> $args Route arguments
+     * @param array<string,mixed> $post POST values
      */
     protected function doDelete(array $args, array $post): bool
     {
-        $event = new Event($this->zdb, $this->login, (int)$post['id']);
-        return $event->remove();
+        $event = new Event($this->zdb, $this->login, $this->history, (int)$post['id']);
+        $event->remove();
+        return true;
     }
 
     // /CRUD - Delete

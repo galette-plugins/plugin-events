@@ -1,23 +1,9 @@
 {#
-/**
- * Copyright © 2003-2024 The Galette Team
- *
- * This file is part of Galette (https://galette.eu).
- *
- * Galette is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * Galette is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with Galette. If not, see <http://www.gnu.org/licenses/>.
- */
-#}
+ # This file is part of Galette Events plugin (https://galette.eu).
+ # SPDX-FileCopyrightText: Copyright © 2018-2026 The Galette Team
+ # SPDX-License-Identifier: GPL-3.0-or-later
+ #}
+
 {% extends 'elements/list.html.twig' %}
 {% import "macros.twig" as macros %}
 
@@ -116,8 +102,8 @@
         </div>
         <div class="two fields">
             <div class="field">
-                <div class="inline fields">
-                    <label for="email_filter">{{ _T("Paid bookings:", "events") }}</label>
+                <div class="inline fields" role="radiogroup" aria-labelledby="paid_filter_label">
+                    <label id="paid_filter_label">{{ _T("Paid bookings:", "events") }}</label>
                     <div class="field inline">
                         <div class="ui radio checkbox">
                             <input type="radio" name="paid_filter" id="filter_dc_paid" value="{{ constant('GaletteEvents\\Repository\\Bookings::FILTER_DC_PAID') }}"{% if filters.paid_filter == constant('GaletteEvents\\Repository\\Bookings::FILTER_DC_PAID') %} checked="checked"{% endif %}>
@@ -141,7 +127,7 @@
 
             <div class="ui right aligned basic fitted segment field flexend">
                 <button type="submit"  class="tooltip action ui labeled icon primary button" title="{{ _T('Apply filters') }}" name="filter">
-                    <i class="search icon"></i>
+                    <i class="search icon" aria-hidden="true"></i>
                     {{ _T('Filter') }}
                 </button>
                 <button type="submit" name="clear_filter" class="ui labeled icon button tooltip" title="{{ _T('Reset all filters to defaults') }}">
@@ -150,7 +136,6 @@
                 </button>
             </div>
         </div>
-        {% include "components/forms/csrf.html.twig" %}
     </div>
     </form>
 {% endblock %}
@@ -159,7 +144,7 @@
     {% if nb > 0 %}
     <tr>
         <td class="right" colspan="10">
-            {{ _T("Found bookings total %f", "events")|replace({'%f': bookings.getSum()}) }}
+            {{ _T("Found bookings total %1$s", "events")|format(bookings.getSum()) }}
         </td>
     </tr>
     {% endif %}
@@ -176,7 +161,8 @@
                         {% set bid = booking.getId() %}
         {% if login.isAdmin() or login.isStaff() or (login.isGroupManager() and booking.getEvent().getGroup() in login.managed_groups) %}
                         <span class="ui checkbox">
-                            <input type="checkbox" name="entries_sel[]" value="{{ bid }}"/>
+                            <input type="checkbox" name="entries_sel[]" id="booking_checkbox_{{ bid }}" value="{{ bid }}"/>
+                            <label for="booking_checkbox_{{ bid }}"><span class="visually-hidden">{{ booking.getMember().sfullname }} - {{ booking.getEvent().getName() }}</span></label>
                         </span>
                         <a href="{{ url_for("events_event_edit", {"id": booking.getEventId()}) }}">{{ booking.getEvent().getName() }}</a>
         {% else %}
@@ -188,14 +174,14 @@
                             {{ booking.getMember().sfullname }}
                         </a>
                     </td>
-                    <td class="{{ rclass }} collapsing" data-col-label="{{ _T("Booking date", "events") }}">{{ booking.getDate() }}</td>
+                    <td class="{{ rclass }} collapsing" data-col-label="{{ _T("Booking date", "events") }}">{{ booking.getDate()|date(_T("Y-m-d")) }}</td>
                     <td class="{{ rclass }} center collapsing" data-col-label="{% if booking.isPaid() %}{{ _T("Paid", "events") }}{% else %}{{ _T("Not paid", "events") }}{% endif %}">
-                        <i class="money bill wave{% if not booking.isPaid() %} red{% endif %} icon tooltip" data-html="{% if booking.isPaid() %}{{ _T("Paid", "events") }}{% else %}{{ _T("Not paid", "events") }}{% endif %}"></i>
+                        <i class="money bill wave{% if not booking.isPaid() %} red{% endif %} icon tooltip" data-html="{% if booking.isPaid() %}{{ _T("Paid", "events") }}{% else %}{{ _T("Not paid", "events") }}{% endif %}" aria-hidden="true"></i>
                         <span class="visually-hidden">
                         {% if booking.isPaid() %}
                             {{ _T("Paid", "events") }}
                         {% else %}
-                            {{ _T("Not paid", "events") }}"
+                            {{ _T("Not paid", "events") }}
                         {% endif %}
                         </span>
                     </td>
@@ -294,47 +280,11 @@
 
 {% block batch_selection %}
                     else if (value == 'sendmail') {
-    {% if existing_mailing == true %}
-                        _sendmail(true);
-    {% else %}
                         _sendmail();
-    {% endif %}
                     }
 {% endblock %}
 
 {% block javascripts %}
     {% set batch_selection = ['sendmail'] %}
     {{ parent() }}
-    <script type="text/javascript">
-{% if nb > 0 %}
-        var _sendmail = function(existing){
-            console.log(existing);
-            var _form = $('#listform');
-                _form.append($('<input type="hidden" name="sendmail" value="true"/>'));
-                _form.append($('<input type="hidden" name="mailing_new" value="true"/>'));
-                _form.append($('<input type="hidden" name="mailing" value="true"/>'));
-            var _redirect = '{{ url_for('mailing') }}';
-
-            if (existing) {
-                {% include "elements/js/modal.js.twig" with {
-                    modal_title_twig: _T("Existing mailing")|e("js"),
-                    modal_content_twig: _T("A mailing already exists. Do you want to create a new one or resume the existing?")|e("js"),
-                    modal_class: "tiny",
-                    modal_onapprove: "_form.submit();",
-                    modal_approve_text: _T("New")|e("js"),
-                    modal_approve_icon: "plus",
-                    modal_approve_color: "green",
-                    modal_additional_button: {
-                        text: _T("Resume")|e("js"),
-                        icon: "edit",
-                        class: "blue",
-                        click: "function() { location.href = _redirect; }"
-                    }
-                } %}
-            } else {
-                _form.submit();
-            }
-        }
-{% endif %}
-    </script>
 {% endblock %}

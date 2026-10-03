@@ -1,38 +1,24 @@
 {#
-/**
- * Copyright © 2003-2024 The Galette Team
- *
- * This file is part of Galette (https://galette.eu).
- *
- * Galette is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * Galette is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with Galette. If not, see <http://www.gnu.org/licenses/>.
- */
-#}
+ # This file is part of Galette Events plugin (https://galette.eu).
+ # SPDX-FileCopyrightText: Copyright © 2018-2026 The Galette Team
+ # SPDX-License-Identifier: GPL-3.0-or-later
+ #}
+
 {% extends "page.html.twig" %}
 
 {% block content %}
     <form action="{% if event.getId() %}{{ url_for("events_storeevent_edit", {"id": event.getId()}) }}{% else %}{{ url_for("events_storeevent_add") }}{% endif %}" method="post" class="ui form">
         <div class="ui styled fluid accordion field">
             <div class="active title">
-                <i class="icon dropdown"></i>
+                <i class="icon dropdown" aria-hidden="true"></i>
                 {{ _T("General information", "events") }}
             </div>
             <div class="active content">
                 {% include "components/forms/checkbox.html.twig" with {
                     id: 'open',
-                    value: event.isOpen(),
+                    value: 1,
                     label: _T("Is open", "events"),
-                    checked: event.IsOpen()
+                    checked: event.isOpenFlag()
                 } %}
 
                 {% include "components/forms/text.html.twig" with {
@@ -51,13 +37,13 @@
 
                 {% include "components/forms/date.html.twig" with {
                     id: 'begin_date',
-                    value: event.getBeginDate(),
+                    value: event.getBeginDate()|date(_T("Y-m-d")),
                     label: _T("Begin date", "events"),
                 } %}
 
                 {% include "components/forms/date.html.twig" with {
                     id: 'end_date',
-                    value: event.getEndDate(),
+                    value: event.getEndDate()|date(_T("Y-m-d")),
                     label: _T("End date", "events"),
                 } %}
 
@@ -85,7 +71,7 @@
 
         <div class="ui styled fluid accordion field">
             <div class="active title">
-                <i class="icon dropdown"></i>
+                <i class="icon dropdown" aria-hidden="true"></i>
                 {{ _T("Location", "events") }}
             </div>
             <div class="active content">
@@ -118,89 +104,82 @@
 
         <div class="ui styled fluid accordion field">
             <div class="active title">
-                <i class="icon dropdown"></i>
+                <i class="icon dropdown" aria-hidden="true"></i>
                 {{ _T("Activities", "events") }}
             </div>
             <div class="active content">
-                <div>
-                    <p class="right">
     {% set availables = event.availableActivities() %}
     {% set activities = event.getActivities() %}
-
     {% if availables|length or activities|length %}
         {% if availables|length %}
-                            <select name="attach_activity" id="attach_activity">
-                                <option value="">{{ _T("Choose an activity to add", "events") }}</option>
+            {% set attach_values = {'': _T("Choose an activity to add", "events")} %}
             {% for activity in availables %}
-                                <option value="{{ activity.id_activity }}">{{ activity.name }}</option>
+                {% set attach_values = attach_values + {(activity.id_activity): activity.name} %}
             {% endfor %}
-                            </select>
-                            <button type="submit" name="add_activity" id="add_activity" class="action ui icon button tooltip">
-                                <i class="add icon"></i>
-                                <span class="visually-hidden">{{ _T("Add selected activity to event", "events") }}"</span>
-                            </button>
+                <div class="fields">
+                    {% include "components/forms/select.html.twig" with {
+                        id: 'attach_activity',
+                        value: '',
+                        values: attach_values,
+                        label: _T("Add selected activity to event", "events"),
+                        component_class: 'twelve wide field'
+                    } %}
+                    <div class="four wide field flexend">
+                        <button type="submit" name="add_activity" id="add_activity" class="action ui labeled icon button" aria-controls="attach_activity" data-message="{{ _T("Please choose an activity to add", "events") }}" data-close="{{ _T("Close") }}">
+                            <i class="add icon" aria-hidden="true"></i>
+                            {{ _T("Add") }}
+                        </button>
+                    </div>
+                </div>
         {% endif %}
         {% if activities|length %}
-                            <select name="detach_activity" id="detach_activity">
-                                <option value="">{{ _T("Choose an activity to remove", "events") }}</option>
+            {% set detach_values = {'': _T("Choose an activity to remove", "events")} %}
             {% for item in activities %}
-                {% set activity = item.activity %}
-                                <option value="{{ activity.getId() }}">{{ activity.getName() }}</option>
+                {% set detach_values = detach_values + {(item.activity.getId()): item.activity.getName()} %}
             {% endfor %}
-                            </select>
-                            <button type="submit" name="remove_activity" id="remove_activity" class="action ui icon button tooltip">
-                                <i class="delete red icon"></i>
-                                <span class="visually-hidden">{{ _T("Remove selected activity from event", "events") }}</span>
-                            </button>
-        {% endif %}
-                        </p>
-        {% if activities|length %}
+                <div class="fields">
+                    {% include "components/forms/select.html.twig" with {
+                        id: 'detach_activity',
+                        value: '',
+                        values: detach_values,
+                        label: _T("Remove selected activity from event", "events"),
+                        component_class: 'twelve wide field'
+                    } %}
+                    <div class="four wide field flexend">
+                        <button type="submit" name="remove_activity" id="remove_activity" class="action ui labeled icon button" aria-controls="detach_activity" data-message="{{ _T("Please choose an activity to remove", "events") }}" data-close="{{ _T("Close") }}">
+                            <i class="delete red icon" aria-hidden="true"></i>
+                            {{ _T("Remove") }}
+                        </button>
+                    </div>
+                </div>
+
+            {% set status_values = {
+                (constant('GaletteEvents\\Activity::YES')): _T("Yes"),
+                (constant('GaletteEvents\\Activity::NO')): _T("No"),
+                (constant('GaletteEvents\\Activity::REQUIRED')): _T("Required", "events")
+            } %}
             {% for item in activities %}
-                {% set activity = item.activity %}
-                        <p>
-                            <input type="hidden" name="activities_ids[]" value="{{ activity.getId() }}"/>
-                            <label for="activities_status_{$activity->getId()}">{{ activity.getName() }}</label>
-                            <select name="activities_status[]" id="activities_status_{{ activity.getId() }}">
-                                <option value="{{ constant('GaletteEvents\\Activity::YES') }}"{% if item.status == constant('GaletteEvents\\Activity::YES') %} selected="selected"{% endif %}>{{ _T("Yes") }}</option>
-                                <option value="{{ constant('GaletteEvents\\Activity::NO') }}"{% if item.status == constant('GaletteEvents\\Activity::NO') %} selected="selected"{% endif %}>{{ _T("No") }}</option>
-                                <option value="{{ constant('GaletteEvents\\Activity::REQUIRED') }}"{% if item.status == constant('GaletteEvents\\Activity::REQUIRED') %} selected="selected"{% endif %}>{{ _T("Required", "events") }}</option>
-                            </select>
-                        </p>
+                <input type="hidden" name="activities_ids[]" value="{{ item.activity.getId() }}"/>
+                {% include "components/forms/select.html.twig" with {
+                    id: 'activities_status_' ~ item.activity.getId(),
+                    name: 'activities_status[]',
+                    value: item.status,
+                    values: status_values,
+                    label: item.activity.getName()
+                } %}
             {% endfor %}
         {% endif %}
     {% else %}
-                        <p>{{ _T("No activity available in the database.", "events") }}</p>
+                <p>{{ _T("No activity available in the database.", "events") }}</p>
     {% endif %}
-                </div>
             </div>
         </div>
 
         <div class="ui basic center aligned fitted segment">
             <button type="submit" name="save" class="action ui labeled icon primary button">
-                <i class="save icon"></i> {{ _T("Save") }}
+                <i class="save icon" aria-hidden="true"></i> {{ _T("Save") }}
             </button>
             <input type="hidden" name="id" id="id" value="{{ event.getId() }}"/>
-            {% include "components/forms/csrf.html.twig" %}
         </div>
      </form>
-{% endblock %}
-
-{% block javascripts %}
-    <script type="text/javascript">
-        $(function() {
-            $('#add_activity').on('click', function (event) {
-                if ($('#attach_activity').val() == '') {
-                    event.preventDefault();
-                    alert('{{ _T("Please choose an activity to add", "events")|e('js') }}');
-                }
-            });
-
-            $('#remove_activity').on('click', function (event) {
-                if ($('#detach_activity').val() == '') {
-                    event.preventDefault();
-                    alert('{{ _T("Please choose an activity to remove", "events")|e('js') }}');
-                }
-            });
-        });
-    </script>
 {% endblock %}

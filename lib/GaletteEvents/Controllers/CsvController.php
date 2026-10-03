@@ -1,34 +1,25 @@
 <?php
 
 /**
- * Copyright © 2003-2025 The Galette Team
- *
- * This file is part of Galette (https://galette.eu).
- *
- * Galette is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * Galette is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with Galette. If not, see <http://www.gnu.org/licenses/>.
+ * This file is part of Galette Events plugin (https://galette.eu).
+ * SPDX-FileCopyrightText: Copyright © 2018-2026 The Galette Team
+ * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
 declare(strict_types=1);
 
 namespace GaletteEvents\Controllers;
 
+use Analog\Analog;
+use DI\Attribute\Inject;
+use Galette\Core\PluginControllerTrait;
 use Slim\Psr7\Request;
 use Slim\Psr7\Response;
 use Galette\IO\Csv;
 use Galette\IO\CsvOut;
 use GaletteEvents\Event;
 use GaletteEvents\Filters\BookingsList;
+use GaletteEvents\NotFoundException;
 use GaletteEvents\Repository\Bookings;
 
 /**
@@ -38,23 +29,48 @@ use GaletteEvents\Repository\Bookings;
  */
 class CsvController extends \Galette\Controllers\CsvController
 {
+    use PluginControllerTrait;
+
+    /**
+     * @var array<string, mixed>
+     */
+    #[Inject("Plugin Galette Events")]
+    protected array $module_info;
+
     /**
      * Bookings CSV exports
      *
-     * @param Request  $request  PSR Request
-     * @param Response $response PSR Response
-     * @param ?int     $id       Event ID, if any
-     *
-     * @return Response
+     * @param ?int $id Event ID, if any
      */
     public function bookingsExport(Request $request, Response $response, ?int $id = null): Response
     {
+        if (
+            !$this->login->isAdmin()
+            && !$this->login->isStaff()
+            && !$this->preferences->pref_bool_groupsmanagers_exports
+        ) {
+            Analog::log(
+                'Logged in member ' . $this->login->login
+                . ' has tried to export bookings without the right to do so.',
+                Analog::WARNING
+            );
+            return $this->redirectWithErrors(
+                response: $response,
+                errors: [_T("You do not have permission for requested URL.")],
+                redirect_url: $this->routeparser->urlFor('events_bookings', ['event' => 'all'])
+            );
+        }
+
         $post = $request->getParsedBody();
         $get = $request->getQueryParams();
         $csv = new CsvOut();
 
-        $session_var = $post['session_var'] ?? $get['session_var'] ?? 'filter_bookings';
-        if (isset($this->session->$session_var) && $id === null) {
+        //filters come from bookings list, or from its batch actions
+        $session_var = $post['session_var'] ?? $get['session_var'] ?? $this->getFilterName('bookings');
+        if (!in_array($session_var, [$this->getFilterName('bookings'), 'plugin-events-bookings'], true)) {
+            $session_var = $this->getFilterName('bookings');
+        }
+        if ($id === null && ($this->session->$session_var ?? null) instanceof BookingsList) {
             $filters = $this->session->$session_var;
         } else {
             $filters = new BookingsList();
@@ -64,7 +80,7 @@ class CsvController extends \Galette\Controllers\CsvController
             $filters->event_filter = $id;
         }
 
-        $bookings = new Bookings($this->zdb, $this->login, $filters);
+        $bookings = new Bookings($this->zdb, $this->login, $this->history, $this->preferences, $filters);
         $bookings_list = $bookings->getList(true);
 
         $labels = [
@@ -81,9 +97,22 @@ class CsvController extends \Galette\Controllers\CsvController
             _T('Number of persons', 'events'),
         ];
 
-        //activities are onl:y available for one event
-        if ($filters->event_filter > 0) {
-            $event = new Event($this->zdb, $this->login, (int)$filters->event_filter);
+        //activities are only available for one event
+        $event = null;
+        if ($filters->event_filter !== null) {
+            try {
+                $event = new Event($this->zdb, $this->login, $this->history, $filters->event_filter);
+            } catch (NotFoundException) {
+                return $this->redirectWithErrors(
+                    response: $response,
+                    errors: [sprintf(
+                        //TRANS: %1$s is the event identifier
+                        _T('No event #%1$s.', 'events'),
+                        $filters->event_filter
+                    )],
+                    redirect_url: $this->routeparser->urlFor('events_bookings', ['event' => 'all'])
+                );
+            }
             $activities = $event->getActivities();
             foreach ($activities as $activity) {
                 $labels[] = $activity['activity']->getName();
@@ -131,7 +160,7 @@ class CsvController extends \Galette\Controllers\CsvController
                 $booking->getNumberPeople()
             ];
 
-            if ($filters->event_filter > 0) {
+            if ($event !== null) {
                 $bactivities = $booking->getActivities();
                 foreach (array_keys($activities) as $aid) {
                     $entry[] = isset($bactivities[$aid]) && $bactivities[$aid]['checked'] ? _T('Yes') : _T('No');
@@ -170,7 +199,11 @@ class CsvController extends \Galette\Controllers\CsvController
             ];
         }
 
-        $filepath = CsvOut::DEFAULT_DIRECTORY . $filename;
-        return $this->sendResponse($response, $filepath, $filename);
+        return $this->sendResponse(
+            request: $request,
+            response: $response,
+            filepath: $filepath,
+            filename: $filename
+        );
     }
 }
