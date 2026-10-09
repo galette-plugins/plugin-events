@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: translations@galette.eu\n"
 "POT-Creation-Date: 2026-09-30 08:40+0200\n"
-"PO-Revision-Date: 2026-10-08 21:02+0000\n"
+"PO-Revision-Date: 2026-10-10 11:51+0000\n"
 "Last-Translator: Marko Puljic <markopuljic.uo@gmail.com>\n"
 "Language-Team: Croatian <https://hosted.weblate.org/projects/galette/events-"
 "plugin/hr/>\n"
@@ -25,11 +25,11 @@ msgstr ""
 
 #: ../lib/GaletteEvents/Event.php:119 ../templates/default/event.html.twig:40
 msgid "Begin date"
-msgstr ""
+msgstr "Datum početka"
 
 #: ../lib/GaletteEvents/Event.php:120 ../templates/default/event.html.twig:46
 msgid "End date"
-msgstr ""
+msgstr "Datum završetka"
 
 #: ../lib/GaletteEvents/Event.php:137
 msgid "End date must be later or equal to begin date"
@@ -37,7 +37,7 @@ msgstr ""
 
 #: ../lib/GaletteEvents/Event.php:143 ../lib/GaletteEvents/Activity.php:92
 msgid "Name is mandatory"
-msgstr ""
+msgstr "Naziv je obvezan"
 
 #: ../lib/GaletteEvents/Event.php:159
 msgid "Please select a group you own!"
@@ -215,11 +215,11 @@ msgstr ""
 #: ../lib/GaletteEvents/Controllers/Crud/ActivitiesController.php:64
 #, php-format
 msgid "No activity #%1$s."
-msgstr ""
+msgstr "Aktivnost #%1$s ne postoji."
 
 #: ../lib/GaletteEvents/Controllers/Crud/ActivitiesController.php:106
 msgid "Activities management"
-msgstr ""
+msgstr "Upravljanje aktivnostima"
 
 #: ../lib/GaletteEvents/Controllers/Crud/ActivitiesController.php:141
 msgid "Activity"
@@ -227,21 +227,21 @@ msgstr "Aktivnost"
 
 #: ../lib/GaletteEvents/Controllers/Crud/ActivitiesController.php:185
 msgid "New activity has been successfully added."
-msgstr ""
+msgstr "Nova aktivnost uspješno je dodana."
 
 #: ../lib/GaletteEvents/Controllers/Crud/ActivitiesController.php:186
 msgid "Activity has been modified."
-msgstr ""
+msgstr "Aktivnost je izmijenjena."
 
 #: ../lib/GaletteEvents/Controllers/Crud/ActivitiesController.php:187
 msgid "An error occurred while storing the activity."
-msgstr ""
+msgstr "Došlo je do pogreške pri spremanju aktivnosti."
 
 #. TRANS %1$s is activity name
 #: ../lib/GaletteEvents/Controllers/Crud/ActivitiesController.php:252
 #, php-format
 msgid "Remove activity %1$s"
-msgstr ""
+msgstr "Ukloni aktivnost %1$s"
 
 #: ../lib/GaletteEvents/Booking.php:116
 msgid "Event is mandatory"
@@ -305,15 +305,15 @@ msgstr ""
 
 #: ../lib/GaletteEvents/Activity.php:144
 msgid "Fail to add new activity."
-msgstr ""
+msgstr "Dodavanje nove aktivnosti nije uspjelo."
 
 #: ../lib/GaletteEvents/Activity.php:153
 msgid "Activity added"
-msgstr ""
+msgstr "Aktivnost je dodana"
 
 #: ../lib/GaletteEvents/Activity.php:169
 msgid "Activity updated"
-msgstr ""
+msgstr "Aktivnost je ažurirana"
 
 #: ../lib/GaletteEvents/Repository/Events.php:176
 msgid "Event information"
@@ -349,7 +349,7 @@ msgstr ""
 #: ../lib/GaletteEvents/PluginGaletteEvents.php:99
 #: ../templates/default/booking.html.twig:78 ../templates/default/event.html.twig:108
 msgid "Activities"
-msgstr ""
+msgstr "Aktivnosti"
 
 #: ../lib/GaletteEvents/PluginGaletteEvents.php:64
 #: ../lib/GaletteEvents/PluginGaletteEvents.php:68
@@ -390,7 +390,7 @@ msgstr ""
 #: ../templates/default/booking.html.twig:69 ../templates/default/activity.html.twig:32
 #: ../templates/default/event.html.twig:66
 msgid "Comment"
-msgstr "Komentar"
+msgstr "Napomena"
 
 #: ../templates/default/booking.html.twig:93
 msgid "No activity for selected event"
@@ -398,13 +398,13 @@ msgstr ""
 
 #: ../templates/default/booking.html.twig:103
 msgid "Financial information"
-msgstr ""
+msgstr "Financijski podaci"
 
 #: ../templates/default/booking.html.twig:108 ../templates/default/bookings.html.twig:49
 #: ../templates/default/bookings.html.twig:116 ../templates/default/bookings.html.twig:178
 #: ../templates/default/bookings.html.twig:179 ../templates/default/bookings.html.twig:182
 msgid "Paid"
-msgstr ""
+msgstr "Plaćeno"
 
 #: ../templates/default/calendar.html.twig:22 ../templates/default/bookings.html.twig:43
 msgid "New booking"
@@ -428,7 +428,7 @@ msgstr ""
 
 #: ../templates/default/calendar.html.twig:35
 msgid "Today"
-msgstr ""
+msgstr "Danas"
 
 #: ../templates/default/events.html.twig:19
 #, php-format
@@ -444,21 +444,21 @@ msgstr ""
 #: ../templates/default/events.html.twig:41 ../templates/default/activity.html.twig:26
 #: ../templates/default/activities.html.twig:41 ../templates/default/event.html.twig:26
 msgid "Name"
-msgstr ""
+msgstr "Naziv"
 
 #: ../templates/default/events.html.twig:41 ../templates/default/events.html.twig:77
 msgid "Date"
-msgstr ""
+msgstr "Datum"
 
 #: ../templates/default/events.html.twig:41 ../templates/default/events.html.twig:78
 #: ../templates/default/event.html.twig:92
 msgid "Town"
-msgstr ""
+msgstr "Mjesto"
 
 #: ../templates/default/events.html.twig:41 ../templates/default/events.html.twig:79
 #: ../templates/default/bookings.html.twig:94
 msgid "Group"
-msgstr ""
+msgstr "Grupa"
 
 #: ../templates/default/events.html.twig:41 ../templates/default/events.html.twig:80
 msgid "Open"
@@ -485,12 +485,12 @@ msgstr ""
 #: ../templates/default/events.html.twig:118 ../templates/default/activities.html.twig:86
 #, php-format
 msgid "%1$s: edit information"
-msgstr ""
+msgstr "%1$s: uredi podatke"
 
 #: ../templates/default/events.html.twig:131 ../templates/default/activities.html.twig:91
 #, php-format
 msgid "%1$s: remove from database"
-msgstr ""
+msgstr "%1$s: ukloni iz baze podataka"
 
 #: ../templates/default/events.html.twig:152
 msgid "No event has been found"
@@ -543,7 +543,7 @@ msgstr ""
 
 #: ../templates/default/bookings.html.twig:88
 msgid "All payment types"
-msgstr ""
+msgstr "Svi načini plaćanja"
 
 #: ../templates/default/bookings.html.twig:106
 msgid "Paid bookings:"
@@ -552,7 +552,7 @@ msgstr ""
 #: ../templates/default/bookings.html.twig:122 ../templates/default/bookings.html.twig:178
 #: ../templates/default/bookings.html.twig:179 ../templates/default/bookings.html.twig:184
 msgid "Not paid"
-msgstr ""
+msgstr "Nije plaćeno"
 
 #: ../templates/default/bookings.html.twig:147
 #, php-format
@@ -565,7 +565,7 @@ msgstr ""
 
 #: ../templates/default/bookings.html.twig:207
 msgid "Remove from database"
-msgstr ""
+msgstr "Ukloni iz baze podataka"
 
 #: ../templates/default/bookings.html.twig:227
 msgid "No booking has been found"
@@ -573,7 +573,7 @@ msgstr ""
 
 #: ../templates/default/activity.html.twig:14 ../templates/default/event.html.twig:14
 msgid "General information"
-msgstr ""
+msgstr "Opći podaci"
 
 #: ../templates/default/activity.html.twig:19 ../templates/default/activities.html.twig:41
 #: ../templates/default/activities.html.twig:75
@@ -584,28 +584,29 @@ msgstr ""
 #, php-format
 msgid "%1$s activity"
 msgid_plural "%1$s activities"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%1$s aktivnost"
+msgstr[1] "%1$s aktivnosti"
+msgstr[2] "%1$s aktivnosti"
 
 #: ../templates/default/activities.html.twig:35
 msgid "New activity"
-msgstr ""
+msgstr "Nova aktivnost"
 
 #: ../templates/default/activities.html.twig:41 ../templates/default/activities.html.twig:73
 msgid "Creation date"
-msgstr ""
+msgstr "Datum stvaranja"
 
 #: ../templates/default/activities.html.twig:76 ../templates/default/activities.html.twig:79
 msgid "Active"
-msgstr ""
+msgstr "Aktivan"
 
 #: ../templates/default/activities.html.twig:76 ../templates/default/activities.html.twig:81
 msgid "Inactive"
-msgstr ""
+msgstr "Neaktivan"
 
 #: ../templates/default/activities.html.twig:113
 msgid "No activity has been found"
-msgstr ""
+msgstr "Nijedna aktivnost nije pronađena"
 
 #: ../templates/default/event.html.twig:17
 msgid "Is open"
@@ -629,11 +630,11 @@ msgstr ""
 
 #: ../templates/default/event.html.twig:80
 msgid "Address"
-msgstr ""
+msgstr "Adresa"
 
 #: ../templates/default/event.html.twig:99
 msgid "Country"
-msgstr ""
+msgstr "Država"
 
 #: ../templates/default/event.html.twig:115
 msgid "Choose an activity to add"
@@ -657,7 +658,7 @@ msgstr ""
 
 #: ../templates/default/event.html.twig:156
 msgid "Required"
-msgstr ""
+msgstr "Obvezno"
 
 #: ../templates/default/event.html.twig:173
 msgid "No activity available in the database."
