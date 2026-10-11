@@ -2,13 +2,14 @@
 # Quentin PAGÈS <quentinantonin@free.fr>, 2020, 2026.
 # Pèire Bréchet <charrar@free.fr>, 2022, 2024.
 # Pèire Bréchet <oxytanistzero@tutanota.com>, 2024, 2026.
+# Johan Cwiklinski <trasher@x-tnd.be>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: translations@galette.eu\n"
 "POT-Creation-Date: 2026-09-30 08:40+0200\n"
-"PO-Revision-Date: 2026-09-03 10:59+0000\n"
-"Last-Translator: Pèire Bréchet <oxytanistzero@tutanota.com>\n"
+"PO-Revision-Date: 2026-10-11 06:55+0000\n"
+"Last-Translator: Johan Cwiklinski <trasher@x-tnd.be>\n"
 "Language-Team: Occitan <https://hosted.weblate.org/projects/galette/events-"
 "plugin/oc/>\n"
 "Language: oc\n"
@@ -16,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n > 1;\n"
-"X-Generator: Weblate 2026.9\n"
+"X-Generator: Weblate 2026.10.1.dev0\n"
 
 #: ../lib/GaletteEvents/Event.php:116
 msgid "Begin date is mandatory"
@@ -503,7 +504,7 @@ msgstr ""
 #: ../templates/default/activities.html.twig:86
 #, php-format
 msgid "%1$s: edit information"
-msgstr ""
+msgstr "%1$s : modificar leis informacions"
 
 #: ../templates/default/events.html.twig:131
 #: ../templates/default/activities.html.twig:91
