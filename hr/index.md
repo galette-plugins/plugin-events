@@ -1,30 +1,31 @@
 ---
 title: Galette Events
-description: Event and booking management
+description: Upravljanje događajima i rezervacijama
 ---
 
-A [Galette](https://galette.eu) plugin to manage events, the activities attached
-to them, and the bookings members make.
+Dodatak za [Galette](https://galette.eu) za upravljanje događajima, pridruženim
+aktivnostima i rezervacijama članova.
 
-This plugin provides:
+Dodatak omogućuje:
 
-* events management,
-* associate activities with events,
-* booking management.
+* upravljanje događajima,
+* povezivanje aktivnosti s događajima,
+* upravljanje rezervacijama.
 
-* [documentation](documentation.html)
-* [bugs and features](https://bugs.galette.eu/projects/evenements)
-* [source code](https://github.com/galette-plugins/plugin-events)
-* mailing lists:
-  [users](https://lists.mailman3.com/postorius/lists/galette-users.mailman3.com/),
-  [developers](https://lists.mailman3.com/postorius/lists/galette-devel.mailman3.com/)
+* [dokumentacija](documentation.html)
+* [pogreške i nove funkcije](https://bugs.galette.eu/projects/evenements)
+* [izvorni kod](https://github.com/galette-plugins/plugin-events)
+* popisi za e-poštu:
+  [korisnici](https://lists.mailman3.com/postorius/lists/galette-users.mailman3.com/),
+  [razvojni
+  tim](https://lists.mailman3.com/postorius/lists/galette-devel.mailman3.com/)
 
-To use it you need a recent enough Galette — the required version is shown at
-the top of this page — and the plugin itself, either by:
+Potrebna je dovoljno nova verzija Galettea; tražena verzija navedena je na vrhu
+stranice. Sam dodatak možete nabaviti:
 
-* downloading it with the buttons at the top of this page,
-* or using the [source code from the
-  repository](https://github.com/galette-plugins/plugin-events), which requires
-  some technical skills.
+* preuzimanjem putem gumba na vrhu stranice,
+* ili uporabom [izvornog koda iz
+  repozitorija](https://github.com/galette-plugins/plugin-events), za što je
+  potrebno tehničko znanje.
 
-See the [documentation](documentation.html) for the installation steps.
+Upute za instalaciju potražite u [dokumentaciji](documentation.html).
