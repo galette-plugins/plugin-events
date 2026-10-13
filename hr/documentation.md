@@ -1,25 +1,25 @@
 ---
-title: Documentation
-description: Event and booking management
+title: Dokumentacija
+description: Upravljanje događajima i rezervacijama
 ---
 
-This plugin provides:
+Dodatak omogućuje:
 
-* events management,
-* associate activities with events,
-* booking management.
+* upravljanje događajima,
+* povezivanje aktivnosti s događajima,
+* upravljanje rezervacijama.
 
-## Installation
+## Instalacija
 
-First of all, download the plugin:
+Najprije preuzmite dodatak:
 
-* [Get latest Events
-  plugin!](https://github.com/galette-plugins/plugin-events/releases/latest)
-* [Get Events plugin nightly
-  build!](https://github.com/galette-plugins/plugin-events/releases/tag/nightly)
+* [Preuzmite najnoviji dodatak
+  Events!](https://github.com/galette-plugins/plugin-events/releases/latest)
+* [Preuzmite noćnu razvojnu verziju dodatka
+  Events!](https://github.com/galette-plugins/plugin-events/releases/tag/nightly)
 
-Extract the downloaded archive in Galette `plugins` directory. For example,
-under linux (replacing `{url}` and `{version}` with correct values):
+Raspakirajte preuzetu arhivu u Galetteovu mapu `plugins`. Primjerice, na Linuxu
+(zamijenite `{url}` i `{version}` odgovarajućim vrijednostima):
 
 ```bash
 $ cd /var/www/html/galette/plugins
@@ -27,89 +27,86 @@ $ wget {url}
 $ tar xjvf galette-plugin-events-{version}.tar.bz2
 ```
 
-## Database initialisation
+## Inicijalizacija baze podataka
 
-In order to work, this plugin requires several tables in the database. See
-[Galette plugins management
-interface](https://doc.galette.eu/en/master/plugins/index.html#plugins-managment).
+Dodatak zahtijeva nekoliko tablica u bazi. Pogledajte [sučelje za upravljanje
+dodacima
+Galettea](https://doc.galette.eu/en/master/plugins/index.html#plugins-managment).
 
-And this is finished; Events plugin is installed :)
+Gotovo; dodatak Events je instaliran :)
 
-## Plugin usage
+## Uporaba dodatka
 
-When the plugin is installed, an `Events` group is added to Galette menu when a
-user is logged in. There are various possibilities that change depending on user
-profile (simple member, group manager, administrator, ...).
+Nakon instalacije u izborniku prijavljenog korisnika pojavljuje se odjeljak
+`Događaji`. Dostupne mogućnosti ovise o korisnikovoj ulozi: obični član,
+voditelj grupe, administrator i slično.
 
-### Activities
+### Aktivnosti
 
-You can define as much activities as you want, and associate them to an event.
-An activity may be an organized trip, a meal, a housing, ...
+Možete definirati proizvoljan broj aktivnosti i povezati ih s događajem.
+Aktivnost može biti organizirani izlet, obrok, smještaj i slično.
 
-![The list of activities](images/list_activities.png)
+![Popis aktivnosti](images/list_activities.png)
 
-An activity is composed with a name, a status and an optional comment.
+Aktivnost sadrži naziv, status i neobveznu napomenu.
 
-To add a new activity, just click on "New activity" link:
+Za dodavanje aktivnosti kliknite poveznicu „Nova aktivnost”:
 
-![The form of a new activity](images/new_activity.png)
+![Obrazac nove aktivnosti](images/new_activity.png)
 
-### Events
+### Događaji
 
-Events are the main goal of the plugin. You can define several information, like
-a name, begin and ending dates, location, ...
+Događaji su središnja funkcija dodatka. Možete zadati naziv, datume početka i
+završetka, lokaciju i druge podatke.
 
-![The form of a new event](images/new_event.png)
+![Obrazac novog događaja](images/new_event.png)
 
-Name, begin date and town are mandatory. All other information are entirely
-optional.
+Naziv, datum početka i mjesto obvezni su. Ostali podaci nisu obvezni.
 
-Events that are not linked to a group will be available for all members. If a
-group is set, only members and managers of this group will have access.
+Događaji koji nisu povezani s grupom dostupni su svim članovima. Ako je zadana
+grupa, pristup imaju samo njezini članovi i voditelji.
 
-> **Note**
+> **Napomena**
 > 
-> When a group manager creates a new event, he must choose one of the groups he
-> owns!
+> Kad voditelj grupe dodaje događaj, mora odabrati jednu od svojih grupa!
 
-You can attach one or several activities to each event, and for each one set if
-it is available, not available or even mandatory. Choose the activity to add,
-and click the button.
+Događaju možete pridružiti jednu ili više aktivnosti i za svaku odrediti je li
+dostupna, nedostupna ili obvezna. Odaberite aktivnost i kliknite gumb.
 
-![The activities attached to an event](images/event_activities.png)
+![Aktivnosti povezane s događajem](images/event_activities.png)
 
-> **Warning**
+> **Upozorenje**
 > 
-> Adding or removing activity from an event will reload the page and ask you to
-> fill mandatory information. Nonetheless (and this is specified each time), the
-> event **will not be stored** during this operation.
+> Dodavanje ili uklanjanje aktivnosti ponovno učitava stranicu i traži unos
+> obveznih podataka. Međutim, događaj se tijekom toga **ne sprema**, na što se
+> svaki put upozorava.
 > 
-> Ensure you save the event :)
+> Ne zaboravite spremiti događaj :)
 
-From Events list, you can edit or remove entries, access to booking list or
-export bookings as CSV.
+U popisu događaja možete uređivati i brisati zapise, otvoriti popis rezervacija
+ili ih izvesti u CSV.
 
-![The list of events](images/events_list.png)
+![Popis događaja](images/events_list.png)
 
-### Bookings
+### Rezervacije
 
-Bookings can be registered for each event. As we said before, simple members and
-groups managers will be limited to their groups events, or to the events that
-are not restricted to a group.
+Za svaki događaj možete bilježiti rezervacije. Kao što je navedeno, obični
+članovi i voditelji grupa imaju pristup događajima svojih grupa i događajima bez
+ograničenja na grupu.
 
-Adding a new booking can be achieved from the menu "New booking" or from the
-event bookings list.
+Novu rezervaciju možete dodati putem stavke „Nova rezervacija” ili popisa
+rezervacija događaja.
 
-![The form of a new booking](images/new_booking.png)
+![Obrazac nove rezervacije](images/new_booking.png)
 
-Bookings are closed once the event is marked as close, or when the begin date is
-over. Administrators and staff members can always add new bookings.
+Rezervacije se zatvaraju kad je događaj označen kao zatvoren ili kad prođe datum
+početka. Administratori i uprava uvijek mogu dodati rezervaciju.
 
-Activities list is retrieved from the event; mandatory ones must of course be
-checked during booking.
+Popis aktivnosti preuzima se iz događaja. Obvezne aktivnosti morate označiti pri
+rezervaciji.
 
-![The list of bookings](images/bookings_list.png)
+![Popis rezervacija](images/bookings_list.png)
 
-You can filter bookings list per event, payment type or payment status. You can
-then send a mailing to booked members, using the standard Galette mailing
-mechanism.
+Rezervacije možete filtrirati prema događaju, načinu plaćanja ili statusu
+plaćanja. Zatim možete poslati skupnu poruku članovima s rezervacijom putem
+uobičajenog Galetteova sustava.
