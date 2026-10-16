@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: translations@galette.eu\n"
 "POT-Creation-Date: 2026-09-30 08:40+0200\n"
-"PO-Revision-Date: 2026-10-13 08:40+0000\n"
+"PO-Revision-Date: 2026-10-17 11:51+0000\n"
 "Last-Translator: Marko Puljic "
 "<markopuljic.uo@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Croatian <https://hosted.weblate.org/projects/galette/events-"
@@ -455,7 +455,7 @@ msgstr "Novi događaj"
 #: ../templates/default/events.html.twig:41 ../templates/default/activity.html.twig:26
 #: ../templates/default/activities.html.twig:41 ../templates/default/event.html.twig:26
 msgid "Name"
-msgstr "Naziv"
+msgstr "Prezime"
 
 #: ../templates/default/events.html.twig:41 ../templates/default/events.html.twig:77
 msgid "Date"
