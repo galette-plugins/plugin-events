@@ -146,6 +146,26 @@ class BookingsController extends GaletteRoutingTestCase
     }
 
     /**
+     * Sub groups are listed with their full name in the groups filter
+     */
+    public function testListGroupsFullNames(): void
+    {
+        $this->logSuperAdmin();
+        $parent = $this->createGroup('Parent group');
+        $child = new \Galette\Entity\Group();
+        $child->setName('Child group');
+        $child->setParentGroup((int)$parent->getId());
+        $this->assertTrue($child->store());
+
+        $body = (string)$this->app->handle($this->createRequest('events_bookings', ['event' => 'all']))->getBody();
+        $this->assertStringContainsString(
+            sprintf('<option value="%1$s">Parent group / Child group</option>', $child->getId()),
+            $body
+        );
+        $this->assertStringNotContainsString('&raquo;', $body);
+    }
+
+    /**
      * Members can neither display nor change bookings of other members
      */
     public function testMemberCannotEditOtherMemberBooking(): void
