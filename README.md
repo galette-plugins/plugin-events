@@ -7,7 +7,7 @@
 
 A [Galette](https://galette.eu) plugin to manage events and bookings.
 
-This plugin is developed and maintained by the **Galette core team**, along with Galette itself — unlike most of the plugins hosted in this organization, which are community-maintained.
+This plugin is developed and maintained by the **Galette core team**, along with Galette itself.
 
 * website: https://galette-plugins.github.io/plugin-events/
 * bugs and features: https://bugs.galette.eu/projects/evenements
@@ -25,7 +25,7 @@ To use Galette Events plugin, you'll need a reliable Galette version, and of cou
 
 Un plugin [Galette](https://galette.eu) pour gérer évènements et réservations.
 
-Ce plugin est développé et maintenu par l'**équipe Galette**, comme Galette lui-même — contrairement à la plupart des plugins hébergés dans cette organisation, qui sont maintenus par la communauté.
+Ce plugin est développé et maintenu par l'**équipe Galette**, comme Galette lui-même.
 
 * site web : https://galette-plugins.github.io/plugin-events/
 * bogues et fonctionnalités : https://bugs.galette.eu/projects/evenements
