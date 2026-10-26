@@ -142,9 +142,13 @@ class Ics
             $parts[] = trim($event->getComment());
         }
 
+        //activities that are not offered are linked to the event as well
         $activities = array_map(
             fn(array $activity): string => '- ' . $activity['activity']->getName(),
-            $event->getActivities()
+            array_filter(
+                $event->getActivities(),
+                fn(array $activity): bool => (int)$activity['status'] !== Activity::NO
+            )
         );
         if (count($activities)) {
             $parts[] = _T('Activities', 'events') . "\n" . implode("\n", $activities);
