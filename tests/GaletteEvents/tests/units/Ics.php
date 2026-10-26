@@ -185,7 +185,8 @@ class Ics extends GaletteTestCase
             'id_group'  => $group->getId(),
         ]);
         $this->linkActivity($full, $this->insertActivity('Meal'));
-        $this->linkActivity($full, $this->insertActivity('Lodging'));
+        $this->linkActivity($full, $this->insertActivity('Lodging'), \GaletteEvents\Activity::REQUIRED);
+        $this->linkActivity($full, $this->insertActivity('Not offered'), \GaletteEvents\Activity::NO);
         $town_only = $this->insertEvent('Town only', ['address' => '', 'zip' => '', 'country' => null, 'comment' => '']);
 
         $vevent = $this->getEvent($this->getCalendar([$full]));
