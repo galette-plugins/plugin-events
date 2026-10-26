@@ -109,3 +109,16 @@ CREATE TABLE galette_events_activitiesbookings (
   PRIMARY KEY (id_activitybooking),
   UNIQUE (id_activity, id_booking)
 );
+
+--
+-- Table structure for table `galette_events_feeds`
+--
+
+DROP TABLE IF EXISTS galette_events_feeds CASCADE;
+CREATE TABLE galette_events_feeds (
+  id_adh integer NOT NULL REFERENCES galette_adherents (id_adh) ON DELETE CASCADE ON UPDATE CASCADE,
+  token character(64) NOT NULL,
+  creation_date date default '19010101' NOT NULL,
+  PRIMARY KEY (id_adh),
+  UNIQUE (token)
+);
