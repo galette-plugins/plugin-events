@@ -39,7 +39,7 @@ $(function() {
     eventClick: function(info) {
       var infos = info.event.extendedProps;
       //description is built and escaped server side, other values must be displayed as text
-      $modal.find('.header').text(infos.name + ' (' + infos.begin_date_fmt + ' - ' + infos.end_date_fmt + ')');
+      $modal.find('.header').text(infos.name + ' (' + infos.period + ')');
       $modal.find('.content').html(infos.description);
       //links are given with the event, edit one only when current user can edit it
       $edit
