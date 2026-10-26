@@ -638,7 +638,7 @@ class Booking
             return true;
         }
 
-        return $event->isOpen() && Events::isVisible($event->getGroup(), $this->login);
+        return $event->isOpen() && Events::isVisible($event->getGroup(), Viewer::fromLogin($this->login));
     }
 
     /**
