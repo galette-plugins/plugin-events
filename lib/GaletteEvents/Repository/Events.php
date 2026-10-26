@@ -185,6 +185,8 @@ class Events extends AbstractRepository
                         $row['textColor'] = $event->getForegroundColor();
                     }
 
+                    $row['period'] = $event->getPeriod();
+
                     //extended description
                     $row['begin_date_fmt'] = $this->formatDate($event->getBeginDate(), $event->getBeginTime());
                     $row['end_date_fmt'] = $this->formatDate($event->getEndDate(), $event->getEndTime());

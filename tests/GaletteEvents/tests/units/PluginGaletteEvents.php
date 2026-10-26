@@ -134,7 +134,7 @@ class PluginGaletteEvents extends GaletteTestCase
         $this->assertInstanceOf(\Galette\IO\News\Entry::class, $news);
         $this->assertSame('Upcoming events', $news->getTitle());
         $this->assertSame(
-            [['Upcoming event', date('Y-m-d', strtotime('+2 days'))]],
+            [['Upcoming event', date('Y-m-d', strtotime('+2 days')) . ' – ' . date('Y-m-d', strtotime('+11 days'))]],
             array_map(fn(\Galette\IO\News\Post $post): array => [$post->getTitle(), $post->getDate()], $news->getPosts())
         );
     }
