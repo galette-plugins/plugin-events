@@ -7,7 +7,9 @@ This plugin provides:
 
 * events management,
 * associate activities with events,
-* booking management.
+* booking management,
+* a calendar, with events for calendar applications,
+* a public page listing the events you publish.
 
 ## Installation
 
@@ -54,6 +56,18 @@ Events are the main goal of the plugin. You can define several information, like
 
 Name, begin date and town are mandatory. All other information are entirely optional.
 
+Begin and end times are optional as well:
+
+* **No begin time**: the event lasts all day long, from its begin date to its end date,
+* **Begin time only**: the event is shown at its begin time, without end,
+* **Begin and end times**: on a single day, the end time cannot be before the begin time.
+
+An end time without begin time is refused.
+
+> **Note** — Times appeared in version 2.4.0.
+
+The **Public** switch publishes the event on Galette public pages, see [Public events](#public-events).
+
 Events that are not linked to a group will be available for all members. If a group is set, only members and managers of this group will have access.
 
 > **Note**
@@ -70,9 +84,52 @@ You can attach one or several activities to each event, and for each one set if 
 >
 > Ensure you save the event :)
 
-From Events list, you can edit or remove entries, access to booking list or export bookings as CSV.
+From Events list, you can edit or remove entries, access to booking list, export bookings as CSV, or download the event for calendar applications. The date column shows the whole period of the event, with its times when it has some.
 
 ![The list of events](images/events_list.png)
+
+### Calendar
+
+The `Calendar` entry of the menu displays the events you can see, by month or as daily, weekly and monthly lists. For members, it also shows past and closed events, that the events list leaves out. Click on an event to get its details:
+
+![An event in the calendar](images/calendar_event.png)
+
+From there, you can edit the event (if you are allowed to), add a new booking, or download the event.
+
+### Calendar applications
+
+Events can be added to calendar applications, such as Thunderbird, Google Calendar, Outlook or the calendar of your phone, using the iCalendar format (`.ics` files).
+
+> **Note** — Added in version 2.4.0.
+
+#### Download an event
+
+Use the download icon of the events list, or the **Download** button of the event details in the calendar. You get a `.ics` file to open or import in your calendar application. It contains the dates and times of the event, its location, its comment, the activities it offers, and a link to book it.
+
+A downloaded event is a copy: it will not change in your calendar application if the event is changed in Galette. Download it again, or subscribe instead.
+
+#### Subscribe to events
+
+A subscription keeps your calendar application up to date by itself. Use the **Subscribe** button of the calendar page; the first time, click on **Get my subscription address**:
+
+![Subscription to events](images/calendar_subscription.png)
+
+* **Open in my calendar application** adds the subscription in your default calendar application,
+* or copy the address, and add it as a calendar subscription (sometimes named "calendar from the Internet", or "new calendar from URL") in your application.
+
+The subscription contains the same events as your calendar: events that are not restricted to a group, the ones of your groups, and the ones you have booked, closed ones included. Events ended for more than a year are left out. Texts are in your language.
+
+Calendar applications refresh subscriptions on their own schedule; Galette asks for every hour, but some applications refresh less often (Google Calendar may take up to a day).
+
+> **Warning**
+>
+> The subscription address is personal: anyone who knows it can see your events, without login. If it has been disclosed, use **Change my subscription address**: the previous one will stop working at once, and you will have to subscribe again with the new one.
+
+The address stops working as well when the member account is disabled. Super administrator, who is not a member, has no subscription.
+
+#### Times and time zone
+
+Times are given to calendar applications in universal time (UTC), converted from the time zone of the server: each application then displays them in its own time zone. If times are shifted in calendar applications, the PHP time zone (`date.timezone` setting) of the server is probably not the one of your association; ask your host or administrator to fix it.
 
 ### Bookings
 
@@ -89,3 +146,17 @@ Activities list is retrieved from the event; mandatory ones must of course be ch
 ![The list of bookings](images/bookings_list.png)
 
 You can filter bookings list per event, payment type or payment status. You can then send a mailing to booked members, using the standard Galette mailing mechanism.
+
+### Public events
+
+Events can be shown to people who are not logged in, on a public page, with a subscription for calendar applications that requires no account.
+
+> **Note** — Added in version 2.4.0.
+
+To publish an event, check its **Public** switch. Only events that are not restricted to a group can be public: an event limited to some members cannot be shown to anyone. Group managers, who must choose one of their groups, cannot publish events.
+
+When public pages are enabled, the public pages menu gets an `Events` entry, that lists upcoming public events with their dates, location, comment and activities; bookings and attendees are never shown. The page also provides the subscription address of public events:
+
+![Public events page](images/public_events.png)
+
+Who can see this page and its subscription is set with the other public pages visibilities, from Galette settings: the **Events** setting follows the default visibility unless you change it. See [who can see public pages](https://doc.galette.eu/en/master/usermanual/public_pages.html#who-can-see-them).
