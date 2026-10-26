@@ -248,6 +248,43 @@ class Events extends AbstractRepository
     }
 
     /**
+     * Get events of a calendar subscription
+     *
+     * Events are the ones of the calendar: public ones, the ones of the
+     * viewer groups and the ones they have booked, whatever their state.
+     *
+     * @param Viewer $viewer Member the subscription belongs to
+     * @param string $since  Events ended before this date, as Y-m-d, are left out
+     *
+     * @return array<Event>
+     */
+    public function getFeed(Viewer $viewer, string $since): array
+    {
+        $select = $this->zdb->select(EVENTS_PREFIX . Event::TABLE, 'e');
+        $select->join(
+            name: ['b' => PREFIX_DB . EVENTS_PREFIX . Booking::TABLE],
+            on: 'e.' . Event::PK . '=b.' . Event::PK,
+            columns: [],
+            type: $select::JOIN_LEFT
+        );
+        if (!$viewer->seesAll()) {
+            $select->where(new PredicateSet(
+                [$this->getVisiblePredicate($viewer), $this->getBookedPredicate($viewer)],
+                PredicateSet::OP_OR
+            ));
+        }
+        $select->where->greaterThanOrEqualTo('e.end_date', $since);
+        $select->group(['e.' . Event::PK]);
+        $select->order(['e.begin_date', 'e.' . Event::PK]);
+
+        $events = [];
+        foreach ($this->zdb->execute($select) as $row) {
+            $events[] = new Event(zdb: $this->zdb, login: $this->login, history: $this->history, args: $row);
+        }
+        return $events;
+    }
+
+    /**
      * Groups whose events a member can see and book: the ones they belong to or manage
      *
      * Events without group are visible to every member.

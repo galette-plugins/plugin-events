@@ -7,7 +7,74 @@
 {% extends "page.html.twig" %}
 
 {% block content %}
+    {% if can_subscribe %}
+    <div class="ui basic right aligned fitted segment">
+        <div class="ui buttons" id="calendar_subscription">
+        {% if feed_urls %}
+            <a href="{{ feed_urls.webcal }}" class="ui primary labeled icon button" id="calendar_subscribe" title="{{ _T("Add events you can see to your calendar application: it will keep them up to date by itself.", "events") }}">
+                <i class="rss icon" aria-hidden="true"></i>
+                {{ _T("Subscribe", "events") }}
+            </a>
+        {% else %}
+            <button type="submit" form="feed_subscribe" class="ui primary labeled icon button" id="calendar_subscribe" title="{{ _T("Add events you can see to your calendar application: it will keep them up to date by itself.", "events") }}">
+                <i class="rss icon" aria-hidden="true"></i>
+                {{ _T("Subscribe", "events") }}
+            </button>
+        {% endif %}
+            <div class="ui primary icon top right pointing dropdown button tooltip" title="{{ _T("More subscription options", "events") }}">
+                <i class="dropdown icon" aria-hidden="true"></i>
+                <span class="visually-hidden">{{ _T("More subscription options", "events") }}</span>
+                <div class="menu">
+        {% if feed_urls %}
+                    <button
+                        type="button"
+                        class="ui item copy-to-clipboard"
+                        data-copy-target="#feed_url"
+                        data-copied="{{ _T("Copied to clipboard.") }}"
+                        data-copy-failed="{{ _T("Unable to copy, please select the text and copy it by hand.") }}"
+                        hidden
+                    >
+                        <i class="copy outline icon" aria-hidden="true"></i>
+                        {{ _T("Copy my subscription address", "events") }}
+                    </button>
+                    <button type="submit" form="feed_regenerate" class="ui item">
+                        <i class="redo icon" aria-hidden="true"></i>
+                        {{ _T("Change my subscription address…", "events") }}
+                    </button>
+                    <div class="divider"></div>
+        {% endif %}
+                    <button type="button" class="ui item" data-subscription-help>
+                        <i class="question circle outline icon" aria-hidden="true"></i>
+                        {{ _T("How to subscribe?", "events") }}
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% if feed_urls and show_subscription %}
+        <div class="ui small left aligned info message">
+            {{ _T("Your subscription address is ready. If no calendar application has opened, copy the address from the menu next to the Subscribe button.", "events") }}
+        </div>
+        {% endif %}
+        {% if feed_urls %}
+        <input type="hidden" id="feed_url" value="{{ feed_urls.https }}"/>
+        <form
+            action="{{ url_for("events_feed_regenerate") }}"
+            method="post"
+            id="feed_regenerate"
+            data-title="{{ _T("Change my subscription address", "events") }}"
+            data-confirm="{{ _T("Calendar applications subscribed to the current address will no longer get updates. Change it?", "events") }}"
+            data-ok="{{ _T("Change the address", "events") }}"
+            data-cancel="{{ _T("Cancel") }}"
+        ></form>
+        {% else %}
+        <form action="{{ url_for("events_feed_subscribe") }}" method="post" id="feed_subscribe" data-back="{{ url_for("events_calendar") }}?subscription"></form>
+        {% endif %}
+    </div>
+    {% endif %}
     <div id='calendar'></div>
+    {% if can_subscribe %}
+        {% include "@PluginGaletteEvents/subscription_help.html.twig" with {feed_urls: feed_urls, personal: true} only %}
+    {% endif %}
     <div class="ui small modal" id="calendar_event">
         <div class="header"></div>
         <div class="content"></div>
