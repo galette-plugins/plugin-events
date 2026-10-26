@@ -95,15 +95,18 @@ class Events extends GaletteTestCase
         $filters->end_date_filter = date(__('Y-m-d'), strtotime('+1 month'));
         $events = new \GaletteEvents\Repository\Events($this->zdb, $this->login, $this->history, $this->preferences, $filters);
         $rows = [];
+        $periods = [];
         foreach ($events->getList(false, true) as $event) {
             $this->assertInstanceOf(\ArrayObject::class, $event);
             $rows[$event['name']] = [$event['allDay'], $event['start'], $event['end'], $event['begin_date_fmt'], $event['end_date_fmt']];
+            $periods[$event['name']] = $event['period'];
         }
 
         $this->assertSame([true, $day, $after, $day, $next], $rows['all day']);
         $this->assertSame([false, $day . 'T14:00', $day . 'T17:30', $day . ' 14:00', $day . ' 17:30'], $rows['timed']);
         $this->assertSame([false, $day . 'T19:00', null, $day . ' 19:00', $day], $rows['begin only']);
         $this->assertSame([false, $day . 'T19:00', $after . 'T00:00', $day . ' 19:00', $next], $rows['begin only, two days']);
+        $this->assertSame($day . ' 14:00 – 17:30', $periods['timed']);
     }
 
     /**

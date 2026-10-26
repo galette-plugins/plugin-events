@@ -208,13 +208,9 @@ class PluginGaletteEvents extends GalettePlugin implements InstallableInterface,
         }
 
         foreach ($list as $event) {
-            $date = (new \DateTime($event->getBeginDate()))->format(__('Y-m-d'));
-            if (!$event->isAllDay()) {
-                $date .= ' ' . $event->getBeginTime();
-            }
             $posts[] = new Post(
                 title: $event->getName(),
-                date: $date
+                date: $event->getPeriod()
             );
         }
 

@@ -309,6 +309,30 @@ class Event extends GaletteTestCase
     }
 
     /**
+     * Period displays what both ends share once
+     */
+    public function testPeriod(): void
+    {
+        $this->logSuperAdmin();
+        $event = new \GaletteEvents\Event($this->zdb, $this->login, $this->history);
+        $one_day = ['begin_date' => '2026-11-05', 'end_date' => '2026-11-05'];
+        $two_days = ['begin_date' => '2026-11-05', 'end_date' => '2026-11-06'];
+        $cases = [
+            ['2026-11-05', $one_day + ['begin_time' => '', 'end_time' => '']],
+            ['2026-11-05 – 2026-11-06', $two_days + ['begin_time' => '', 'end_time' => '']],
+            ['2026-11-05 18:30 – 20:00', $one_day + ['begin_time' => '18:30', 'end_time' => '20:00']],
+            ['2026-11-05 18:30', $one_day + ['begin_time' => '18:30', 'end_time' => '18:30']],
+            ['2026-11-05 19:00', $one_day + ['begin_time' => '19:00', 'end_time' => '']],
+            ['2026-11-05 19:00 – 2026-11-06', $two_days + ['begin_time' => '19:00', 'end_time' => '']],
+            ['2026-11-05 19:00 – 2026-11-06 02:00', $two_days + ['begin_time' => '19:00', 'end_time' => '02:00']],
+        ];
+        foreach ($cases as [$expected, $values]) {
+            $this->assertTrue($event->check($this->getFormValues($values)));
+            $this->assertSame($expected, $event->getPeriod());
+        }
+    }
+
+    /**
      * Events are removed with their bookings and activities links
      */
     public function testRemove(): void

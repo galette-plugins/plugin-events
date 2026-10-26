@@ -564,6 +564,33 @@ class Event
     }
 
     /**
+     * Get event period, for display
+     *
+     * What both ends share is not repeated: "2026-11-05 18:30 – 20:00",
+     * "2026-11-02 – 2026-11-03"; an all day event of one day is just its date.
+     */
+    public function getPeriod(): string
+    {
+        $format = __('Y-m-d');
+        $begin = (new \DateTime($this->begin_date))->format($format);
+        $end = (new \DateTime($this->end_date))->format($format);
+        if ($this->begin_time !== null) {
+            $begin .= ' ' . $this->begin_time;
+        }
+
+        if ($this->begin_date === $this->end_date) {
+            return $this->end_time === null || $this->end_time === $this->begin_time
+                ? $begin
+                : $begin . ' – ' . $this->end_time;
+        }
+
+        if ($this->end_time !== null) {
+            $end .= ' ' . $this->end_time;
+        }
+        return $begin . ' – ' . $end;
+    }
+
+    /**
      * Is activity required
      *
      * @param int $activity Activity ID
