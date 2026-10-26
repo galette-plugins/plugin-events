@@ -25,3 +25,13 @@
     display: flex;
     align-items: flex-end;
 }
+
+/* subscription menu: buttons look like the other menu items, full width, without native background */
+#calendar_subscription .menu > button.item {
+    width: 100%;
+    border: 0;
+    background-color: transparent;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}

@@ -65,3 +65,14 @@ ALTER TABLE galette_events_activitiesbookings
     REFERENCES galette_events_activities (id_activity) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT galette_events_activitiesbookings_id_booking_fkey FOREIGN KEY (id_booking)
     REFERENCES galette_events_bookings (id_booking) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- Personal calendar subscriptions
+CREATE TABLE galette_events_feeds (
+  id_adh int unsigned NOT NULL,
+  token char(64) NOT NULL,
+  creation_date datetime NOT NULL,
+  PRIMARY KEY (id_adh),
+  UNIQUE KEY galette_events_feeds_token_key (token),
+  CONSTRAINT galette_events_feeds_id_adh_fkey FOREIGN KEY (id_adh)
+    REFERENCES galette_adherents (id_adh) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci;

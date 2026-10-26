@@ -43,3 +43,12 @@ ALTER TABLE galette_events_activities
 ALTER TABLE galette_events_bookings
   ALTER COLUMN payment_method DROP DEFAULT,
   ALTER COLUMN payment_method TYPE integer;
+
+-- Personal calendar subscriptions
+CREATE TABLE galette_events_feeds (
+  id_adh integer NOT NULL REFERENCES galette_adherents (id_adh) ON DELETE CASCADE ON UPDATE CASCADE,
+  token character(64) NOT NULL,
+  creation_date timestamp NOT NULL,
+  PRIMARY KEY (id_adh),
+  UNIQUE (token)
+);

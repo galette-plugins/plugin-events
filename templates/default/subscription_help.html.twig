@@ -1,0 +1,109 @@
+{#
+ # This file is part of Galette Events plugin (https://galette.eu).
+ # SPDX-FileCopyrightText: Copyright © 2018-2026 The Galette Team
+ # SPDX-License-Identifier: GPL-3.0-or-later
+ #}
+{#
+ # How to subscribe to events from calendar applications, opened from the subscription menus.
+ #
+ # Parameters:
+ # - feed_urls: subscription addresses (https and webcal), null when the member has none yet
+ # - personal: whether the address belongs to the logged-in member
+ #}
+{% set applications = {
+    'google': {
+        name: _T("Google Calendar", "events"),
+        steps: [
+            _T("On a computer, open Google Calendar.", "events"),
+            _T("Next to “Other calendars”, click + then “From URL”.", "events"),
+            _T("Paste the subscription address and confirm.", "events"),
+            _T("Google updates subscribed calendars every few hours.", "events")
+        ]
+    },
+    'apple': {
+        name: _T("Apple Calendar", "events"),
+        steps: [
+            _T("Use “Open in my calendar application”: Calendar offers to add the subscription.", "events"),
+            _T("Or, in Calendar, choose File › New Calendar Subscription and paste the subscription address.", "events")
+        ]
+    },
+    'outlook': {
+        name: _T("Outlook", "events"),
+        steps: [
+            _T("In the Outlook calendar, choose “Add calendar” then “Subscribe from web”.", "events"),
+            _T("Paste the subscription address and give the calendar a name.", "events")
+        ]
+    },
+    'thunderbird': {
+        name: _T("Thunderbird", "events"),
+        steps: [
+            _T("Use “Open in my calendar application”.", "events"),
+            _T("Or choose File › New › Calendar › On the network and paste the subscription address.", "events")
+        ]
+    }
+} %}
+<div class="ui small modal" id="subscription_help">
+    <div class="header">{{ _T("How to subscribe", "events") }}</div>
+    <div class="content">
+        <p>
+        {% if personal %}
+            {{ _T("Add events you can see to your calendar application: it will keep them up to date by itself.", "events") }}
+        {% else %}
+            {{ _T("Add these events to your calendar application: it will keep them up to date by itself.", "events") }}
+        {% endif %}
+        </p>
+    {% if feed_urls %}
+        <p>
+            <a href="{{ feed_urls.webcal }}" class="ui primary labeled icon button">
+                <i class="calendar plus icon" aria-hidden="true"></i>
+                {{ _T("Open in my calendar application", "events") }}
+            </a>
+        </p>
+    {% else %}
+        <p>
+            <button type="submit" form="feed_subscribe" class="ui primary labeled icon button">
+                <i class="rss icon" aria-hidden="true"></i>
+                {{ _T("Get my subscription address", "events") }}
+            </button>
+        </p>
+    {% endif %}
+
+        <div class="ui top attached tabular menu" role="tablist">
+    {% for key, application in applications %}
+            <button type="button" class="item{% if loop.first %} active{% endif %}" data-tab="subscription_{{ key }}" role="tab">{{ application.name }}</button>
+    {% endfor %}
+        </div>
+    {% for key, application in applications %}
+        <div class="ui bottom attached tab segment{% if loop.first %} active{% endif %}" data-tab="subscription_{{ key }}" role="tabpanel">
+            <ol class="ui list">
+        {% for step in application.steps %}
+                <li>{{ step }}</li>
+        {% endfor %}
+            </ol>
+        </div>
+    {% endfor %}
+
+    {% if feed_urls %}
+        <div class="ui form">
+            <div class="field">
+                <label for="subscription_help_url">{{ _T("Subscription address", "events") }}</label>
+                <div class="ui action input">
+                    <input type="text" id="subscription_help_url" value="{{ feed_urls.https }}" readonly="readonly"/>
+                    {% include "components/copy_button.html.twig" with {target: '#subscription_help_url', label: _T("Copy subscription address", "events")} only %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+    {% if personal %}
+        <div class="ui warning message">
+            {{ _T("This address is personal: anyone who knows it can see your events. If it has been disclosed, change it.", "events") }}
+        </div>
+    {% endif %}
+    </div>
+    <div class="actions">
+        <button type="button" class="ui labeled icon cancel button">
+            <i class="times icon" aria-hidden="true"></i>
+            {{ _T("Close") }}
+        </button>
+    </div>
+</div>
