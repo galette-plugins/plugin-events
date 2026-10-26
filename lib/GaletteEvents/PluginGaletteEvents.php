@@ -208,9 +208,13 @@ class PluginGaletteEvents extends GalettePlugin implements InstallableInterface,
         }
 
         foreach ($list as $event) {
+            $date = (new \DateTime($event->getBeginDate()))->format(__('Y-m-d'));
+            if (!$event->isAllDay()) {
+                $date .= ' ' . $event->getBeginTime();
+            }
             $posts[] = new Post(
                 title: $event->getName(),
-                date: (new \DateTime($event->getBeginDate()))->format(__('Y-m-d'))
+                date: $date
             );
         }
 
@@ -232,23 +236,30 @@ class PluginGaletteEvents extends GalettePlugin implements InstallableInterface,
      * Version of tables installed before plugins versions were recorded
      *
      * Since 1.1, amounts are no longer floating point numbers on PostgreSQL,
-     * and foreign keys are named on MySQL.
+     * and foreign keys are named on MySQL. Since 1.2, events have times.
      */
     public function getLegacyDbVersion(): ?float
     {
         $metadata = Factory::createSourceFromAdapter($this->zdb->db);
+        $table = PREFIX_DB . EVENTS_PREFIX . Event::TABLE;
         if ($this->zdb->isPostgres()) {
             $amount = $metadata->getColumn('payment_amount', PREFIX_DB . EVENTS_PREFIX . Booking::TABLE);
-            return $amount->getDataType() === 'real' ? 1.0 : null;
-        }
-
-        $table = PREFIX_DB . EVENTS_PREFIX . Event::TABLE;
-        /** @var ConstraintObject $constraint */
-        foreach ($metadata->getConstraints($table) as $constraint) {
-            if ($constraint->isForeignKey() && $constraint->getColumns() === [Group::PK]) {
-                return $constraint->getName() === $table . '_id_group_fkey' ? null : 1.0;
+            if ($amount->getDataType() === 'real') {
+                return 1.0;
+            }
+        } else {
+            /** @var ConstraintObject $constraint */
+            foreach ($metadata->getConstraints($table) as $constraint) {
+                if (
+                    $constraint->isForeignKey()
+                    && $constraint->getColumns() === [Group::PK]
+                    && $constraint->getName() !== $table . '_id_group_fkey'
+                ) {
+                    return 1.0;
+                }
             }
         }
-        return null;
+
+        return in_array('begin_time', $metadata->getColumnNames($table), true) ? null : 1.1;
     }
 }

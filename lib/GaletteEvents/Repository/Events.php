@@ -161,17 +161,33 @@ class Events extends AbstractRepository
                     //required entries for fullcalendar
                     $row['title'] = $row['name'];
                     $row['can_edit'] = $event->canEdit($this->login);
-                    $row['start'] = $row['begin_date'];
-                    $end_date = new \DateTime($event->getEndDate());
+                    $row['allDay'] = $event->isAllDay();
+                    if ($event->isAllDay()) {
+                        $row['start'] = $row['begin_date'];
+                        $end_date = new \DateTime($event->getEndDate());
+                        if ($fullcalendar === true) {
+                            //all day events end is exclusive
+                            $end_date = $end_date->modify('+1 day');
+                        }
+                        $row['end'] = $end_date->format('Y-m-d');
+                    } else {
+                        $row['start'] = $event->getBeginDate() . 'T' . $event->getBeginTime();
+                        if ($event->getEndTime() !== null) {
+                            $row['end'] = $event->getEndDate() . 'T' . $event->getEndTime();
+                        } elseif ($event->getEndDate() !== $event->getBeginDate()) {
+                            //no end time: event lasts until the end of its last day
+                            $row['end'] = (new \DateTime($event->getEndDate()))->modify('+1 day')->format('Y-m-d\\TH:i');
+                        } else {
+                            $row['end'] = null;
+                        }
+                    }
                     if ($fullcalendar === true) {
-                        $end_date = $end_date->modify('+1 day');
                         $row['textColor'] = $event->getForegroundColor();
                     }
-                    $row['end'] = $end_date->format('Y-m-d');
 
                     //extended description
-                    $row['begin_date_fmt'] = $this->formatDate($event->getBeginDate());
-                    $row['end_date_fmt'] = $this->formatDate($event->getEndDate());
+                    $row['begin_date_fmt'] = $this->formatDate($event->getBeginDate(), $event->getBeginTime());
+                    $row['end_date_fmt'] = $this->formatDate($event->getEndDate(), $event->getEndTime());
                     $description = '<h4>';
                     $description .= _T('Event information', 'events');
                     $description .= '</h4>';
@@ -297,9 +313,10 @@ class Events extends AbstractRepository
      *
      * @param string $date Date, as Y-m-d
      */
-    private function formatDate(string $date): string
+    private function formatDate(string $date, ?string $time = null): string
     {
-        return (new \DateTime($date))->format(__('Y-m-d'));
+        $formatted = (new \DateTime($date))->format(__('Y-m-d'));
+        return $time === null ? $formatted : $formatted . ' ' . $time;
     }
 
     /**
