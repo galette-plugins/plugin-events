@@ -15,6 +15,7 @@ use Galette\Repository\Groups;
 use Galette\Core\Pagination;
 use GaletteEvents\Filters\EventsList;
 use GaletteEvents\Event;
+use GaletteEvents\Ics;
 use GaletteEvents\NotFoundException;
 use GaletteEvents\Repository\Events;
 use Slim\Psr7\Request;
@@ -181,9 +182,35 @@ class EventsController extends AbstractController
                 $row['edit_url'] = $this->routeparser->urlFor('events_event_edit', ['id' => $id]);
             }
             $row['booking_url'] = $this->routeparser->urlFor('events_booking_add') . '?event=' . $id;
+            $row['ics_url'] = $this->routeparser->urlFor('events_event_ics', ['id' => $id]);
         }
 
         return $this->withJson($response, $list);
+    }
+
+    /**
+     * Download an event as an iCalendar file
+     *
+     * @param int $id Event id
+     */
+    public function ics(Request $request, Response $response, int $id): Response
+    {
+        try {
+            $event = new Event($this->zdb, $this->login, $this->history, $id);
+        } catch (NotFoundException) {
+            return $this->redirectNotFound($response, $id);
+        }
+
+        //same answer as a missing event, not to disclose it exists
+        if (!$event->canShow($this->login)) {
+            return $this->redirectNotFound($response, $id);
+        }
+
+        $ics = new Ics($this->preferences, $this->routeparser);
+        $response->getBody()->write($ics->getCalendar([$event])->serialize());
+        return $response
+            ->withHeader('Content-Type', Ics::CONTENT_TYPE)
+            ->withHeader('Content-Disposition', 'attachment; filename="' . Ics::getFilename($event) . '"');
     }
 
     // /CRUD - Read
