@@ -400,4 +400,30 @@ class Event extends GaletteTestCase
         $this->zdb->connection->rollBack();
         $this->assertSame(0, $this->zdb->execute($this->zdb->select(EVENTS_PREFIX . \GaletteEvents\Event::TABLE))->count());
     }
+
+    /**
+     * Only events without group can be public
+     */
+    public function testPublic(): void
+    {
+        $this->logSuperAdmin();
+        $group = $this->createGroup('Group');
+        $event = new \GaletteEvents\Event($this->zdb, $this->login, $this->history);
+        $this->assertFalse($event->isPublic());
+
+        $this->assertTrue($event->check($this->getFormValues(['public' => '1'])));
+        $event->store();
+        $event = new \GaletteEvents\Event($this->zdb, $this->login, $this->history, (int)$event->getId());
+        $this->assertTrue($event->isPublic());
+
+        $values = $this->getFormValues();
+        $this->assertTrue($event->check($values));
+        $event->store();
+        $event = new \GaletteEvents\Event($this->zdb, $this->login, $this->history, (int)$event->getId());
+        $this->assertFalse($event->isPublic());
+
+        $this->assertFalse($event->check($this->getFormValues(['public' => '1', 'group' => (string)$group->getId()])));
+        $this->assertSame(['An event restricted to a group cannot be public'], $event->getErrors());
+        $this->expectLogEntry(\Analog\Analog::ERROR, 'Some errors has been threw attempting to edit/store an event');
+    }
 }

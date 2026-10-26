@@ -9,6 +9,10 @@ ALTER TABLE galette_events_events
   ADD begin_time time default NULL AFTER end_date,
   ADD end_time time default NULL AFTER begin_time;
 
+-- Events published on public pages
+ALTER TABLE galette_events_events
+  ADD is_public tinyint(1) NOT NULL default 0 AFTER is_open;
+
 -- Personal calendar subscriptions
 CREATE TABLE galette_events_feeds (
   id_adh int(10) unsigned NOT NULL,
