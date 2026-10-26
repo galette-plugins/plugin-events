@@ -730,4 +730,46 @@ class EventsController extends GaletteRoutingTestCase
             $this->expectLogin($this->app->handle($this->createRequest($route, [], 'POST')));
         }
     }
+
+    /**
+     * Visitors get public events, and their calendar subscription, as public pages allow
+     */
+    public function testPublicEvents(): void
+    {
+        $this->insertEvent('Public event', ['is_public' => true, 'comment' => "First line\nSecond <b>line</b>"]);
+        $this->insertEvent('Members event');
+        $this->setRawPreference('pref_bool_publicpages', true);
+        $this->setRawPreference('pref_events_publicpages_visibility_events', \Galette\Enums\PublicPageVisibility::Everyone->value);
+        //instance URL cannot be guessed without request host
+        $this->preferences->pref_galette_url = 'https://galette.test/';
+
+        $test_response = $this->app->handle($this->createRequest('events_public'));
+        $this->assertSame(200, $test_response->getStatusCode());
+        $body = (string)$test_response->getBody();
+        $this->assertStringContainsString('Public event', $body);
+        $this->assertStringNotContainsString('Members event', $body);
+        $this->assertStringContainsString('First line<br />' . "\n" . 'Second &lt;b&gt;line&lt;/b&gt;', $body);
+        $this->assertStringContainsString(
+            'href="webcal://galette.test' . $this->routeparser->urlFor('events_public_feed') . '"',
+            $body
+        );
+
+        $test_response = $this->app->handle($this->createRequest('events_public_feed'));
+        $this->assertSame(200, $test_response->getStatusCode());
+        $this->assertSame(['text/calendar; charset=utf-8'], $test_response->getHeader('Content-Type'));
+        $ics = (string)$test_response->getBody();
+        $this->assertStringContainsString('SUMMARY:Public event', $ics);
+        $this->assertStringNotContainsString('Members event', $ics);
+
+        //members only
+        $this->setRawPreference(
+            'pref_events_publicpages_visibility_events',
+            \Galette\Enums\PublicPageVisibility::UpToDateMembers->value
+        );
+        foreach (['events_public', 'events_public_feed'] as $route) {
+            $test_response = $this->app->handle($this->createRequest($route));
+            $this->assertSame(['Location' => [$this->routeparser->urlFor('slash')]], $test_response->getHeaders());
+            $this->expectFlashData(['error_detected' => ['Unauthorized']]);
+        }
+    }
 }
