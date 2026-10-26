@@ -740,7 +740,7 @@ class Event
      */
     public function canShow(Login $login): bool
     {
-        if (Events::isVisible($this->group, $login)) {
+        if (Events::isVisible($this->group, Viewer::fromLogin($login))) {
             return true;
         }
 
