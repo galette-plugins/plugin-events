@@ -22,6 +22,8 @@ CREATE TABLE galette_events_events (
   country character varying(50) default NULL,
   begin_date date default '19010101' NOT NULL,
   end_date date default '19010101' NOT NULL,
+  begin_time time default NULL,
+  end_time time default NULL,
   creation_date date default '19010101' NOT NULL,
   is_open boolean default TRUE NOT NULL,
   id_group integer REFERENCES galette_groups(id_group) ON DELETE RESTRICT ON UPDATE CASCADE default NULL,

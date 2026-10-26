@@ -20,6 +20,8 @@ CREATE TABLE galette_events_events (
   country varchar(50) default NULL,
   begin_date date NOT NULL default '1901-01-01',
   end_date date NOT NULL default '1901-01-01',
+  begin_time time default NULL,
+  end_time time default NULL,
   creation_date date NOT NULL default '1901-01-01',
   is_open tinyint(1) NOT NULL default 1,
   id_group int unsigned default NULL,
