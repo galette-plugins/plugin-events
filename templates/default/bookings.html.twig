@@ -9,6 +9,10 @@
 
 {% set nb = nb_bookings %}
 
+{% if not login.isAdmin() and not login.isStaff() and not login.isGroupManager() %}
+    {% set no_action = true %}
+{% endif %}
+
 {% set form = {
     'route': {
         'name': 'batch-eventslist'

@@ -531,6 +531,8 @@ class BookingsController extends GaletteRoutingTestCase
         $body = (string)$test_response->getBody();
         $this->assertStringContainsString($member_one->sfullname, $body);
         $this->assertStringNotContainsString($member_two->sfullname, $body);
+        //members have no action on bookings, not even a column header
+        $this->assertStringNotContainsString('actions_row', $body);
         $this->expectNoLogEntry();
         $this->login->logout();
 
@@ -538,6 +540,7 @@ class BookingsController extends GaletteRoutingTestCase
         $body = (string)$this->app->handle($this->createRequest('events_bookings', ['event' => (string)$event]))->getBody();
         $this->assertStringContainsString($member_one->sfullname, $body);
         $this->assertStringContainsString($member_two->sfullname, $body);
+        $this->assertStringContainsString('actions_row', $body);
     }
 
     /**
