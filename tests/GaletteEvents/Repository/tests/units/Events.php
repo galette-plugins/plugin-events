@@ -76,6 +76,40 @@ class Events extends GaletteTestCase
     }
 
     /**
+     * Calendar gets all day events with an exclusive end date, other ones with their times
+     */
+    public function testCalendarTimes(): void
+    {
+        $day = date('Y-m-d', strtotime('+3 days'));
+        $next = date('Y-m-d', strtotime('+4 days'));
+        $after = date('Y-m-d', strtotime('+5 days'));
+        $this->insertEvent('all day', ['begin_date' => $day, 'end_date' => $next]);
+        $this->insertEvent('timed', ['begin_date' => $day, 'end_date' => $day, 'begin_time' => '14:00', 'end_time' => '17:30']);
+        $this->insertEvent('begin only', ['begin_date' => $day, 'end_date' => $day, 'begin_time' => '19:00']);
+        $this->insertEvent('begin only, two days', ['begin_date' => $day, 'end_date' => $next, 'begin_time' => '19:00']);
+
+        $this->logSuperAdmin();
+        $filters = new EventsList();
+        $filters->calendar_filter = true;
+        $filters->start_date_filter = date(__('Y-m-d'));
+        $filters->end_date_filter = date(__('Y-m-d'), strtotime('+1 month'));
+        $events = new \GaletteEvents\Repository\Events($this->zdb, $this->login, $this->history, $this->preferences, $filters);
+        $rows = [];
+        $periods = [];
+        foreach ($events->getList(false, true) as $event) {
+            $this->assertInstanceOf(\ArrayObject::class, $event);
+            $rows[$event['name']] = [$event['allDay'], $event['start'], $event['end'], $event['begin_date_fmt'], $event['end_date_fmt']];
+            $periods[$event['name']] = $event['period'];
+        }
+
+        $this->assertSame([true, $day, $after, $day, $next], $rows['all day']);
+        $this->assertSame([false, $day . 'T14:00', $day . 'T17:30', $day . ' 14:00', $day . ' 17:30'], $rows['timed']);
+        $this->assertSame([false, $day . 'T19:00', null, $day . ' 19:00', $day], $rows['begin only']);
+        $this->assertSame([false, $day . 'T19:00', $after . 'T00:00', $day . ' 19:00', $next], $rows['begin only, two days']);
+        $this->assertSame($day . ' 14:00 – 17:30', $periods['timed']);
+    }
+
+    /**
      * Events listed, bookable and displayed in calendar, depending on who is logged in
      */
     public function testVisibility(): void

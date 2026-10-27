@@ -263,6 +263,76 @@ class Event extends GaletteTestCase
     }
 
     /**
+     * Times are optional, events without begin time last all day
+     */
+    public function testTimes(): void
+    {
+        $this->logSuperAdmin();
+        $event = new \GaletteEvents\Event($this->zdb, $this->login, $this->history);
+        $this->assertTrue($event->isAllDay());
+
+        $this->assertTrue($event->check($this->getFormValues(['begin_time' => '14:00', 'end_time' => '17:30:00'])));
+        $event->store();
+        $event = new \GaletteEvents\Event($this->zdb, $this->login, $this->history, (int)$event->getId());
+        $this->assertSame('14:00', $event->getBeginTime());
+        $this->assertSame('17:30', $event->getEndTime());
+        $this->assertFalse($event->isAllDay());
+
+        //begin time only
+        $this->assertTrue($event->check($this->getFormValues(['begin_time' => '19:00', 'end_time' => ''])));
+        $event->store();
+        $event = new \GaletteEvents\Event($this->zdb, $this->login, $this->history, (int)$event->getId());
+        $this->assertSame('19:00', $event->getBeginTime());
+        $this->assertNull($event->getEndTime());
+
+        //back to all day
+        $this->assertTrue($event->check($this->getFormValues(['begin_time' => '', 'end_time' => ''])));
+        $event->store();
+        $event = new \GaletteEvents\Event($this->zdb, $this->login, $this->history, (int)$event->getId());
+        $this->assertNull($event->getBeginTime());
+        $this->assertTrue($event->isAllDay());
+
+        //end before begin is fine on another day
+        $this->assertTrue($event->check($this->getFormValues(['begin_time' => '20:00', 'end_time' => '02:00'])));
+
+        $same_day = ['begin_date' => '2026-10-10', 'end_date' => '2026-10-10'];
+        $this->assertFalse($event->check($this->getFormValues(['begin_time' => '20:00', 'end_time' => '19:59'] + $same_day)));
+        $this->assertSame(['End time must be later or equal to begin time'], $event->getErrors());
+        $this->assertTrue($event->check($this->getFormValues(['begin_time' => '20:00', 'end_time' => '20:00'] + $same_day)));
+
+        $this->assertFalse($event->check($this->getFormValues(['begin_time' => '', 'end_time' => '20:00'])));
+        $this->assertSame(['End time requires a begin time'], $event->getErrors());
+
+        $this->assertFalse($event->check($this->getFormValues(['begin_time' => '25:00', 'end_time' => ''])));
+        $this->assertSame(['- Wrong time format (HH:MM) for Begin time!'], $event->getErrors());
+        $this->expectLogEntry(\Analog\Analog::ERROR, 'Some errors has been threw attempting to edit/store an event');
+    }
+
+    /**
+     * Period displays what both ends share once
+     */
+    public function testPeriod(): void
+    {
+        $this->logSuperAdmin();
+        $event = new \GaletteEvents\Event($this->zdb, $this->login, $this->history);
+        $one_day = ['begin_date' => '2026-11-05', 'end_date' => '2026-11-05'];
+        $two_days = ['begin_date' => '2026-11-05', 'end_date' => '2026-11-06'];
+        $cases = [
+            ['2026-11-05', $one_day + ['begin_time' => '', 'end_time' => '']],
+            ['2026-11-05 – 2026-11-06', $two_days + ['begin_time' => '', 'end_time' => '']],
+            ['2026-11-05 18:30 – 20:00', $one_day + ['begin_time' => '18:30', 'end_time' => '20:00']],
+            ['2026-11-05 18:30', $one_day + ['begin_time' => '18:30', 'end_time' => '18:30']],
+            ['2026-11-05 19:00', $one_day + ['begin_time' => '19:00', 'end_time' => '']],
+            ['2026-11-05 19:00 – 2026-11-06', $two_days + ['begin_time' => '19:00', 'end_time' => '']],
+            ['2026-11-05 19:00 – 2026-11-06 02:00', $two_days + ['begin_time' => '19:00', 'end_time' => '02:00']],
+        ];
+        foreach ($cases as [$expected, $values]) {
+            $this->assertTrue($event->check($this->getFormValues($values)));
+            $this->assertSame($expected, $event->getPeriod());
+        }
+    }
+
+    /**
      * Events are removed with their bookings and activities links
      */
     public function testRemove(): void

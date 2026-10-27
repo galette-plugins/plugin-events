@@ -41,10 +41,25 @@
                     label: _T("Begin date", "events"),
                 } %}
 
+                {% include "components/forms/input.html.twig" with {
+                    id: 'begin_time',
+                    value: event.getBeginTime(),
+                    label: _T("Begin time", "events"),
+                    type: 'time',
+                    description: _T("Leave empty for an all day event.", "events")
+                } %}
+
                 {% include "components/forms/date.html.twig" with {
                     id: 'end_date',
                     value: event.getEndDate()|date(_T("Y-m-d")),
                     label: _T("End date", "events"),
+                } %}
+
+                {% include "components/forms/input.html.twig" with {
+                    id: 'end_time',
+                    value: event.getEndTime(),
+                    label: _T("End time", "events"),
+                    type: 'time'
                 } %}
 
                 {% set group_list_values = {(0): _T("Select a group")} %}
