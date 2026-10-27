@@ -90,7 +90,7 @@ class PluginGaletteEvents extends GaletteTestCase
     public function testDashboardsAndActions(): void
     {
         $plugin = $this->getPlugin();
-        $this->assertSame([], $plugin->getPublicMenus());
+        $this->assertSame(['events_public'], array_map(fn($item) => $item['route']['name'], $plugin->getPublicMenus()));
         $this->assertSame([], $plugin->getMyDashboards());
         $this->assertSame([], $plugin->getBatchActions());
 
@@ -153,5 +153,30 @@ class PluginGaletteEvents extends GaletteTestCase
     public function testGetLegacyDbVersion(): void
     {
         $this->assertNull($this->getPlugin()->getLegacyDbVersion());
+    }
+
+    /**
+     * The public events page is declared to the core, with a visibility of its own
+     */
+    public function testPublicPage(): void
+    {
+        $name = 'pref_events_publicpages_visibility_events';
+        $plugin = $this->getPlugin();
+
+        $this->assertSame(['events' => ['routes' => ['events_public', 'events_public_feed']]], $plugin->getPublicPages());
+        $this->assertSame('Events', $plugin->getPublicPageLabel('events'));
+        $this->assertSame($name, \Galette\Core\PreferencesSchema::getPublicPageRight('events_public'));
+        $this->assertSame($name, \Galette\Core\PreferencesSchema::getPublicPageRight('events_public_feed'));
+
+        $this->setRawPreference('pref_bool_publicpages', true);
+        $this->setRawPreference('pref_publicpages_visibility_generic', \Galette\Enums\PublicPageVisibility::Hidden->value);
+        $this->setRawPreference($name, \Galette\Enums\PublicPageVisibility::Everyone->value);
+        $this->assertSame(['events_public'], array_map(
+            fn($item) => $item['route']['name'],
+            $plugin->getPublicMenuItems()
+        ));
+
+        $this->setRawPreference($name, \Galette\Enums\PublicPageVisibility::Inherit->value);
+        $this->assertSame([], $plugin->getPublicMenuItems());
     }
 }

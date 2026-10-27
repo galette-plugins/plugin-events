@@ -50,6 +50,7 @@ class Event
     private ?string $end_time = null;
     private ?string $creation_date = null;
     private bool $open = true;
+    private bool $public = false;
     private ?int $group = null;
     private string $comment = '';
     private ?string $color = null;
@@ -102,6 +103,7 @@ class Event
         $this->end_time = $this->loadTime($r['end_time']);
         $this->creation_date = $r['creation_date'];
         $this->open = (bool)$r['is_open'];
+        $this->public = (bool)$r['is_public'];
         $this->group = $r['id_group'] === null ? null : (int)$r['id_group'];
         $this->comment = $r['comment'] ?? '';
         $this->color = $r['color'];
@@ -236,6 +238,12 @@ class Event
             $this->open = false;
         }
 
+        //events of a group are not visible to every member: they cannot be shown to anyone
+        $this->public = isset($values['public']);
+        if ($this->public && $this->group !== null) {
+            $this->errors[] = _T('An event restricted to a group cannot be public', 'events');
+        }
+
         if (count($this->errors) > 0) {
             Analog::log(
                 'Some errors has been threw attempting to edit/store an event' . "\n"
@@ -325,6 +333,7 @@ class Event
                 'begin_time'            => ($this->begin_time ?? new Expression('NULL')),
                 'end_time'              => ($this->end_time ?? new Expression('NULL')),
                 'is_open'               => (int)$this->open,
+                'is_public'             => (int)$this->public,
                 Group::PK               => ($this->group ?: new Expression('NULL')),
                 'comment'               => $this->comment,
                 'color'                 => $this->color
@@ -619,6 +628,14 @@ class Event
     public function isOpenFlag(): bool
     {
         return $this->open;
+    }
+
+    /**
+     * Is event published on public pages?
+     */
+    public function isPublic(): bool
+    {
+        return $this->public;
     }
 
     /**

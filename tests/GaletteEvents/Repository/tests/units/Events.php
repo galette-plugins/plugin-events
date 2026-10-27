@@ -193,4 +193,26 @@ class Events extends GaletteTestCase
         $this->assertSame(['Third'], $names);
         $this->assertSame(3, $events->getCount());
     }
+
+    /**
+     * Public events, whatever their state, ended since given date
+     */
+    public function testGetPublic(): void
+    {
+        $this->insertEvent('public', ['is_public' => true]);
+        $this->insertEvent('public closed', ['is_public' => true, 'is_open' => false]);
+        $this->insertEvent(
+            'public past',
+            ['is_public' => true, 'begin_date' => date('Y-m-d', strtotime('-3 days')), 'end_date' => date('Y-m-d', strtotime('-2 days'))]
+        );
+        $this->insertEvent('not public');
+
+        $events = new \GaletteEvents\Repository\Events($this->zdb, $this->login, $this->history, $this->preferences);
+        $names = fn(string $since): array => array_map(
+            fn(\GaletteEvents\Event $event): string => $event->getName(),
+            $events->getPublic($since)
+        );
+        $this->assertEqualsCanonicalizing(['public', 'public closed'], $names(date('Y-m-d')));
+        $this->assertEqualsCanonicalizing(['public', 'public closed', 'public past'], $names(date('Y-m-d', strtotime('-1 month'))));
+    }
 }

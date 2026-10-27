@@ -20,6 +20,7 @@ use Galette\Core\Plugins\InstallableInterface;
 use Galette\Core\Plugins\MemberActionProviderInterface;
 use Galette\Core\Plugins\MenuProviderInterface;
 use Galette\Core\Plugins\NewsProviderInterface;
+use Galette\Core\Plugins\PublicPagesProviderInterface;
 use Galette\Entity\Adherent;
 use Galette\Entity\Group;
 use Galette\Core\GalettePlugin;
@@ -36,7 +37,7 @@ use Laminas\Db\Metadata\Source\Factory;
  * @author Johan Cwiklinski <johan@x-tnd.be>
  */
 
-class PluginGaletteEvents extends GalettePlugin implements InstallableInterface, NewsProviderInterface, MenuProviderInterface, DashboardProviderInterface, MemberActionProviderInterface
+class PluginGaletteEvents extends GalettePlugin implements InstallableInterface, NewsProviderInterface, MenuProviderInterface, DashboardProviderInterface, MemberActionProviderInterface, PublicPagesProviderInterface
 {
     #[Inject]
     protected Db $zdb;
@@ -116,7 +117,37 @@ class PluginGaletteEvents extends GalettePlugin implements InstallableInterface,
      */
     public function getPublicMenus(): array
     {
-        return [];
+        return [
+            [
+                'label' => _T('Events', 'events'),
+                'route' => [
+                    'name' => 'events_public'
+                ],
+                'icon' => 'calendar alternate'
+            ]
+        ];
+    }
+
+    /**
+     * Get the public pages the plugin declares
+     *
+     * @return array<string, array{routes: list<string>, default?: int}>
+     */
+    public function getPublicPages(): array
+    {
+        return [
+            'events' => ['routes' => ['events_public', 'events_public_feed']],
+        ];
+    }
+
+    /**
+     * Get the label of a declared public page
+     *
+     * @param string $id Page identifier
+     */
+    public function getPublicPageLabel(string $id): string
+    {
+        return _T('Events', 'events');
     }
 
     /**

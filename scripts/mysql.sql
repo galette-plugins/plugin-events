@@ -24,6 +24,7 @@ CREATE TABLE galette_events_events (
   end_time time default NULL,
   creation_date date NOT NULL default '1901-01-01',
   is_open tinyint(1) NOT NULL default 1,
+  is_public tinyint(1) NOT NULL default 0,
   id_group int unsigned default NULL,
   comment text,
   color varchar(7),

@@ -9,6 +9,7 @@
 declare(strict_types=1);
 
 use Galette\Middleware\Authenticate;
+use Galette\Middleware\PublicPages;
 use GaletteEvents\Controllers\Crud\EventsController;
 use GaletteEvents\Controllers\Crud\ActivitiesController;
 use GaletteEvents\Controllers\Crud\BookingsController;
@@ -189,6 +190,16 @@ $app->get(
     '/events/feed/{token:' . GaletteEvents\Feeds::TOKEN_PATTERN . '}.ics',
     [EventsController::class, 'feed']
 )->setName('events_feed');
+
+$app->get(
+    '/public/events',
+    [EventsController::class, 'publicList']
+)->setName('events_public')->add(PublicPages::class);
+
+$app->get(
+    '/public/events.ics',
+    [EventsController::class, 'publicFeed']
+)->setName('events_public_feed')->add(PublicPages::class);
 
 $app->get(
     '/ajax/events/calendar',

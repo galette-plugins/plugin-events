@@ -174,8 +174,19 @@ class EventsController extends AbstractController
      */
     private function getFeedUrls(string $token): array
     {
-        $url = rtrim($this->preferences->getURL(), '/')
-            . $this->routeparser->urlFor('events_feed', ['token' => $token]);
+        return $this->getSubscriptionUrls($this->routeparser->urlFor('events_feed', ['token' => $token]));
+    }
+
+    /**
+     * Absolute subscription URLs, for browsers and calendar applications
+     *
+     * @param string $path Path of the subscription route
+     *
+     * @return array{https: string, webcal: string}
+     */
+    private function getSubscriptionUrls(string $path): array
+    {
+        $url = rtrim($this->preferences->getURL(), '/') . $path;
         return [
             'https'     => $url,
             'webcal'    => (string)preg_replace('#^https?://#', 'webcal://', $url),
@@ -258,13 +269,56 @@ class EventsController extends AbstractController
             (new \DateTimeImmutable('-' . self::FEED_PAST_MONTHS . ' months'))->format('Y-m-d')
         );
 
+        return $this->writeFeed($response, $list, 'private');
+    }
+
+    /**
+     * Write a calendar subscription
+     *
+     * @param array<Event> $events Events
+     * @param string       $cache  Cache-Control visibility, public or private
+     */
+    private function writeFeed(Response $response, array $events, string $cache): Response
+    {
         $ics = new Ics($this->preferences, $this->routeparser);
         $name = $this->preferences->pref_nom . ' – ' . _T('Events', 'events');
-        $response->getBody()->write($ics->getCalendar($list, $name)->serialize());
+        $response->getBody()->write($ics->getCalendar($events, $name)->serialize());
         return $response
             ->withHeader('Content-Type', Ics::CONTENT_TYPE)
             ->withHeader('Content-Disposition', 'inline; filename="events.ics"')
-            ->withHeader('Cache-Control', 'private, no-cache');
+            ->withHeader('Cache-Control', $cache . ', no-cache');
+    }
+
+    /**
+     * Public events page
+     */
+    public function publicList(Request $request, Response $response): Response
+    {
+        $events = new Events($this->zdb, $this->login, $this->history, $this->preferences);
+
+        $this->view->render(
+            $response,
+            $this->getTemplate('public_events'),
+            [
+                'page_title'    => _T('Events', 'events'),
+                'events'        => $events->getPublic(date('Y-m-d')),
+                'feed_urls'     => $this->getSubscriptionUrls($this->routeparser->urlFor('events_public_feed')),
+            ]
+        );
+        return $response;
+    }
+
+    /**
+     * Public events calendar subscription
+     */
+    public function publicFeed(Request $request, Response $response): Response
+    {
+        $events = new Events($this->zdb, $this->login, $this->history, $this->preferences);
+        return $this->writeFeed(
+            $response,
+            $events->getPublic((new \DateTimeImmutable('-' . self::FEED_PAST_MONTHS . ' months'))->format('Y-m-d')),
+            'public'
+        );
     }
 
     /**
