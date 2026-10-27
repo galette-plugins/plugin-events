@@ -16,6 +16,7 @@ use Galette\Entity\PaymentType;
 use GaletteEvents\Activity;
 use GaletteEvents\Booking;
 use GaletteEvents\Event;
+use GaletteEvents\Feeds;
 
 /**
  * Events, bookings and groups for plugin tests
@@ -29,7 +30,7 @@ trait EventsFixtures
      */
     protected function cleanEvents(): void
     {
-        foreach (['activitiesbookings', 'activitiesevents', Booking::TABLE, Event::TABLE, Activity::TABLE] as $table) {
+        foreach (['activitiesbookings', 'activitiesevents', Booking::TABLE, Event::TABLE, Activity::TABLE, Feeds::TABLE] as $table) {
             $this->zdb->execute($this->zdb->delete(EVENTS_PREFIX . $table));
         }
     }

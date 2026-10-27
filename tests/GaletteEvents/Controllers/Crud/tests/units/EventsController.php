@@ -42,6 +42,7 @@ class EventsController extends GaletteRoutingTestCase
     public function tearDown(): void
     {
         $this->login->logout();
+        $this->preferences->pref_galette_url = '';
         //iCalendar export generates the instance UUID, core tests expect the one they have, if any
         $update = $this->zdb->update(\Galette\Core\Preferences::TABLE)
             ->set(['val_pref' => $this->instance_uuid])
@@ -601,5 +602,132 @@ class EventsController extends GaletteRoutingTestCase
             $this->createRequest('events_event_ics', ['id' => (string)$public])
         );
         $this->expectLogin($test_response);
+    }
+
+    /**
+     * Get the calendar subscription of a member, as calendar applications do
+     *
+     * @param string $token Subscription token
+     */
+    private function getFeed(string $token): \Psr\Http\Message\ResponseInterface
+    {
+        return $this->app->handle($this->createRequest('events_feed', ['token' => $token]));
+    }
+
+    /**
+     * Set member active state
+     *
+     * @param int  $member Member ID
+     * @param bool $active Active state
+     */
+    private function setActive(int $member, bool $active): void
+    {
+        $update = $this->zdb->update(\Galette\Entity\Adherent::TABLE)
+            ->set(['activite_adh' => $this->zdb->isPostgres() ? ($active ? 'true' : 'false') : (int)$active])
+            ->where([\Galette\Entity\Adherent::PK => $member]);
+        $this->zdb->execute($update);
+    }
+
+    /**
+     * Members get, change and use their calendar subscription
+     */
+    public function testSubscription(): void
+    {
+        $member_one = $this->getMemberOne();
+        $member_two = $this->getMemberTwo();
+        $other = $this->createGroup('Other group', [], [$member_two]);
+        $this->insertEvent('Public event', ['begin_time' => '18:30', 'end_time' => '20:00']);
+        $this->insertEvent('Other group event', ['id_group' => $other->getId()]);
+        $feeds = new \GaletteEvents\Feeds($this->zdb);
+        //instance URL cannot be guessed without request host
+        $this->preferences->pref_galette_url = 'https://galette.test/';
+
+        $this->logMember($this->dataAdherentOne());
+        $body = (string)$this->app->handle($this->createRequest('events_calendar'))->getBody();
+        $this->assertStringContainsString('id="calendar_subscribe"', $body);
+        $this->assertStringContainsString($this->routeparser->urlFor('events_feed_subscribe'), $body);
+        //no subscription until asked for
+        $this->assertNull((new \GaletteEvents\Feeds($this->zdb))->getToken((int)$member_one->id));
+
+        $test_response = $this->app->handle($this->createRequest('events_feed_subscribe', [], 'POST'));
+        $this->assertSame(
+            ['Location' => [$this->routeparser->urlFor('events_calendar') . '?subscription']],
+            $test_response->getHeaders()
+        );
+        $token = $feeds->getToken((int)$member_one->id);
+        $this->assertNotNull($token);
+
+        //subscribing again keeps the address
+        $this->app->handle($this->createRequest('events_feed_subscribe', [], 'POST'));
+        $this->assertSame($token, $feeds->getToken((int)$member_one->id));
+
+        $body = (string)$this->app->handle(
+            $this->createRequest('events_calendar', [], 'GET', 'text/html', ['subscription' => ''])
+        )->getBody();
+        $url = 'galette.test' . $this->routeparser->urlFor('events_feed', ['token' => $token]);
+        $this->assertStringContainsString('href="webcal://' . $url . '"', $body);
+        $this->assertStringContainsString('value="https://' . $url . '"', $body);
+        $this->assertStringContainsString('"show_subscription":true', $body);
+        $this->login->logout();
+
+        //calendar applications have no session
+        $test_response = $this->getFeed($token);
+        $this->assertSame(200, $test_response->getStatusCode());
+        $this->assertSame(['text/calendar; charset=utf-8'], $test_response->getHeader('Content-Type'));
+        $ics = (string)$test_response->getBody();
+        $this->assertStringContainsString('SUMMARY:Public event', $ics);
+        $this->assertStringNotContainsString('Other group event', $ics);
+        $this->assertStringContainsString('X-WR-CALNAME:', $ics);
+        $this->assertStringContainsString('REFRESH-INTERVAL;VALUE=DURATION:PT1H', $ics);
+
+        //unknown token and inactive member get the same answer
+        $this->assertSame(404, $this->getFeed(str_repeat('a', 64))->getStatusCode());
+        $this->setActive((int)$member_one->id, false);
+        try {
+            $this->assertSame(404, $this->getFeed($token)->getStatusCode());
+        } finally {
+            $this->setActive((int)$member_one->id, true);
+        }
+
+        //previous address no longer works once changed
+        $this->logMember($this->dataAdherentOne());
+        $test_response = $this->app->handle($this->createRequest('events_feed_regenerate', [], 'POST'));
+        $this->assertSame(
+            ['Location' => [$this->routeparser->urlFor('events_calendar') . '?subscription']],
+            $test_response->getHeaders()
+        );
+        $this->expectFlashData(['success_detected' => [_T(
+            'Your subscription address has been changed: calendar applications subscribed to the previous one no longer get updates.',
+            'events'
+        )]]);
+        $this->login->logout();
+        $new = $feeds->getToken((int)$member_one->id);
+        $this->assertNotSame($token, $new);
+        $this->assertSame(404, $this->getFeed($token)->getStatusCode());
+        $this->assertSame(200, $this->getFeed((string)$new)->getStatusCode());
+    }
+
+    /**
+     * Superadmin is not a member, it has no subscription
+     */
+    public function testSuperAdminCannotSubscribe(): void
+    {
+        $this->logSuperAdmin();
+        $body = (string)$this->app->handle($this->createRequest('events_calendar'))->getBody();
+        $this->assertStringNotContainsString('id="calendar_subscribe"', $body);
+
+        $test_response = $this->app->handle($this->createRequest('events_feed_subscribe', [], 'POST'));
+        $this->assertSame(['Location' => [$this->routeparser->urlFor('events_calendar')]], $test_response->getHeaders());
+        $this->expectFlashData(['error_detected' => [_T('You do not have permission for requested URL.')]]);
+    }
+
+    /**
+     * Visitors cannot subscribe
+     */
+    public function testVisitorCannotSubscribe(): void
+    {
+        foreach (['events_feed_subscribe', 'events_feed_regenerate'] as $route) {
+            $this->expectLogin($this->app->handle($this->createRequest($route, [], 'POST')));
+        }
     }
 }

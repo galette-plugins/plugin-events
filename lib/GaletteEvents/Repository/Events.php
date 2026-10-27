@@ -25,6 +25,7 @@ use Galette\Entity\Group;
 use Galette\Repository\Groups;
 use GaletteEvents\Event;
 use GaletteEvents\Filters\EventsList;
+use GaletteEvents\Viewer;
 
 /**
  * Events
@@ -87,17 +88,11 @@ class Events extends AbstractRepository
                 $select::JOIN_LEFT
             );
 
-            if (!$this->login->isAdmin() && !$this->login->isStaff()) {
-                $managed = array_map('intval', $this->login->managed_groups);
-                $groups = self::getVisibleGroups($this->login);
-
-                $visible = [new Predicate\IsNull('e.' . Group::PK)];
-                if (count($groups)) {
-                    $visible[] = new Predicate\In('e.' . Group::PK, $groups);
-                }
-                $visible = new PredicateSet($visible, PredicateSet::OP_OR);
-
-                $booked = new Predicate\Operator('b.' . Adherent::PK, '=', $this->login->id);
+            $viewer = Viewer::fromLogin($this->login);
+            if (!$viewer->seesAll()) {
+                $managed = $viewer->managed;
+                $visible = $this->getVisiblePredicate($viewer);
+                $booked = $this->getBookedPredicate($viewer);
 
                 if ($this->filters->calendar_filter) {
                     $set = [$visible, $booked];
@@ -246,34 +241,100 @@ class Events extends AbstractRepository
     }
 
     /**
+     * Get events of a calendar subscription
+     *
+     * Events are the ones of the calendar: public ones, the ones of the
+     * viewer groups and the ones they have booked, whatever their state.
+     *
+     * @param Viewer $viewer Member the subscription belongs to
+     * @param string $since  Events ended before this date, as Y-m-d, are left out
+     *
+     * @return array<Event>
+     */
+    public function getFeed(Viewer $viewer, string $since): array
+    {
+        $select = $this->zdb->select(EVENTS_PREFIX . Event::TABLE, 'e');
+        $select->join(
+            ['b' => PREFIX_DB . EVENTS_PREFIX . Booking::TABLE],
+            'e.' . Event::PK . '=b.' . Event::PK,
+            [],
+            $select::JOIN_LEFT
+        );
+        if (!$viewer->seesAll()) {
+            $select->where(new PredicateSet(
+                [$this->getVisiblePredicate($viewer), $this->getBookedPredicate($viewer)],
+                PredicateSet::OP_OR
+            ));
+        }
+        $select->where->greaterThanOrEqualTo('e.end_date', $since);
+        $select->group(['e.' . Event::PK]);
+        $select->order(['e.begin_date', 'e.' . Event::PK]);
+
+        $events = [];
+        foreach ($this->zdb->execute($select) as $row) {
+            $events[] = new Event($this->zdb, $this->login, $this->history, $row);
+        }
+        return $events;
+    }
+
+    /**
      * Groups whose events a member can see and book: the ones they belong to or manage
      *
      * Events without group are visible to every member.
      *
-     * @param Login $login Logged-in member
+     * @param Viewer $viewer Member events are listed for
      *
      * @return array<int>
      */
-    public static function getVisibleGroups(Login $login): array
+    public static function getVisibleGroups(Viewer $viewer): array
     {
+        if ($viewer->id === null) {
+            return $viewer->managed;
+        }
         return array_values(array_unique(array_merge(
-            array_map('intval', Groups::loadGroups((int)$login->id, false, false)),
-            array_map('intval', $login->managed_groups)
+            array_map('intval', Groups::loadGroups($viewer->id, false, false)),
+            $viewer->managed
         )));
+    }
+
+    /**
+     * Events visible to a member: public ones, and the ones of their groups
+     *
+     * @param Viewer $viewer Viewer
+     */
+    private function getVisiblePredicate(Viewer $viewer): PredicateSet
+    {
+        $groups = self::getVisibleGroups($viewer);
+        $visible = [new Predicate\IsNull('e.' . Group::PK)];
+        if (count($groups)) {
+            $visible[] = new Predicate\In('e.' . Group::PK, $groups);
+        }
+        return new PredicateSet($visible, PredicateSet::OP_OR);
+    }
+
+    /**
+     * Events a member has booked
+     *
+     * @param Viewer $viewer Viewer
+     */
+    private function getBookedPredicate(Viewer $viewer): Predicate\PredicateInterface
+    {
+        return $viewer->id === null
+            ? new Predicate\Expression('1 = 0')
+            : new Predicate\Operator('b.' . Adherent::PK, '=', $viewer->id);
     }
 
     /**
      * Is an event of this group visible to a member
      *
-     * @param ?int  $group Event group, if any
-     * @param Login $login Logged-in member
+     * @param ?int   $group  Event group, if any
+     * @param Viewer $viewer Member events are listed for
      */
-    public static function isVisible(?int $group, Login $login): bool
+    public static function isVisible(?int $group, Viewer $viewer): bool
     {
-        return $login->isAdmin()
-            || $login->isStaff()
+        return $viewer->seesAll()
             || $group === null
-            || in_array($group, self::getVisibleGroups($login), true);
+            || in_array($group, self::getVisibleGroups($viewer), true);
     }
 
     /**
