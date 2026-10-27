@@ -22,6 +22,7 @@ $(function() {
   var $modal = $('#calendar_event');
   var $edit = $modal.find('[data-action="edit"]');
   var $booking = $modal.find('[data-action="booking"]');
+  var $ics = $modal.find('[data-action="ics"]');
 
   var calendar = new Calendar(calendarEl, {
     plugins: [ themePlugin, interactionPlugin, dayGridPlugin, listPlugin ],
@@ -46,6 +47,7 @@ $(function() {
         .attr('href', infos.edit_url || '#')
         .toggleClass('displaynone', !infos.edit_url);
       $booking.attr('href', infos.booking_url);
+      $ics.attr('href', infos.ics_url);
       $modal.modal('show');
     },
     eventMouseEnter: function(info) {

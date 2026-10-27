@@ -8,7 +8,7 @@
 
 {% block content %}
     <div id='calendar'></div>
-    <div class="ui tiny modal" id="calendar_event">
+    <div class="ui small modal" id="calendar_event">
         <div class="header"></div>
         <div class="content"></div>
         <div class="actions">
@@ -16,6 +16,10 @@
             <a href="#" class="ui labeled icon blue button" data-action="edit">
                 <i class="edit icon" aria-hidden="true"></i>
                 {{ _T("Edit") }}
+            </a>
+            <a href="#" class="ui labeled icon button" data-action="ics">
+                <i class="calendar plus icon" aria-hidden="true"></i>
+                {{ _T("Download", "events") }}
             </a>
             <a href="#" class="ui labeled icon green button" data-action="booking">
                 <i class="plus circle icon" aria-hidden="true"></i>
