@@ -47,6 +47,8 @@ $this->register(
         'event_bookings_export'     => 'groupmanager',
         'events_bookings_export'    => 'groupmanager',
         'events_calendar'           => 'member',
+        'events_feed_subscribe'     => 'member',
+        'events_feed_regenerate'    => 'member',
         'ajax-events_calendar'      => 'member'
     ],
     dbver: 1.2

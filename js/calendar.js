@@ -61,4 +61,18 @@ $(function() {
   });
 
   calendar.render();
+
+  var $feed = $('#calendar_feed');
+  $('#calendar_subscribe').on('click', function() {
+    $feed.modal('show');
+  });
+  $('#feed_regenerate').on('submit', function(event) {
+    if (!window.confirm($(this).data('confirm'))) {
+      event.preventDefault();
+    }
+  });
+  //back from getting or changing the subscription address
+  if (options.show_subscription) {
+    $feed.modal('show');
+  }
 });

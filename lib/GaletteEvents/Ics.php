@@ -46,14 +46,22 @@ class Ics
      * Build calendar
      *
      * @param array<Event> $events Events to include
+     * @param ?string      $name   Name of a subscribed calendar, refreshed by calendar applications
      */
-    public function getCalendar(array $events): VCalendar
+    public function getCalendar(array $events, ?string $name = null): VCalendar
     {
         $calendar = new VCalendar([
             'PRODID'    => '-//Galette//Galette Events//EN',
             'CALSCALE'  => 'GREGORIAN',
             'METHOD'    => 'PUBLISH',
         ]);
+        if ($name !== null) {
+            //RFC 7986 properties, and their widely used predecessors
+            $calendar->add('NAME', $name);
+            $calendar->add('X-WR-CALNAME', $name);
+            $calendar->add('REFRESH-INTERVAL', 'PT1H', ['VALUE' => 'DURATION']);
+            $calendar->add('X-PUBLISHED-TTL', 'PT1H');
+        }
 
         $now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
         $domain = $this->getUidDomain();

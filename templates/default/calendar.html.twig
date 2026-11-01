@@ -7,6 +7,14 @@
 {% extends "page.html.twig" %}
 
 {% block content %}
+    {% if can_subscribe %}
+    <div class="ui basic right aligned fitted segment">
+        <button type="button" class="ui labeled icon button" id="calendar_subscribe">
+            <i class="rss icon" aria-hidden="true"></i>
+            {{ _T("Subscribe", "events") }}
+        </button>
+    </div>
+    {% endif %}
     <div id='calendar'></div>
     <div class="ui small modal" id="calendar_event">
         <div class="header"></div>
@@ -31,12 +39,60 @@
             </button>
         </div>
     </div>
+    {% if can_subscribe %}
+    <div class="ui small modal" id="calendar_feed">
+        <div class="header">{{ _T("Subscribe to events", "events") }}</div>
+        <div class="content">
+            <p>{{ _T("Add events you can see to your calendar application: it will keep them up to date by itself.", "events") }}</p>
+        {% if feed_urls %}
+            <p>
+                <a href="{{ feed_urls.webcal }}" class="ui primary labeled icon button">
+                    <i class="calendar plus icon" aria-hidden="true"></i>
+                    {{ _T("Open in my calendar application", "events") }}
+                </a>
+            </p>
+            <div class="ui form">
+                <div class="field">
+                    <label for="feed_url">{{ _T("Or copy this address in your calendar application", "events") }}</label>
+                    <div class="ui action input">
+                        <input type="text" id="feed_url" value="{{ feed_urls.https }}" readonly="readonly"/>
+                        {% include "components/copy_button.html.twig" with {target: '#feed_url', label: _T("Copy subscription address", "events")} only %}
+                    </div>
+                </div>
+            </div>
+            <div class="ui warning message">
+                {{ _T("This address is personal: anyone who knows it can see your events. If it has been disclosed, change it.", "events") }}
+            </div>
+            <form action="{{ url_for("events_feed_regenerate") }}" method="post" id="feed_regenerate" data-confirm="{{ _T("Calendar applications subscribed to the current address will no longer get updates. Change it?", "events") }}">
+                <button type="submit" class="ui labeled icon button">
+                    <i class="redo icon" aria-hidden="true"></i>
+                    {{ _T("Change my subscription address", "events") }}
+                </button>
+            </form>
+        {% else %}
+            <form action="{{ url_for("events_feed_subscribe") }}" method="post">
+                <button type="submit" class="ui primary labeled icon button">
+                    <i class="rss icon" aria-hidden="true"></i>
+                    {{ _T("Get my subscription address", "events") }}
+                </button>
+            </form>
+        {% endif %}
+        </div>
+        <div class="actions">
+            <button type="button" class="ui labeled icon cancel button">
+                <i class="times icon" aria-hidden="true"></i>
+                {{ _T("Close") }}
+            </button>
+        </div>
+    </div>
+    {% endif %}
 {% endblock %}
 
 {% block javascripts %}
     {% set calendar_options = {
         'dataurl': url_for("ajax-events_calendar"),
         'locale': i18n.getWebID(),
+        'show_subscription': show_subscription,
         'buttons': {
             'listDay': {'text': _T("Daily list", "events")},
             'listWeek': {'text': _T("Weekly list", "events")},

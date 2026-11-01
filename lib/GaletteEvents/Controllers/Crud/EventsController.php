@@ -14,8 +14,11 @@ use ArrayObject;
 use Galette\Repository\Groups;
 use Galette\Core\Pagination;
 use GaletteEvents\Filters\EventsList;
+use Galette\Entity\Adherent;
 use GaletteEvents\Event;
+use GaletteEvents\Feeds;
 use GaletteEvents\Ics;
+use GaletteEvents\Viewer;
 use GaletteEvents\NotFoundException;
 use GaletteEvents\Repository\Events;
 use Slim\Psr7\Request;
@@ -37,6 +40,9 @@ use Slim\Psr7\Response;
 
 class EventsController extends AbstractController
 {
+    /** Ended events kept in calendar subscriptions */
+    public const int FEED_PAST_MONTHS = 12;
+
     /**
      * Entity name, for session keys and logs
      */
@@ -139,6 +145,10 @@ class EventsController extends AbstractController
             );
         }
 
+        //calendar subscription, for members only
+        $viewer = Viewer::fromLogin($this->login);
+        $token = $viewer->id === null ? null : (new Feeds($this->zdb))->getToken($viewer->id);
+
         // display page
         $this->view->render(
             $response,
@@ -146,10 +156,115 @@ class EventsController extends AbstractController
             [
                 'page_title'            => _T("Events calendar", "events"),
                 'require_dialog'        => true,
-                'module_id'             => $this->getModuleId()
+                'module_id'             => $this->getModuleId(),
+                'can_subscribe'         => $viewer->id !== null,
+                'feed_urls'             => $token === null ? null : $this->getFeedUrls($token),
+                'show_subscription'     => isset($request->getQueryParams()['subscription']),
             ]
         );
         return $response;
+    }
+
+    /**
+     * Subscription URLs of a calendar
+     *
+     * @param string $token Subscription token
+     *
+     * @return array{https: string, webcal: string}
+     */
+    private function getFeedUrls(string $token): array
+    {
+        $url = rtrim($this->preferences->getURL(), '/')
+            . $this->routeparser->urlFor('events_feed', ['token' => $token]);
+        return [
+            'https'     => $url,
+            'webcal'    => (string)preg_replace('#^https?://#', 'webcal://', $url),
+        ];
+    }
+
+    /**
+     * Get, or create, the calendar subscription of logged-in member
+     */
+    public function subscribe(Request $request, Response $response): Response
+    {
+        return $this->storeFeedToken($response, false);
+    }
+
+    /**
+     * Change calendar subscription of logged-in member
+     */
+    public function regenerateFeed(Request $request, Response $response): Response
+    {
+        return $this->storeFeedToken($response, true);
+    }
+
+    /**
+     * Create or change calendar subscription token of logged-in member
+     *
+     * @param bool $regenerate Replace an existing token
+     */
+    private function storeFeedToken(Response $response, bool $regenerate): Response
+    {
+        $viewer = Viewer::fromLogin($this->login);
+        if ($viewer->id === null) {
+            //superadmin is not a member
+            return $this->redirectWithErrors(
+                response: $response,
+                errors: [_T("You do not have permission for requested URL.")],
+                redirect_url: $this->routeparser->urlFor('events_calendar')
+            );
+        }
+
+        $feeds = new Feeds($this->zdb);
+        $successes = [];
+        if ($regenerate) {
+            $feeds->regenerate($viewer->id);
+            $successes[] = _T(
+                'Your subscription address has been changed: calendar applications subscribed to the previous one no longer get updates.',
+                'events'
+            );
+        } else {
+            $feeds->getOrCreateToken($viewer->id);
+        }
+
+        return $this->redirect(
+            response: $response,
+            redirect_url: $this->routeparser->urlFor('events_calendar') . '?subscription',
+            successes: $successes
+        );
+    }
+
+    /**
+     * Calendar subscription, as fetched by calendar applications, without session
+     *
+     * Unknown tokens and inactive members get the same answer.
+     *
+     * @param string $token Subscription token
+     */
+    public function feed(Request $request, Response $response, string $token): Response
+    {
+        $id = (new Feeds($this->zdb))->getMember($token);
+        $member = $id === null ? null : new Adherent($this->zdb, $id);
+        if ($member === null || !$member->isActive()) {
+            return $response->withStatus(404);
+        }
+
+        //descriptions are in the member language
+        $this->i18n->changeLanguage($member->language);
+
+        $events = new Events($this->zdb, $this->login, $this->history, $this->preferences);
+        $list = $events->getFeed(
+            Viewer::fromMember($member),
+            (new \DateTimeImmutable('-' . self::FEED_PAST_MONTHS . ' months'))->format('Y-m-d')
+        );
+
+        $ics = new Ics($this->preferences, $this->routeparser);
+        $name = $this->preferences->pref_nom . ' – ' . _T('Events', 'events');
+        $response->getBody()->write($ics->getCalendar($list, $name)->serialize());
+        return $response
+            ->withHeader('Content-Type', Ics::CONTENT_TYPE)
+            ->withHeader('Content-Disposition', 'inline; filename="events.ics"')
+            ->withHeader('Cache-Control', 'private, no-cache');
     }
 
     /**

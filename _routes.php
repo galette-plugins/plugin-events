@@ -174,6 +174,22 @@ $app->get(
     [EventsController::class, 'calendar']
 )->setName('events_calendar')->add(Authenticate::class);
 
+$app->post(
+    '/events/feed',
+    [EventsController::class, 'subscribe']
+)->setName('events_feed_subscribe')->add(Authenticate::class);
+
+$app->post(
+    '/events/feed/regenerate',
+    [EventsController::class, 'regenerateFeed']
+)->setName('events_feed_regenerate')->add(Authenticate::class);
+
+//calendar applications have no session: the secret token is the only credential
+$app->get(
+    '/events/feed/{token:' . GaletteEvents\Feeds::TOKEN_PATTERN . '}.ics',
+    [EventsController::class, 'feed']
+)->setName('events_feed');
+
 $app->get(
     '/ajax/events/calendar',
     [EventsController::class, 'ajaxCalendar']
