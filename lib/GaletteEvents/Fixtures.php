@@ -35,7 +35,8 @@ use RuntimeException;
  *     bookings: int,
  *     group?: int,
  *     closed?: bool,
- *     comment?: string
+ *     comment?: string,
+ *     times?: array{0: string, 1?: string}
  * }
  */
 class Fixtures implements FixturesProviderInterface
@@ -58,18 +59,18 @@ class Fixtures implements FixturesProviderInterface
             'activities' => [], 'bookings' => 6],
         ['name' => 'Conseil d\'administration', 'town' => 'Lyon', 'zip' => '69002',
             'address' => 'Salle du conseil', 'begin' => -60, 'days' => 0, 'color' => '#455a64',
-            'activities' => [], 'bookings' => 4, 'group' => 1],
+            'activities' => [], 'bookings' => 4, 'group' => 1, 'times' => ['19:00']],
         ['name' => 'Forum des associations', 'town' => 'Lille', 'zip' => '59000',
             'address' => 'Grand Palais', 'begin' => 7, 'days' => 1, 'color' => '#1565c0',
             'activities' => ['Covoiturage' => Activity::YES], 'bookings' => 8,
             'comment' => 'Venez tenir le stand avec nous !'],
         ['name' => 'Réunion du bureau', 'town' => 'Paris', 'zip' => '75011',
             'address' => 'Local associatif', 'begin' => 10, 'days' => 0, 'color' => '#455a64',
-            'activities' => [], 'bookings' => 5, 'group' => 0],
+            'activities' => [], 'bookings' => 5, 'group' => 0, 'times' => ['18:30', '20:00']],
         ['name' => 'Assemblée générale', 'town' => 'Paris', 'zip' => '75011',
             'address' => 'Salle des fêtes', 'begin' => 21, 'days' => 0, 'color' => '#c62828',
             'activities' => ['Repas' => Activity::YES], 'bookings' => 15,
-            'comment' => 'Ordre du jour envoyé par courriel.'],
+            'comment' => 'Ordre du jour envoyé par courriel.', 'times' => ['14:00', '17:30']],
         ['name' => 'Sortie vélo en Camargue', 'town' => 'Arles', 'zip' => '13200',
             'address' => 'Place de la République', 'begin' => 45, 'days' => 2, 'color' => '#ef6c00',
             'activities' => [
@@ -166,6 +167,8 @@ class Fixtures implements FixturesProviderInterface
             'end_date' => $this->getDate($data['begin'] + $data['days']),
             'color' => $data['color'],
             'comment' => $data['comment'] ?? '',
+            'begin_time' => $data['times'][0] ?? '',
+            'end_time' => $data['times'][1] ?? '',
             'activities_ids' => [],
             'activities_status' => [],
         ];

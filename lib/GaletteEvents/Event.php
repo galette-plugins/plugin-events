@@ -44,6 +44,8 @@ class Event
     private ?string $country = null;
     private string $begin_date;
     private string $end_date;
+    private ?string $begin_time = null;
+    private ?string $end_time = null;
     private ?string $creation_date = null;
     private bool $open = true;
     private ?int $group = null;
@@ -94,6 +96,8 @@ class Event
         $this->country = $r['country'];
         $this->begin_date = $r['begin_date'];
         $this->end_date = $r['end_date'];
+        $this->begin_time = $this->loadTime($r['begin_time']);
+        $this->end_time = $this->loadTime($r['end_time']);
         $this->creation_date = $r['creation_date'];
         $this->open = (bool)$r['is_open'];
         $this->group = $r['id_group'] === null ? null : (int)$r['id_group'];
@@ -138,6 +142,8 @@ class Event
                 }
             }
         }
+
+        $this->checkTimes($values);
 
         if (empty($values['name'])) {
             $this->errors[] = _T('Name is mandatory', 'events');
@@ -245,6 +251,62 @@ class Event
     }
 
     /**
+     * Check posted times
+     *
+     * Events without begin time last all day; an end time requires a begin time.
+     *
+     * @param array<string, mixed> $values Posted values
+     */
+    private function checkTimes(array $values): void
+    {
+        $labels = [
+            'begin_time'    => _T('Begin time', 'events'),
+            'end_time'      => _T('End time', 'events'),
+        ];
+        foreach ($labels as $timefield => $label) {
+            if (!isset($values[$timefield])) {
+                continue;
+            }
+            $value = trim((string)$values[$timefield]);
+            if ($value === '') {
+                $this->$timefield = null;
+                continue;
+            }
+            //DateTime would accept overflowing values such as 25:00
+            if (!preg_match('/^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/', $value)) {
+                $this->errors[] = sprintf(
+                    //TRANS: %1$s is the expected time format, %2$s is the field label
+                    _T('- Wrong time format (%1$s) for %2$s!', 'events'),
+                    'HH:MM',
+                    $label
+                );
+                continue;
+            }
+            $this->$timefield = substr($value, 0, 5);
+        }
+
+        if ($this->end_time !== null && $this->begin_time === null) {
+            $this->errors[] = _T('End time requires a begin time', 'events');
+        } elseif (
+            $this->end_time !== null
+            && $this->begin_date === $this->end_date
+            && $this->end_time < $this->begin_time
+        ) {
+            $this->errors[] = _T('End time must be later or equal to begin time', 'events');
+        }
+    }
+
+    /**
+     * Time as stored in the database, without seconds
+     *
+     * @param ?string $value Stored time
+     */
+    private function loadTime(?string $value): ?string
+    {
+        return $value === null ? null : substr($value, 0, 5);
+    }
+
+    /**
      * Store the event
      */
     public function store(): void
@@ -258,6 +320,8 @@ class Event
                 'country'               => ($this->country ?: new Expression('NULL')),
                 'begin_date'            => $this->begin_date,
                 'end_date'              => $this->end_date,
+                'begin_time'            => ($this->begin_time ?? new Expression('NULL')),
+                'end_time'              => ($this->end_time ?? new Expression('NULL')),
                 'is_open'               => (int)$this->open,
                 Group::PK               => ($this->group ?: new Expression('NULL')),
                 'comment'               => $this->comment,
@@ -473,6 +537,57 @@ class Event
     public function getEndDate(): string
     {
         return $this->end_date;
+    }
+
+    /**
+     * Get begin time, as H:i, if any
+     */
+    public function getBeginTime(): ?string
+    {
+        return $this->begin_time;
+    }
+
+    /**
+     * Get end time, as H:i, if any
+     */
+    public function getEndTime(): ?string
+    {
+        return $this->end_time;
+    }
+
+    /**
+     * Does the event last all day long?
+     */
+    public function isAllDay(): bool
+    {
+        return $this->begin_time === null;
+    }
+
+    /**
+     * Get event period, for display
+     *
+     * What both ends share is not repeated: "2026-11-05 18:30 – 20:00",
+     * "2026-11-02 – 2026-11-03"; an all day event of one day is just its date.
+     */
+    public function getPeriod(): string
+    {
+        $format = __('Y-m-d');
+        $begin = (new \DateTime($this->begin_date))->format($format);
+        $end = (new \DateTime($this->end_date))->format($format);
+        if ($this->begin_time !== null) {
+            $begin .= ' ' . $this->begin_time;
+        }
+
+        if ($this->begin_date === $this->end_date) {
+            return $this->end_time === null || $this->end_time === $this->begin_time
+                ? $begin
+                : $begin . ' – ' . $this->end_time;
+        }
+
+        if ($this->end_time !== null) {
+            $end .= ' ' . $this->end_time;
+        }
+        return $begin . ' – ' . $end;
     }
 
     /**
