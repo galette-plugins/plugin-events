@@ -1,0 +1,70 @@
+{#
+ # This file is part of Galette Events plugin (https://galette.eu).
+ # SPDX-FileCopyrightText: Copyright © 2018-2026 The Galette Team
+ # SPDX-License-Identifier: GPL-3.0-or-later
+ #}
+
+{% set is_public = not login.isLogged() %}
+{% extends is_public ? "public_page.html.twig" : "page.html.twig" %}
+
+{% block content %}
+    <div class="ui segment">
+        <p>{{ _T("Add these events to your calendar application: it will keep them up to date by itself.", "events") }}</p>
+        <a href="{{ feed_urls.webcal }}" class="ui primary labeled icon button">
+            <i class="calendar plus icon" aria-hidden="true"></i>
+            {{ _T("Open in my calendar application", "events") }}
+        </a>
+        <div class="ui form">
+            <div class="field">
+                <label for="feed_url">{{ _T("Or copy this address in your calendar application", "events") }}</label>
+                <div class="ui action input">
+                    <input type="text" id="feed_url" value="{{ feed_urls.https }}" readonly="readonly"/>
+                    {% include "components/copy_button.html.twig" with {target: '#feed_url', label: _T("Copy subscription address", "events")} only %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if events|length == 0 %}
+        <div class="ui small message">
+            <div class="content">
+                <em>{{ _T("No upcoming event", "events") }}</em>
+            </div>
+        </div>
+    {% else %}
+        <div class="ui segment">
+            <div class="ui divided relaxed items">
+        {% for event in events %}
+                <div class="item">
+                    <div class="content">
+                        <h2 class="ui small header">{{ event.getName() }}</h2>
+                        <div class="meta">
+                            <span>
+                                <i class="clock outline icon" aria-hidden="true"></i>
+                                {{ event.getPeriod() }}
+                            </span>
+                            <span>
+                                <i class="map marker alternate icon" aria-hidden="true"></i>
+                                {{ [event.getAddress(), (event.getZip() ~ ' ' ~ event.getTown())|trim, event.getCountry()]|filter(part => part is not empty)|join(', ') }}
+                            </span>
+                        </div>
+            {% if event.getComment() is not empty %}
+                        <div class="description">
+                            <p>{{ event.getComment()|nl2br }}</p>
+                        </div>
+            {% endif %}
+            {% set activities = event.getActivities()|filter(activity => activity.status != constant('GaletteEvents\\Activity::NO')) %}
+            {% if activities|length %}
+                        <div class="extra">
+                {% for activity in activities %}
+                            <span class="ui label">{{ activity.activity.getName() }}</span>
+                {% endfor %}
+                        </div>
+            {% endif %}
+                    </div>
+                </div>
+        {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}

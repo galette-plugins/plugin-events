@@ -278,6 +278,27 @@ class Events extends AbstractRepository
     }
 
     /**
+     * Get events published on public pages
+     *
+     * @param string $since Events ended before this date, as Y-m-d, are left out
+     *
+     * @return array<Event>
+     */
+    public function getPublic(string $since): array
+    {
+        $select = $this->zdb->select(EVENTS_PREFIX . Event::TABLE, 'e');
+        $select->where(new Predicate\Operator('e.is_public', '=', 1));
+        $select->where->greaterThanOrEqualTo('e.end_date', $since);
+        $select->order(['e.begin_date', 'e.' . Event::PK]);
+
+        $events = [];
+        foreach ($this->zdb->execute($select) as $row) {
+            $events[] = new Event($this->zdb, $this->login, $this->history, $row);
+        }
+        return $events;
+    }
+
+    /**
      * Groups whose events a member can see and book: the ones they belong to or manage
      *
      * Events without group are visible to every member.

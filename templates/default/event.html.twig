@@ -21,6 +21,14 @@
                     checked: event.isOpenFlag()
                 } %}
 
+                {% include "components/forms/checkbox.html.twig" with {
+                    id: 'public',
+                    value: 1,
+                    label: _T("Public", "events"),
+                    tip: _T("Shown on public pages, and in their calendar subscription, to anyone public pages are visible to. Not for events restricted to a group.", "events"),
+                    checked: event.isPublic()
+                } %}
+
                 {% include "components/forms/text.html.twig" with {
                     id: 'name',
                     value: event.getName(),
