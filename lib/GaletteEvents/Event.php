@@ -14,7 +14,9 @@ use ArrayObject;
 use Galette\Core\Db;
 use Galette\Core\History;
 use Galette\Core\Login;
+use Galette\Entity\Adherent;
 use Galette\Entity\Group;
+use GaletteEvents\Repository\Events;
 use Analog\Analog;
 use Laminas\Db\Sql\Expression;
 
@@ -726,6 +728,28 @@ class Event
         }
 
         return $this->group !== null && $login->isGroupManager($this->group);
+    }
+
+    /**
+     * Can member see event
+     *
+     * As in the calendar: events that are public or of one of their groups,
+     * and the ones they have booked, whatever their state.
+     *
+     * @param Login $login Login instance
+     */
+    public function canShow(Login $login): bool
+    {
+        if (Events::isVisible($this->group, $login)) {
+            return true;
+        }
+
+        $select = $this->zdb->select(EVENTS_PREFIX . Booking::TABLE);
+        $select->where([
+            self::PK        => $this->id,
+            Adherent::PK    => $login->id
+        ]);
+        return $this->zdb->execute($select)->count() > 0;
     }
 
     /**

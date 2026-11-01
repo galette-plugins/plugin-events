@@ -25,6 +25,16 @@ class EventsController extends GaletteRoutingTestCase
 
     protected int $seed = 20260926101512;
     protected bool $load_plugins = true;
+    private string $instance_uuid;
+
+    /**
+     * Set up tests
+     */
+    public function setUp(): void
+    {
+        parent::setUp();
+        $this->instance_uuid = $this->preferences->pref_instance_uuid;
+    }
 
     /**
      * Cleanup after each test method
@@ -32,6 +42,11 @@ class EventsController extends GaletteRoutingTestCase
     public function tearDown(): void
     {
         $this->login->logout();
+        //iCalendar export generates the instance UUID, core tests expect the one they have, if any
+        $update = $this->zdb->update(\Galette\Core\Preferences::TABLE)
+            ->set(['val_pref' => $this->instance_uuid])
+            ->where(['nom_pref' => 'pref_instance_uuid']);
+        $this->zdb->execute($update);
         $this->cleanEvents();
         parent::tearDown();
     }
@@ -353,6 +368,10 @@ class EventsController extends GaletteRoutingTestCase
             $this->routeparser->urlFor('events_booking_add') . '?event=' . $public_id,
             $by_name['Public event']['booking_url']
         );
+        $this->assertSame(
+            $this->routeparser->urlFor('events_event_ics', ['id' => $public_id]),
+            $by_name['Public event']['ics_url']
+        );
     }
 
     /**
@@ -480,7 +499,7 @@ class EventsController extends GaletteRoutingTestCase
         $body = (string)$test_response->getBody();
         $this->assertStringContainsString('<div id=\'calendar\'></div>', $body);
         $this->assertStringContainsString('js/calendar.bundle.js', $body);
-        $this->assertStringContainsString('<div class="ui tiny modal" id="calendar_event">', $body);
+        $this->assertStringContainsString('<div class="ui small modal" id="calendar_event">', $body);
 
         //options are given as JSON, that cannot close the script element
         $this->assertSame(1, preg_match('#<script type="application/json" id="calendar_options">(.+?)</script>#s', $body, $matches));
@@ -521,5 +540,66 @@ class EventsController extends GaletteRoutingTestCase
 
         $body = (string)$this->app->handle($this->createRequest('dashboard'))->getBody();
         $this->assertStringNotContainsString('events.js', $body);
+    }
+
+    /**
+     * Download an event, check it is refused as a missing one
+     *
+     * @param int  $event   Event ID
+     * @param bool $allowed Is download expected to be allowed
+     */
+    private function assertDownload(int $event, bool $allowed): void
+    {
+        $test_response = $this->app->handle(
+            $this->createRequest('events_event_ics', ['id' => (string)$event])
+        );
+
+        if ($allowed) {
+            $this->assertSame(200, $test_response->getStatusCode());
+            $this->assertSame(['text/calendar; charset=utf-8'], $test_response->getHeader('Content-Type'));
+            $this->assertStringContainsString('attachment; filename="', $test_response->getHeaderLine('Content-Disposition'));
+            $this->assertStringContainsString('UID:event-' . $event . '@', (string)$test_response->getBody());
+        } else {
+            $this->assertSame(
+                ['Location' => [$this->routeparser->urlFor('events_events')]],
+                $test_response->getHeaders()
+            );
+            $this->expectFlashData(['error_detected' => [sprintf(_T('No event #%1$s.', 'events'), $event)]]);
+        }
+    }
+
+    /**
+     * Members download events they can see in the calendar only
+     */
+    public function testIcsDownload(): void
+    {
+        $member_one = $this->getMemberOne();
+        $member_two = $this->getMemberTwo();
+        $own = $this->createGroup('Own group', [], [$member_one]);
+        $other = $this->createGroup('Other group', [], [$member_two]);
+
+        $public = $this->insertEvent('public', ['is_open' => false]);
+        $own_event = $this->insertEvent('own group', ['id_group' => $own->getId()]);
+        $other_event = $this->insertEvent('other group', ['id_group' => $other->getId()]);
+        $booked_event = $this->insertEvent('booked other group', ['id_group' => $other->getId()]);
+        $this->insertBooking($booked_event, $member_one->id);
+
+        $this->logMember($this->dataAdherentOne());
+        $this->assertDownload($public, true);
+        $this->assertDownload($own_event, true);
+        $this->assertDownload($booked_event, true);
+        $this->assertDownload($other_event, false);
+        $this->assertDownload($other_event + 100, false);
+        $this->login->logout();
+
+        $this->logSuperAdmin();
+        $this->assertDownload($other_event, true);
+        $this->login->logout();
+
+        //visitors are sent to the login page
+        $test_response = $this->app->handle(
+            $this->createRequest('events_event_ics', ['id' => (string)$public])
+        );
+        $this->expectLogin($test_response);
     }
 }

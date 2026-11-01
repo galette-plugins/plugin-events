@@ -19,6 +19,7 @@ $this->register(
     date: '2026-10-03',         //Release date
     acls: [                     //Permissions needed
         'events_events'             => 'member',
+        'events_event_ics'          => 'member',
         'events_bookings'           => 'member',
         'filter-eventslist'         => 'member',
         'events_event_add'          => 'groupmanager',
