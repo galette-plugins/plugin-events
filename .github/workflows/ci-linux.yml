@@ -65,7 +65,7 @@ jobs:
           repository: galette/galette
           path: galette-core
           fetch-depth: 1
-          ref: develop
+          ref: master
 
       - name: Checkout plugin
         uses: actions/checkout@v7
@@ -187,6 +187,7 @@ jobs:
         uses: galette/.github/actions/build-galette@main
         with:
           php-version: ${{ matrix.php-version }}
+          galette-ref: master
 
       - name: Checkout plugin
         uses: actions/checkout@v7
@@ -274,6 +275,7 @@ jobs:
         uses: galette/.github/actions/build-galette@main
         with:
           php-version: '8.4'
+          galette-ref: master
 
       - name: Checkout plugin
         uses: actions/checkout@v7
@@ -324,6 +326,78 @@ jobs:
           cd galette-core
           bin/console galette:plugins:install-db --no-interaction plugin-events | tee upgrade.log
           grep -q 'Database for plugin "plugin-events" upgraded' upgrade.log
+
+      - name: Unit tests
+        run: |
+          cd galette-core/galette/plugins/plugin-events
+          ../../vendor/bin/phpunit --test-suffix=.php --bootstrap tests/TestsBootstrap.php --no-coverage --process-isolation tests/GaletteEvents/
+
+  # Galette core develop prepares the next generation, which this plugin does not
+  # declare yet: run against it for information only, without failing the workflow.
+  core-develop:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+
+    services:
+      db:
+        image: postgres:17
+        env:
+          POSTGRES_USER: galette_tests
+          POSTGRES_PASSWORD: g@l3tte
+          POSTGRES_DB: galette_tests
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd=pg_isready
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    name: Galette core develop (non blocking)
+
+    steps:
+      - name: PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          tools: composer, pecl
+          coverage: none
+          extensions: apcu
+          ini-values: apc.enable_cli=1
+
+      - name: Build Galette
+        uses: galette/.github/actions/build-galette@main
+        with:
+          php-version: '8.4'
+          galette-ref: develop
+
+      - name: Checkout plugin
+        uses: actions/checkout@v7
+        with:
+          path: galette-core/galette/plugins/plugin-events
+
+      - name: Declare core compatibility
+        run: |
+          cd galette-core
+          compat=$(grep -oE "GALETTE_COMPAT_VERSION', '[0-9.]+" galette/includes/sys_config/versions.inc.php | grep -oE '[0-9.]+$')
+          sed -i -E "s/(compver: *')[0-9.]+'/\1${compat}'/" galette/plugins/plugin-events/_define.php
+          grep -q "compver: *'${compat}'" galette/plugins/plugin-events/_define.php
+
+      - name: PHPStan checks
+        run: |
+          cd galette-core/galette/plugins/plugin-events
+          ../../vendor/bin/phpstan analyze --ansi --memory-limit=2G --no-interaction --no-progress
+
+      - name: Compile translations
+        run: |
+          cd galette-core
+          bin/console galette:compile-locales plugin-events
+
+      - name: Init database
+        run: |
+          cd galette-core
+          bin/console galette:install -v --dbtype=pgsql --dbhost=localhost --dbname=galette_tests --dbuser=galette_tests --dbpass=g@l3tte --admin=admin --password=admin --no-interaction -w
+          bin/console galette:plugins:install-db --all
 
       - name: Unit tests
         run: |
