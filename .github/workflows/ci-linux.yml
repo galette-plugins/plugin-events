@@ -338,6 +338,9 @@ jobs:
     runs-on: ubuntu-latest
     continue-on-error: true
 
+    env:
+      DB: postgres:17
+
     services:
       db:
         image: postgres:17
@@ -348,7 +351,7 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd=pg_isready
+          --health-cmd="pg_isready -U galette_tests"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=10
