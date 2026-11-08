@@ -1,3 +1,8 @@
+* 2026-11-10 - 2.3.1
+- Display groups full names in groups dropdowns
+- Hide actions column header from members on bookings list
+- New Croatian translation, update other languages
+
 * 2026-10-03 - 2.3.0
 - Galette 1.3 compatible
 
