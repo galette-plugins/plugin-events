@@ -279,6 +279,27 @@ class EventsController extends GaletteRoutingTestCase
     }
 
     /**
+     * Sub groups are listed with their full name, without HTML entities
+     */
+    public function testFormGroupsFullNames(): void
+    {
+        $this->logSuperAdmin();
+        $parent = $this->createGroup('Parent group');
+        $child = new \Galette\Entity\Group();
+        $child->setName('Child group');
+        $child->setParentGroup((int)$parent->getId());
+        $this->assertTrue($child->store());
+
+        $body = (string)$this->app->handle($this->createRequest('events_event_add'))->getBody();
+        $this->assertMatchesRegularExpression(
+            sprintf('|<option\s+value="%1$s"\s*>\s*Parent group / Child group\s*</option>|', $child->getId()),
+            $body
+        );
+        $this->assertStringNotContainsString('&amp;raquo;', $body);
+        $this->assertStringNotContainsString('&amp;nbsp;', $body);
+    }
+
+    /**
      * Calendar requires dates
      */
     public function testCalendarRequiresDates(): void

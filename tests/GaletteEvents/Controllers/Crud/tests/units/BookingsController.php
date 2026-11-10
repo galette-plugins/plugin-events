@@ -146,6 +146,26 @@ class BookingsController extends GaletteRoutingTestCase
     }
 
     /**
+     * Sub groups are listed with their full name in the groups filter
+     */
+    public function testListGroupsFullNames(): void
+    {
+        $this->logSuperAdmin();
+        $parent = $this->createGroup('Parent group');
+        $child = new \Galette\Entity\Group();
+        $child->setName('Child group');
+        $child->setParentGroup((int)$parent->getId());
+        $this->assertTrue($child->store());
+
+        $body = (string)$this->app->handle($this->createRequest('events_bookings', ['event' => 'all']))->getBody();
+        $this->assertStringContainsString(
+            sprintf('<option value="%1$s">Parent group / Child group</option>', $child->getId()),
+            $body
+        );
+        $this->assertStringNotContainsString('&raquo;', $body);
+    }
+
+    /**
      * Members can neither display nor change bookings of other members
      */
     public function testMemberCannotEditOtherMemberBooking(): void
@@ -511,6 +531,8 @@ class BookingsController extends GaletteRoutingTestCase
         $body = (string)$test_response->getBody();
         $this->assertStringContainsString($member_one->sfullname, $body);
         $this->assertStringNotContainsString($member_two->sfullname, $body);
+        //members have no action on bookings, not even a column header
+        $this->assertStringNotContainsString('actions_row', $body);
         $this->expectNoLogEntry();
         $this->login->logout();
 
@@ -518,6 +540,7 @@ class BookingsController extends GaletteRoutingTestCase
         $body = (string)$this->app->handle($this->createRequest('events_bookings', ['event' => (string)$event]))->getBody();
         $this->assertStringContainsString($member_one->sfullname, $body);
         $this->assertStringContainsString($member_two->sfullname, $body);
+        $this->assertStringContainsString('actions_row', $body);
     }
 
     /**

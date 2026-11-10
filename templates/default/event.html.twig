@@ -49,7 +49,7 @@
 
                 {% set group_list_values = {(0): _T("Select a group")} %}
                 {% for group in groups %}
-                    {% set group_list_values = group_list_values + {(group.getId()): group.getIndentName()} %}
+                    {% set group_list_values = group_list_values + {(group.getId()): group.getFullName()} %}
                 {% endfor %}
 
                 {% include "components/forms/select.html.twig" with {

@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: translations@galette.eu\n"
 "POT-Creation-Date: 2026-09-30 08:40+0200\n"
-"PO-Revision-Date: 2026-09-28 08:56+0000\n"
+"PO-Revision-Date: 2026-10-08 20:44+0000\n"
 "Last-Translator: Jože Felicijan <joze@felicijan.com>\n"
 "Language-Team: Slovenian <https://hosted.weblate.org/projects/galette/events-"
 "plugin/sl/>\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=4; plural=n%100==1 ? 0 : n%100==2 ? 1 : n%100==3 || "
 "n%100==4 ? 2 : 3;\n"
-"X-Generator: Weblate 2026.10.dev0\n"
+"X-Generator: Weblate 2026.10.1.dev0\n"
 
 #: ../lib/GaletteEvents/Event.php:116
 msgid "Begin date is mandatory"
@@ -132,7 +132,7 @@ msgstr "seznam rezervacij"
 
 #: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:114
 msgid "Events management"
-msgstr "To končnico uporablja eno ali več vozil in ga ni mogoče izbrisati"
+msgstr "Vodenje dogodkov"
 
 #: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:137
 msgid "Javascript libraries has not been built!"

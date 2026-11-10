@@ -2,13 +2,15 @@
 # Alessandro Mandelli <mandelli.alessandro@ngi.it>, 2021, 2026.
 # Marco Ciampa <ciampix@posteo.net>, 2024, 2025, 2026.
 # Ilario Quinson <ilario.quinson@e.email>, 2024, 2026.
+# Johan Cwiklinski <trasher@users.noreply.hosted.weblate.org>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: translations@galette.eu\n"
 "POT-Creation-Date: 2026-09-30 08:40+0200\n"
-"PO-Revision-Date: 2026-10-01 18:51+0000\n"
-"Last-Translator: Johan Cwiklinski <trasher@x-tnd.be>\n"
+"PO-Revision-Date: 2026-10-12 20:15+0000\n"
+"Last-Translator: Johan Cwiklinski <trasher@users.noreply.hosted.weblate.org>"
+"\n"
 "Language-Team: Italian <https://hosted.weblate.org/projects/galette/events-"
 "plugin/it/>\n"
 "Language: it_IT\n"
@@ -16,7 +18,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 2026.10\n"
+"X-Generator: Weblate 2026.11.dev0\n"
 
 #: ../lib/GaletteEvents/Event.php:116
 msgid "Begin date is mandatory"
@@ -507,7 +509,7 @@ msgstr "%1$s: mostra prenotazioni"
 #: ../templates/default/activities.html.twig:86
 #, php-format
 msgid "%1$s: edit information"
-msgstr "%1$s: modifica le informazioni"
+msgstr "%1$s: modifica informazioni"
 
 #: ../templates/default/events.html.twig:131
 #: ../templates/default/activities.html.twig:91

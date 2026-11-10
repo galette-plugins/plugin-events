@@ -88,7 +88,6 @@ class Activity extends GaletteTestCase
         $this->assertFalse($activity->isActive());
         $this->assertSame(0, $activity->countEvents());
         $this->assertSame(date('Y-m-d'), $activity->getCreationDate());
-        $this->assertSame(date('Y-m-d'), $activity->getCreationDate());
 
         $activities_list = $activities->getList();
         $this->assertCount(1, $activities_list);
