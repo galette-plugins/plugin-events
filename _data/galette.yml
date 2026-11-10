@@ -13,7 +13,7 @@
 # `rank` is compver packed into an integer, because Liquid has no version
 # comparison. The page shows a verdict only on a value it can rank, so an
 # unrankable compver is published without one rather than judged wrongly.
-release: "2.3.0"
+release: "2.3.1"
 compver: "1.3.0"
 series: "1.3"
 rank: 1003000
