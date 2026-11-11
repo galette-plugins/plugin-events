@@ -20,3 +20,8 @@
     vertical-align: top;
 }
 
+/* add/remove activity buttons line up with their dropdown */
+.ui.form .fields > .field.flexend {
+    display: flex;
+    align-items: flex-end;
+}
