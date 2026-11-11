@@ -12,17 +12,17 @@ SET FOREIGN_KEY_CHECKS=0;
 
 DROP TABLE IF EXISTS galette_events_events;
 CREATE TABLE galette_events_events (
-  id_event int(10) NOT NULL auto_increment,
+  id_event int unsigned NOT NULL auto_increment,
   name varchar(150) NOT NULL,
   address varchar(150) NOT NULL default '',
   zip varchar(10) NOT NULL default '',
   town varchar(50) NOT NULL default '',
   country varchar(50) default NULL,
-  begin_date date NOT NULL default '1901-01-01',
-  end_date date NOT NULL default '1901-01-01',
+  begin_date date NOT NULL,
+  end_date date NOT NULL,
   begin_time time default NULL,
   end_time time default NULL,
-  creation_date date NOT NULL default '1901-01-01',
+  creation_date date NOT NULL,
   is_open tinyint(1) NOT NULL default 1,
   id_group int unsigned default NULL,
   comment text,
@@ -38,17 +38,17 @@ CREATE TABLE galette_events_events (
 
 DROP TABLE IF EXISTS galette_events_bookings;
 CREATE TABLE galette_events_bookings (
-  id_booking int(10) NOT NULL auto_increment,
-  id_event int(10) NOT NULL,
-  id_adh int(10) unsigned NOT NULL,
-  booking_date date NOT NULL default '1901-01-01',
+  id_booking int unsigned NOT NULL auto_increment,
+  id_event int unsigned NOT NULL,
+  id_adh int unsigned NOT NULL,
+  booking_date date NOT NULL,
   is_paid tinyint(1) NOT NULL default 0,
   payment_amount decimal(15,2) default '0',
-  payment_method tinyint(3) unsigned NOT NULL default '0',
+  payment_method int unsigned NOT NULL,
   bank_name varchar(100) default NULL,
   check_number varchar(50) default NULL,
-  number_people int(4) default NULL,
-  creation_date date NOT NULL default '1901-01-01',
+  number_people smallint default NULL,
+  creation_date date NOT NULL,
   comment text,
   PRIMARY KEY (id_booking),
   UNIQUE KEY galette_events_bookings_id_event_id_adh_key (id_event, id_adh),
@@ -64,19 +64,19 @@ CREATE TABLE galette_events_bookings (
 
 DROP TABLE IF EXISTS galette_events_activities;
 CREATE TABLE galette_events_activities (
-  id_activity int(10) NOT NULL auto_increment,
+  id_activity int unsigned NOT NULL auto_increment,
   name varchar(150) NOT NULL,
   is_active tinyint(1) NOT NULL default 1,
-  creation_date date NOT NULL default '1901-01-01',
+  creation_date date NOT NULL,
   comment text,
   PRIMARY KEY (id_activity)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci;
 
 DROP TABLE IF EXISTS galette_events_activitiesevents;
 CREATE TABLE galette_events_activitiesevents (
-  id_event int(10) NOT NULL,
-  id_activity int(10) NOT NULL,
-  status tinyint(1) NOT NULL,
+  id_event int unsigned NOT NULL,
+  id_activity int unsigned NOT NULL,
+  status smallint NOT NULL,
   PRIMARY KEY (id_event, id_activity),
   CONSTRAINT galette_events_activitiesevents_id_event_fkey FOREIGN KEY (id_event)
     REFERENCES galette_events_events (id_event) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -86,9 +86,9 @@ CREATE TABLE galette_events_activitiesevents (
 
 DROP TABLE IF EXISTS galette_events_activitiesbookings;
 CREATE TABLE galette_events_activitiesbookings (
-  id_activitybooking int(10) NOT NULL auto_increment,
-  id_activity int(10) NOT NULL,
-  id_booking int(10) NOT NULL,
+  id_activitybooking int unsigned NOT NULL auto_increment,
+  id_activity int unsigned NOT NULL,
+  id_booking int unsigned NOT NULL,
   checked tinyint(1) NOT NULL default 0,
   PRIMARY KEY (id_activitybooking),
   UNIQUE KEY galette_events_activitiesbookings_id_activity_id_booking_key (id_activity, id_booking),
