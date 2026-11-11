@@ -92,9 +92,10 @@ trait EntityTrait
     private function getLastInsertId(): int
     {
         if ($this->zdb->isPostgres()) {
+            //identity column sequence, named by PostgreSQL after its table and column
             /** @phpstan-ignore-next-line */
             return (int)$this->zdb->driver->getLastGeneratedValue(
-                PREFIX_DB . $this->getTableName() . '_id_seq'
+                $this->zdb->getSequenceName($this->getTableName(), self::PK, prefixed: true)
             );
         }
         return (int)$this->zdb->driver->getLastGeneratedValue();
