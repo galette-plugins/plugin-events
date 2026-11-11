@@ -30,10 +30,6 @@ class Booking
 
     public const string TABLE = 'bookings';
     public const string PK = 'id_booking';
-
-    private Db $zdb;
-    private Login $login;
-    private History $history;
     /** @var array<string> */
     private array $errors = [];
 
@@ -65,11 +61,8 @@ class Booking
      *                                                     a specific event, or null to just
      *                                                     instanciate object
      */
-    public function __construct(Db $zdb, Login $login, History $history, int|ArrayObject|null $args = null)
+    public function __construct(private Db $zdb, private Login $login, private History $history, int|ArrayObject|null $args = null)
     {
-        $this->zdb = $zdb;
-        $this->login = $login;
-        $this->history = $history;
         if (is_int($args)) {
             $this->load($args);
         } elseif ($args !== null) {
@@ -117,7 +110,12 @@ class Booking
         } else {
             $event_changed = $this->getId() === null || $this->getEventId() !== (int)$values['event'];
             try {
-                $event = new Event($this->zdb, $this->login, $this->history, (int)$values['event']);
+                $event = new Event(
+                    zdb: $this->zdb,
+                    login: $this->login,
+                    history: $this->history,
+                    args: (int)$values['event']
+                );
             } catch (NotFoundException) {
                 $event = null;
             }
@@ -240,7 +238,7 @@ class Booking
         if (count($this->errors) > 0) {
             Analog::log(
                 'Some errors has been threw attempting to edit/store a booking' . "\n"
-                . print_r($this->errors, true),
+                . print_r($this->errors, return: true),
                 Analog::ERROR
             );
             return false;
@@ -433,7 +431,12 @@ class Booking
             return null;
         }
         if ($this->event_entity?->getId() !== $this->event) {
-            $this->event_entity = new Event($this->zdb, $this->login, $this->history, $this->event);
+            $this->event_entity = new Event(
+                zdb: $this->zdb,
+                login: $this->login,
+                history: $this->history,
+                args: $this->event
+            );
         }
         return $this->event_entity;
     }

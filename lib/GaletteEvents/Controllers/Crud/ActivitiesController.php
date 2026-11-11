@@ -73,7 +73,7 @@ class ActivitiesController extends AbstractController
      */
     public function add(Request $request, Response $response): Response
     {
-        return $this->edit($request, $response, null, 'add');
+        return $this->edit(request: $request, response: $response, id: null, action: 'add');
     }
 
     /**
@@ -81,7 +81,7 @@ class ActivitiesController extends AbstractController
      */
     public function doAdd(Request $request, Response $response): Response
     {
-        return $this->doEdit($request, $response, null, 'add');
+        return $this->doEdit(request: $request, response: $response, id: null, action: 'add');
     }
 
     // /CRUD - Create
@@ -96,13 +96,19 @@ class ActivitiesController extends AbstractController
     public function list(Request $request, Response $response, ?string $option = null, string|int|null $value = null): Response
     {
         $filters = $this->getFilters($option, $value);
-        $activities = new Activities($this->zdb, $this->login, $this->history, $this->preferences, $filters);
+        $activities = new Activities(
+            zdb: $this->zdb,
+            login: $this->login,
+            history: $this->history,
+            preferences: $this->preferences,
+            filters: $filters
+        );
 
         return $this->renderList(
-            $response,
-            'activities',
-            $filters,
-            [
+            response: $response,
+            template: 'activities',
+            filters: $filters,
+            params: [
                 'page_title'            => _T("Activities management", "events"),
                 'activities'            => $activities->getList(),
                 'nb_activities'         => $activities->getCount(),
@@ -181,12 +187,12 @@ class ActivitiesController extends AbstractController
         $errors = [];
         if ($activity->check($post)) {
             $this->storeEntity(
-                $activity,
-                _T("New activity has been successfully added.", "events"),
-                _T("Activity has been modified.", "events"),
-                _T("An error occurred while storing the activity.", "events"),
-                $successes,
-                $errors
+                entity: $activity,
+                added: _T("New activity has been successfully added.", "events"),
+                modified: _T("Activity has been modified.", "events"),
+                failed: _T("An error occurred while storing the activity.", "events"),
+                successes: $successes,
+                errors: $errors
             );
         } else {
             $errors = $activity->getErrors();

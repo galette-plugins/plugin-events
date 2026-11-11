@@ -51,7 +51,14 @@ abstract class AbstractRepository extends Repository
         string $entity,
         Pagination $filters
     ) {
-        parent::__construct($zdb, $preferences, $login, $entity, 'GaletteEvents', EVENTS_PREFIX);
+        parent::__construct(
+            zdb: $zdb,
+            preferences: $preferences,
+            login: $login,
+            entity: $entity,
+            ns: 'GaletteEvents',
+            prefix: EVENTS_PREFIX
+        );
         $this->filters = $filters;
     }
 
@@ -70,7 +77,7 @@ abstract class AbstractRepository extends Repository
         $counted->reset(Select::JOINS);
         $counted->columns(['id' => new Expression(static::ALIAS . '.' . static::PK)]);
         foreach ($select->joins as $join) {
-            $counted->join($join['name'], $join['on'], [], $join['type']);
+            $counted->join(name: $join['name'], on: $join['on'], columns: [], type: $join['type']);
         }
 
         $count_select = new Select(['counted' => $counted]);

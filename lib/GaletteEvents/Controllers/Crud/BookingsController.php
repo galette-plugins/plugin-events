@@ -82,7 +82,7 @@ class BookingsController extends AbstractController
      */
     public function add(Request $request, Response $response, ?int $id_adh = null): Response
     {
-        return $this->edit($request, $response, null, 'add', $id_adh);
+        return $this->edit(request: $request, response: $response, id: null, action: 'add', id_adh: $id_adh);
     }
 
     /**
@@ -90,7 +90,7 @@ class BookingsController extends AbstractController
      */
     public function doAdd(Request $request, Response $response): Response
     {
-        return $this->doEdit($request, $response, null, 'add');
+        return $this->doEdit(request: $request, response: $response, id: null, action: 'add');
     }
 
     // /CRUD - Create
@@ -116,7 +116,12 @@ class BookingsController extends AbstractController
         $event = null;
         if ($linked_event !== 'all') {
             try {
-                $event = new Event($this->zdb, $this->login, $this->history, (int)$linked_event);
+                $event = new Event(
+                    zdb: $this->zdb,
+                    login: $this->login,
+                    history: $this->history,
+                    args: (int)$linked_event
+                );
             } catch (NotFoundException) {
                 //event may have been removed since it has been filtered
                 $filters->event_filter = null;
@@ -140,15 +145,26 @@ class BookingsController extends AbstractController
         $groups = new Groups($this->zdb, $this->login);
         $groups_list = $groups->getList();
 
-        $bookings = new Bookings($this->zdb, $this->login, $this->history, $this->preferences, $filters);
+        $bookings = new Bookings(
+            zdb: $this->zdb,
+            login: $this->login,
+            history: $this->history,
+            preferences: $this->preferences,
+            filters: $filters
+        );
         $list = $bookings->getList();
-        $events = new Events($this->zdb, $this->login, $this->history, $this->preferences);
+        $events = new Events(
+            zdb: $this->zdb,
+            login: $this->login,
+            history: $this->history,
+            preferences: $this->preferences
+        );
 
         return $this->renderList(
-            $response,
-            'bookings',
-            $filters,
-            [
+            response: $response,
+            template: 'bookings',
+            filters: $filters,
+            params: [
                 'page_title'        => _T("Bookings management", "events"),
                 'bookings'          => $bookings,
                 'bookings_list'     => $list,
@@ -219,7 +235,13 @@ class BookingsController extends AbstractController
             $filters->selected = $post['entries_sel'];
 
             //selection is restricted to bookings current logged-in user can list
-            $bookings = new Bookings($this->zdb, $this->login, $this->history, $this->preferences, $filters);
+            $bookings = new Bookings(
+                zdb: $this->zdb,
+                login: $this->login,
+                history: $this->history,
+                preferences: $this->preferences,
+                filters: $filters
+            );
             $members = [];
             foreach ($bookings->getList() as $booking) {
                 $members[] = $booking->getMemberId();
@@ -355,7 +377,12 @@ class BookingsController extends AbstractController
         }
 
         //Events
-        $events = new Events($this->zdb, $this->login, $this->history, $this->preferences);
+        $events = new Events(
+            zdb: $this->zdb,
+            login: $this->login,
+            history: $this->history,
+            preferences: $this->preferences
+        );
         if ($action === 'add') {
             if (isset($get['event'])) {
                 $booking->setEvent((int)$get['event']);
@@ -394,7 +421,7 @@ class BookingsController extends AbstractController
                 $booking->getMemberId() > 0
                 && !isset($members[$booking->getMemberId()])
             ) {
-                $members[$booking->getMemberId()] = Adherent::getSName($this->zdb, $booking->getMemberId(), true);
+                $members[$booking->getMemberId()] = Adherent::getSName($this->zdb, $booking->getMemberId(), wid: true);
             }
 
             if (count($members)) {
@@ -413,7 +440,7 @@ class BookingsController extends AbstractController
                 [
                     'page_title'        => $title,
                     'booking'           => $booking,
-                    'events'            => $events->getList(true),
+                    'events'            => $events->getList(bookable: true),
                     'require_dialog'    => true,
                     'require_calendar'  => true,
                     // pseudo random int
@@ -468,12 +495,12 @@ class BookingsController extends AbstractController
 
         if (count($error_detected) == 0 && isset($post['save'])) {
             $this->storeEntity(
-                $booking,
-                _T("New booking has been successfully added.", "events"),
-                _T("Booking has been modified.", "events"),
-                _T("An error occurred while storing the booking.", "events"),
-                $success_detected,
-                $error_detected
+                entity: $booking,
+                added: _T("New booking has been successfully added.", "events"),
+                modified: _T("Booking has been modified.", "events"),
+                failed: _T("An error occurred while storing the booking.", "events"),
+                successes: $success_detected,
+                errors: $error_detected
             );
         }
 
@@ -538,7 +565,12 @@ class BookingsController extends AbstractController
     public function confirmRemoveTitle(array $args): string
     {
         try {
-            $booking = new Booking($this->zdb, $this->login, $this->history, (int)$args['id']);
+            $booking = new Booking(
+                zdb: $this->zdb,
+                login: $this->login,
+                history: $this->history,
+                args: (int)$args['id']
+            );
         } catch (NotFoundException) {
             return $this->getNotFoundMessage((int)$args['id']);
         }
@@ -560,7 +592,12 @@ class BookingsController extends AbstractController
      */
     protected function doDelete(array $args, array $post): bool
     {
-        $booking = new Booking($this->zdb, $this->login, $this->history, (int)$post['id']);
+        $booking = new Booking(
+            zdb: $this->zdb,
+            login: $this->login,
+            history: $this->history,
+            args: (int)$post['id']
+        );
         $booking->remove();
         return true;
     }

@@ -138,7 +138,7 @@ trait FiltersTrait
      */
     protected function toChoice(string $name, mixed $value, array $choices): ?int
     {
-        if (is_numeric($value) && in_array((int)$value, $choices, true)) {
+        if (is_numeric($value) && in_array((int)$value, $choices, strict: true)) {
             return (int)$value;
         }
         $this->logInvalid($name, $value);
@@ -158,7 +158,7 @@ trait FiltersTrait
                 '[%1$s] Invalid value for %2$s: %3$s',
                 static::class,
                 $name,
-                var_export($value, true)
+                var_export($value, return: true)
             ),
             Analog::WARNING
         );

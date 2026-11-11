@@ -81,7 +81,7 @@ class EventsController extends AbstractController
      */
     public function add(Request $request, Response $response): Response
     {
-        return $this->edit($request, $response, null, 'add');
+        return $this->edit(request: $request, response: $response, id: null, action: 'add');
     }
 
     /**
@@ -89,7 +89,7 @@ class EventsController extends AbstractController
      */
     public function doAdd(Request $request, Response $response): Response
     {
-        return $this->doEdit($request, $response, null, 'add');
+        return $this->doEdit(request: $request, response: $response, id: null, action: 'add');
     }
 
     // /CRUD - Create
@@ -104,13 +104,19 @@ class EventsController extends AbstractController
     public function list(Request $request, Response $response, ?string $option = null, string|int|null $value = null): Response
     {
         $filters = $this->getFilters($option, $value);
-        $events = new Events($this->zdb, $this->login, $this->history, $this->preferences, $filters);
+        $events = new Events(
+            zdb: $this->zdb,
+            login: $this->login,
+            history: $this->history,
+            preferences: $this->preferences,
+            filters: $filters
+        );
 
         return $this->renderList(
-            $response,
-            'events',
-            $filters,
-            [
+            response: $response,
+            template: 'events',
+            filters: $filters,
+            params: [
                 'page_title'            => _T("Events management", "events"),
                 'events'                => $events->getList(),
                 'nb_events'             => $events->getCount(),
@@ -168,8 +174,14 @@ class EventsController extends AbstractController
         $filters->start_date_filter = date(__("Y-m-d"), $start);
         $filters->end_date_filter = date(__("Y-m-d"), $end);
 
-        $events = new Events($this->zdb, $this->login, $this->history, $this->preferences, $filters);
-        $list = $events->getList(false, true);
+        $events = new Events(
+            zdb: $this->zdb,
+            login: $this->login,
+            history: $this->history,
+            preferences: $this->preferences,
+            filters: $filters
+        );
+        $list = $events->getList(bookable: false, fullcalendar: true);
 
         //links of the event modal
         foreach ($list as $row) {
@@ -299,12 +311,12 @@ class EventsController extends AbstractController
             $error_detected = array_merge($error_detected, $event->getErrors());
         } elseif (isset($post['save'])) {
             $this->storeEntity(
-                $event,
-                _T("New event has been successfully added.", "events"),
-                _T("Event has been modified.", "events"),
-                _T("An error occurred while storing the event.", "events"),
-                $success_detected,
-                $error_detected
+                entity: $event,
+                added: _T("New event has been successfully added.", "events"),
+                modified: _T("Event has been modified.", "events"),
+                failed: _T("An error occurred while storing the event.", "events"),
+                successes: $success_detected,
+                errors: $error_detected
             );
         } else {
             $goto_list = false;
@@ -362,7 +374,12 @@ class EventsController extends AbstractController
     public function confirmRemoveTitle(array $args): string
     {
         try {
-            $event = new Event($this->zdb, $this->login, $this->history, (int)$args['id']);
+            $event = new Event(
+                zdb: $this->zdb,
+                login: $this->login,
+                history: $this->history,
+                args: (int)$args['id']
+            );
         } catch (NotFoundException) {
             return $this->getNotFoundMessage((int)$args['id']);
         }
@@ -381,7 +398,12 @@ class EventsController extends AbstractController
      */
     protected function doDelete(array $args, array $post): bool
     {
-        $event = new Event($this->zdb, $this->login, $this->history, (int)$post['id']);
+        $event = new Event(
+            zdb: $this->zdb,
+            login: $this->login,
+            history: $this->history,
+            args: (int)$post['id']
+        );
         $event->remove();
         return true;
     }

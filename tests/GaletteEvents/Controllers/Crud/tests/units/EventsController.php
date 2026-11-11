@@ -102,7 +102,7 @@ class EventsController extends GaletteRoutingTestCase
         $test_response = $this->app->handle($request);
         $this->assertSame(200, $test_response->getStatusCode());
 
-        $events = json_decode((string)$test_response->getBody(), true);
+        $events = json_decode((string)$test_response->getBody(), associative: true);
         $this->assertIsArray($events);
         $this->assertCount(1, $events);
         $description = $events[0]['description'];
@@ -163,11 +163,14 @@ class EventsController extends GaletteRoutingTestCase
         $this->logSuperAdmin();
         $dinner = $this->insertActivity('Dinner');
 
-        $test_response = $this->postEvent(null, $this->getFormValues([
-            'name'              => '',
-            'add_activity'      => '1',
-            'attach_activity'   => (string)$dinner,
-        ]));
+        $test_response = $this->postEvent(
+            id: null,
+            data: $this->getFormValues([
+                'name'              => '',
+                'add_activity'      => '1',
+                'attach_activity'   => (string)$dinner,
+            ])
+        );
         $this->assertSame(
             ['Location' => [$this->routeparser->urlFor('events_event_add')]],
             $test_response->getHeaders()
@@ -187,10 +190,13 @@ class EventsController extends GaletteRoutingTestCase
         $this->assertNull($this->session->plugin_events_event_data ?? null);
 
         //an unknown activity is not attached
-        $this->postEvent(null, $this->getFormValues([
-            'add_activity'      => '1',
-            'attach_activity'   => (string)($dinner + 1000),
-        ]));
+        $this->postEvent(
+            id: null,
+            data: $this->getFormValues([
+                'add_activity'      => '1',
+                'attach_activity'   => (string)($dinner + 1000),
+            ])
+        );
         $this->expectFlashData(['error_detected' => ['Please choose an activity to add']]);
     }
 
@@ -246,7 +252,7 @@ class EventsController extends GaletteRoutingTestCase
         $this->zdb->connection->rollBack();
 
         //an unknown group breaks the foreign key
-        $test_response = $this->postEvent(null, $this->getFormValues(['group' => '999999', 'save' => '1']));
+        $test_response = $this->postEvent(id: null, data: $this->getFormValues(['group' => '999999', 'save' => '1']));
         $this->assertSame(
             ['Location' => [$this->routeparser->urlFor('events_event_add')]],
             $test_response->getHeaders()
@@ -334,14 +340,14 @@ class EventsController extends GaletteRoutingTestCase
                 'end'   => date('Y-m-d', strtotime('+1 month')),
             ]
         );
-        $events = json_decode((string)$this->app->handle($request)->getBody(), true);
+        $events = json_decode((string)$this->app->handle($request)->getBody(), associative: true);
         $this->assertIsArray($events);
         $can_edit = array_column($events, 'can_edit', 'name');
         ksort($can_edit);
         $this->assertSame(['Managed event' => true, 'Public event' => false], $can_edit);
 
         //links of the event modal come with the event
-        $by_name = array_column($events, null, 'name');
+        $by_name = array_column($events, column_key: null, index_key: 'name');
         $managed_id = (string)$by_name['Managed event']['id_event'];
         $public_id = (string)$by_name['Public event']['id_event'];
         $this->assertSame(
@@ -390,7 +396,7 @@ class EventsController extends GaletteRoutingTestCase
                 'end'   => date('Y-m-d', strtotime('+1 month')),
             ]
         );
-        $events = json_decode((string)$this->app->handle($request)->getBody(), true);
+        $events = json_decode((string)$this->app->handle($request)->getBody(), associative: true);
         $this->assertIsArray($events);
         $descriptions = array_column($events, 'description', 'name');
         $this->assertStringContainsString('<strong>Attendees:</strong> 5 (3 paid)', $descriptions['First event']);
@@ -453,11 +459,9 @@ class EventsController extends GaletteRoutingTestCase
     public function testFilter(): void
     {
         $this->logSuperAdmin();
-        $filter = function (array $data): \Psr\Http\Message\ResponseInterface {
-            return $this->app->handle(
-                $this->createRequest('filter-eventslist', [], 'POST')->withParsedBody($data)
-            );
-        };
+        $filter = (fn(array $data): \Psr\Http\Message\ResponseInterface => $this->app->handle(
+            $this->createRequest('filter-eventslist', [], 'POST')->withParsedBody($data)
+        ));
 
         $test_response = $filter(['nbshow' => '50']);
         $this->assertSame(['Location' => [$this->routeparser->urlFor('events_events')]], $test_response->getHeaders());
@@ -484,7 +488,7 @@ class EventsController extends GaletteRoutingTestCase
 
         //options are given as JSON, that cannot close the script element
         $this->assertSame(1, preg_match('#<script type="application/json" id="calendar_options">(.+?)</script>#s', $body, $matches));
-        $options = json_decode($matches[1], true);
+        $options = json_decode($matches[1], associative: true);
         $this->assertSame($this->routeparser->urlFor('ajax-events_calendar'), $options['dataurl']);
         $this->assertSame('Daily list', $options['buttons']['listDay']['text']);
         $this->assertSame('en-US', $options['locale']);

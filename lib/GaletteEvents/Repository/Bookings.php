@@ -65,7 +65,14 @@ class Bookings extends AbstractRepository
         Preferences $preferences,
         ?BookingsList $filters = null
     ) {
-        parent::__construct($zdb, $login, $history, $preferences, 'Booking', $filters ?? new BookingsList());
+        parent::__construct(
+            zdb: $zdb,
+            login: $login,
+            history: $history,
+            preferences: $preferences,
+            entity: 'Booking',
+            filters: $filters ?? new BookingsList()
+        );
     }
 
     /**
@@ -90,7 +97,12 @@ class Bookings extends AbstractRepository
 
             $bookings = [];
             foreach ($results as $row) {
-                $booking = new Booking($this->zdb, $this->login, $this->history, $row);
+                $booking = new Booking(
+                    zdb: $this->zdb,
+                    login: $this->login,
+                    history: $this->history,
+                    args: $row
+                );
                 $bookings[] = $booking;
             }
             $this->loadEvents($bookings);
@@ -121,7 +133,7 @@ class Bookings extends AbstractRepository
         $select->where([Event::PK => array_values($ids)]);
         $events = [];
         foreach ($this->zdb->execute($select) as $row) {
-            $events[(int)$row[Event::PK]] = new Event($this->zdb, $this->login, $this->history, $row);
+            $events[(int)$row[Event::PK]] = new Event(zdb: $this->zdb, login: $this->login, history: $this->history, args: $row);
         }
 
         foreach ($bookings as $booking) {

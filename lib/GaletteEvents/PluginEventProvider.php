@@ -55,10 +55,10 @@ class PluginEventProvider implements ListenerSubscriber
                         sprintf(
                             _Tn(
                                 //TRANS: %1$s is the group name, %2$s the number of events
-                                'Group "%1$s" is used by %2$s event, it cannot be deleted. Remove the event or change its group first.',
-                                'Group "%1$s" is used by %2$s events, it cannot be deleted. Remove the events or change their group first.',
-                                $count,
-                                'events'
+                                singular: 'Group "%1$s" is used by %2$s event, it cannot be deleted. Remove the event or change its group first.',
+                                plural: 'Group "%1$s" is used by %2$s events, it cannot be deleted. Remove the events or change their group first.',
+                                count: $count,
+                                domain: 'events'
                             ),
                             $group->getName(),
                             $count

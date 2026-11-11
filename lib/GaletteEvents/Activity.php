@@ -31,9 +31,6 @@ class Activity
     public const int NO = 0;
     public const int YES = 1;
     public const int REQUIRED = 2;
-
-    private Db $zdb;
-    private History $history;
     /** @var array<string> */
     private array $errors = [];
 
@@ -52,11 +49,8 @@ class Activity
      *                                                     a specific activity, or null to just
      *                                                     instanciate object
      */
-    public function __construct(Db $zdb, History $history, int|ArrayObject|null $args = null)
+    public function __construct(private Db $zdb, private History $history, int|ArrayObject|null $args = null)
     {
-        $this->zdb = $zdb;
-        $this->history = $history;
-
         if (is_int($args)) {
             $this->load($args);
         } elseif (is_object($args)) {
@@ -107,7 +101,7 @@ class Activity
         if (count($this->errors) > 0) {
             Analog::log(
                 'Some errors has been thrown attempting to edit/store an activity' . "\n"
-                . print_r($this->errors, true),
+                . print_r($this->errors, return: true),
                 Analog::ERROR
             );
             return false;

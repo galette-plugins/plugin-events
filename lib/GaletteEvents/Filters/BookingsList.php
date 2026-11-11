@@ -123,7 +123,7 @@ class BookingsList extends Pagination
                 return true;
             case 'selected':
                 if (is_array($value)) {
-                    $this->selected = array_values(array_map('intval', $value));
+                    $this->selected = array_values(array_map(intval(...), $value));
                 } else {
                     $this->logInvalid($name, $value);
                 }

@@ -63,7 +63,7 @@ class Booking extends GaletteTestCase
             ['comment' => null, 'payment_amount' => null, 'number_people' => null, 'creation_date' => '2026-09-01']
         );
 
-        $booking = new \GaletteEvents\Booking($this->zdb, $this->login, $this->history, $id);
+        $booking = new \GaletteEvents\Booking(zdb: $this->zdb, login: $this->login, history: $this->history, args: $id);
         $this->assertSame('', $booking->getComment());
         $this->assertNull($booking->getAmount());
         $this->assertSame(1, $booking->getNumberPeople());
@@ -95,7 +95,7 @@ class Booking extends GaletteTestCase
         $id = (int)$booking->getId();
         $this->assertSame([$dinner => true, $lodging => false], $this->getBookingActivities($id));
 
-        $booking = new \GaletteEvents\Booking($this->zdb, $this->login, $this->history, $id);
+        $booking = new \GaletteEvents\Booking(zdb: $this->zdb, login: $this->login, history: $this->history, args: $id);
         $this->assertTrue($booking->check($values + ['activities' => [(string)$lodging]]));
         $booking->store();
         $this->assertSame([$dinner => false, $lodging => true], $this->getBookingActivities($id));
@@ -104,7 +104,7 @@ class Booking extends GaletteTestCase
         $delete = $this->zdb->delete(EVENTS_PREFIX . 'activitiesevents');
         $delete->where([\GaletteEvents\Event::PK => $event, \GaletteEvents\Activity::PK => $dinner]);
         $this->zdb->execute($delete);
-        $booking = new \GaletteEvents\Booking($this->zdb, $this->login, $this->history, $id);
+        $booking = new \GaletteEvents\Booking(zdb: $this->zdb, login: $this->login, history: $this->history, args: $id);
         $this->assertTrue($booking->check($values + ['activities' => [(string)$lodging]]));
         $booking->store();
         $this->assertSame([$lodging => true], $this->getBookingActivities($id));
@@ -130,10 +130,10 @@ class Booking extends GaletteTestCase
         $booking->store();
         $id = (int)$booking->getId();
 
-        $booking = new \GaletteEvents\Booking($this->zdb, $this->login, $this->history, $id);
+        $booking = new \GaletteEvents\Booking(zdb: $this->zdb, login: $this->login, history: $this->history, args: $id);
         $this->assertTrue($booking->check($values + ['amount' => '']));
         $booking->store();
-        $booking = new \GaletteEvents\Booking($this->zdb, $this->login, $this->history, $id);
+        $booking = new \GaletteEvents\Booking(zdb: $this->zdb, login: $this->login, history: $this->history, args: $id);
         $this->assertNull($booking->getAmount());
 
         $this->assertTrue($booking->check($values + ['amount' => '0', 'paid' => '1']));
@@ -225,7 +225,7 @@ class Booking extends GaletteTestCase
         $insert->values([\GaletteEvents\Activity::PK => $dinner, \GaletteEvents\Booking::PK => $id]);
         $this->zdb->execute($insert);
 
-        $booking = new \GaletteEvents\Booking($this->zdb, $this->login, $this->history, $id);
+        $booking = new \GaletteEvents\Booking(zdb: $this->zdb, login: $this->login, history: $this->history, args: $id);
         $booking->remove();
         $this->assertSame(0, $this->countBookings($event));
         $this->assertSame([], $this->getBookingActivities($id));

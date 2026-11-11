@@ -273,7 +273,10 @@ class BookingsController extends GaletteRoutingTestCase
         $event = $this->insertEvent('Public event');
 
         $this->logMember($this->dataAdherentOne());
-        $test_response = $this->postBooking(null, ['event' => (string)$event, 'member' => (string)$member_two->id]);
+        $test_response = $this->postBooking(
+            id: null,
+            data: ['event' => (string)$event, 'member' => (string)$member_two->id]
+        );
         $this->assertSame(
             ['Location' => [$this->routeparser->urlFor('events_bookings', ['event' => (string)$event])]],
             $test_response->getHeaders()
@@ -297,8 +300,8 @@ class BookingsController extends GaletteRoutingTestCase
 
         //a public event is not an event of a managed group
         $test_response = $this->postBooking(
-            null,
-            ['event' => (string)$public_event, 'member' => (string)$member_one->id]
+            id: null,
+            data: ['event' => (string)$public_event, 'member' => (string)$member_one->id]
         );
         $this->expectBookingInvalid(
             $test_response,
@@ -307,11 +310,17 @@ class BookingsController extends GaletteRoutingTestCase
         $this->assertSame(0, $this->countBookings($public_event));
 
         //but group managers can still book for themselves
-        $this->postBooking(null, ['event' => (string)$public_event, 'member' => (string)$member_two->id]);
+        $this->postBooking(
+            id: null,
+            data: ['event' => (string)$public_event, 'member' => (string)$member_two->id]
+        );
         $this->flash_data = [];
         $this->assertSame($member_two->id, $this->getBookedMember($public_event));
 
-        $this->postBooking(null, ['event' => (string)$managed_event, 'member' => (string)$member_one->id]);
+        $this->postBooking(
+            id: null,
+            data: ['event' => (string)$managed_event, 'member' => (string)$member_one->id]
+        );
         $this->expectFlashData(['success_detected' => [_T('New booking has been successfully added.', 'events')]]);
         $this->assertSame($member_one->id, $this->getBookedMember($managed_event));
     }
@@ -329,8 +338,8 @@ class BookingsController extends GaletteRoutingTestCase
 
         $this->logMember($this->dataAdherentTwo());
         $test_response = $this->postBooking(
-            null,
-            ['event' => (string)$managed_event, 'member' => (string)$member_one->id]
+            id: null,
+            data: ['event' => (string)$managed_event, 'member' => (string)$member_one->id]
         );
         $this->expectBookingInvalid($test_response, _T('- Please select a member from a group you manage.'));
         $this->assertSame(0, $this->countBookings($managed_event));
@@ -359,7 +368,7 @@ class BookingsController extends GaletteRoutingTestCase
         $this->logMember($this->dataAdherentOne());
         foreach ($refused + ['unknown' => $own_event + 1000] as $event) {
             $this->expectBookingInvalid(
-                $this->postBooking(null, ['event' => (string)$event]),
+                $this->postBooking(id: null, data: ['event' => (string)$event]),
                 'This event cannot be booked.'
             );
         }
@@ -367,7 +376,7 @@ class BookingsController extends GaletteRoutingTestCase
             $this->assertSame(0, $this->countBookings($event));
         }
 
-        $this->postBooking(null, ['event' => (string)$own_event]);
+        $this->postBooking(id: null, data: ['event' => (string)$own_event]);
         $this->expectFlashData(['success_detected' => ['New booking has been successfully added.']]);
         $this->assertSame($member_one->id, $this->getBookedMember($own_event));
     }
@@ -397,7 +406,10 @@ class BookingsController extends GaletteRoutingTestCase
         $event = $this->insertEvent('Closed event', ['is_open' => false]);
 
         $this->logMember($this->dataAdherentOne());
-        $this->postBooking(null, ['event' => (string)$event, 'member' => (string)$member_two->id]);
+        $this->postBooking(
+            id: null,
+            data: ['event' => (string)$event, 'member' => (string)$member_two->id]
+        );
         $this->expectFlashData(['success_detected' => ['New booking has been successfully added.']]);
         $this->assertSame($member_two->id, $this->getBookedMember($event));
         $this->resetStaffStatus($staff, $member_two);
@@ -424,7 +436,7 @@ class BookingsController extends GaletteRoutingTestCase
         $this->logMember($this->dataAdherentTwo());
         $batch = function (array $selected): \Psr\Http\Message\ResponseInterface {
             $request = $this->createRequest('batch-eventslist', [], 'POST')->withParsedBody([
-                'entries_sel'   => array_map('strval', $selected),
+                'entries_sel'   => array_map(strval(...), $selected),
                 'csv'           => '1',
             ]);
             return $this->app->handle($request);
