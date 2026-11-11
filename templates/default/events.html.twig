@@ -111,6 +111,14 @@
                         'args': {'event': eid}
                     },
                     'icon': 'eye grey'
+                },
+                {
+                    'label': _T("%1$s: download for calendar applications", "events")|replace({"%1$s": event.getName()}),
+                    'route': {
+                    'name': 'events_event_ics',
+                        'args': {'id': eid}
+                    },
+                    'icon': 'calendar plus grey'
                 }
             ]) %}
 
