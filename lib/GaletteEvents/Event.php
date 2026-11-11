@@ -46,9 +46,16 @@ class Event
     private ?string $end_time = null;
     private ?string $creation_date = null;
     private bool $open = true;
+    private bool $public = false;
     private ?int $group = null;
+    private string $summary = '';
     private string $comment = '';
     private ?string $color = null;
+
+    /** Maximum length of the summary, as stored */
+    public const int SUMMARY_LENGTH = 255;
+    /** Length of the excerpt of the comment, shown when there is no summary */
+    private const int EXCERPT_LENGTH = 160;
 
     /** @var array<int, array<string, mixed>> */
     private array $activities = [];
@@ -95,7 +102,9 @@ class Event
         $this->end_time = $this->loadTime($r['end_time']);
         $this->creation_date = $r['creation_date'];
         $this->open = (bool)$r['is_open'];
+        $this->public = (bool)$r['is_public'];
         $this->group = $r['id_group'] === null ? null : (int)$r['id_group'];
+        $this->summary = $r['summary'] ?? '';
         $this->comment = $r['comment'] ?? '';
         $this->color = $r['color'];
         $this->loadActivities();
@@ -110,6 +119,21 @@ class Event
     public function check(array $values): bool
     {
         $this->errors = [];
+
+        //the form of staff members offers one choice: every member, a group, or public pages
+        if (isset($values['visibility'])) {
+            if ($values['visibility'] === 'group' && empty($values['group'])) {
+                $this->errors[] = _T('Please choose the group that can see the event', 'events');
+            }
+            if ($values['visibility'] !== 'group') {
+                unset($values['group']);
+            }
+            if ($values['visibility'] === 'public') {
+                $values['public'] = '1';
+            } else {
+                unset($values['public']);
+            }
+        }
 
         if (empty($values['begin_date'])) {
             $this->errors[] = _T('Begin date is mandatory', 'events');
@@ -182,6 +206,17 @@ class Event
             }
         }
 
+        if (isset($values['summary'])) {
+            $this->summary = trim((string)$values['summary']);
+            if (mb_strlen($this->summary) > self::SUMMARY_LENGTH) {
+                $this->errors[] = sprintf(
+                    //TRANS: %1$s is the maximum number of characters
+                    _T('Summary cannot be longer than %1$s characters', 'events'),
+                    self::SUMMARY_LENGTH
+                );
+            }
+        }
+
         //the form posts every linked activity: posted list replaces the current one
         $detached = null;
         if (
@@ -235,6 +270,12 @@ class Event
             $this->open = false;
         }
 
+        //events of a group are not visible to every member: they cannot be shown to anyone
+        $this->public = isset($values['public']);
+        if ($this->public && $this->group !== null) {
+            $this->errors[] = _T('An event restricted to a group cannot be public', 'events');
+        }
+
         if (count($this->errors) > 0) {
             Analog::log(
                 'Some errors has been threw attempting to edit/store an event' . "\n"
@@ -260,6 +301,13 @@ class Event
      */
     private function checkTimes(array $values): void
     {
+        //times typed before the event has been switched to all day are ignored
+        if (isset($values['all_day'])) {
+            $this->begin_time = null;
+            $this->end_time = null;
+            return;
+        }
+
         $labels = [
             'begin_time'    => _T('Begin time', 'events'),
             'end_time'      => _T('End time', 'events'),
@@ -324,7 +372,9 @@ class Event
                 'begin_time'            => ($this->begin_time ?? new Expression('NULL')),
                 'end_time'              => ($this->end_time ?? new Expression('NULL')),
                 'is_open'               => (int)$this->open,
+                'is_public'             => (int)$this->public,
                 Group::PK               => ($this->group ?: new Expression('NULL')),
+                'summary'               => ($this->summary !== '' ? $this->summary : new Expression('NULL')),
                 'comment'               => $this->comment,
                 'color'                 => $this->color
             ];
@@ -621,6 +671,14 @@ class Event
     }
 
     /**
+     * Is event published on public pages?
+     */
+    public function isPublic(): bool
+    {
+        return $this->public;
+    }
+
+    /**
      * Is event open?
      * Will return false once the begin date has been exceeded
      */
@@ -693,6 +751,34 @@ class Event
     public function getActivities(): array
     {
         return $this->activities;
+    }
+
+    /**
+     * Get summary
+     */
+    public function getSummary(): string
+    {
+        return $this->summary;
+    }
+
+    /**
+     * Get the short text that presents the event in lists
+     *
+     * Its summary, or else the beginning of its comment, cut between two words.
+     */
+    public function getShortDescription(): string
+    {
+        if ($this->summary !== '') {
+            return $this->summary;
+        }
+
+        $text = trim((string)preg_replace('/\s+/u', ' ', $this->comment));
+        if (mb_strlen($text) <= self::EXCERPT_LENGTH) {
+            return $text;
+        }
+        $text = mb_substr($text, 0, self::EXCERPT_LENGTH + 1);
+        $space = mb_strrpos($text, ' ');
+        return rtrim(mb_substr($text, 0, $space ?: self::EXCERPT_LENGTH), ' ,.;:') . '…';
     }
 
     /**

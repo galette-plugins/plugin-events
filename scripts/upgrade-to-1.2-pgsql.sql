@@ -44,6 +44,14 @@ ALTER TABLE galette_events_bookings
   ALTER COLUMN payment_method DROP DEFAULT,
   ALTER COLUMN payment_method TYPE integer;
 
+-- Events published on public pages
+ALTER TABLE galette_events_events
+  ADD COLUMN is_public boolean default FALSE NOT NULL;
+
+-- Short presentation of events, for lists
+ALTER TABLE galette_events_events
+  ADD COLUMN summary character varying(255) default NULL;
+
 -- Personal calendar subscriptions
 CREATE TABLE galette_events_feeds (
   id_adh integer NOT NULL REFERENCES galette_adherents (id_adh) ON DELETE CASCADE ON UPDATE CASCADE,

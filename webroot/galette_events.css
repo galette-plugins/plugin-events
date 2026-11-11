@@ -26,6 +26,47 @@
     align-items: flex-end;
 }
 
+/* event form: who can see the event, as one segmented choice */
+.event-visibility {
+    display: inline-flex;
+    flex-wrap: wrap;
+    max-width: 100%;
+    border: 1px solid rgba(34, 36, 38, .15);
+    border-radius: .3rem;
+    overflow: hidden;
+}
+
+.ui.form .event-visibility label {
+    display: flex;
+    align-items: center;
+    gap: .5em;
+    margin: 0;
+    padding: .7em 1.1em;
+    font-weight: normal;
+    cursor: pointer;
+}
+
+.ui.form .event-visibility label + label {
+    border-left: 1px solid rgba(34, 36, 38, .15);
+}
+
+.ui.form .event-visibility label:has(input:checked) {
+    background-color: rgba(255, 182, 25, .25);
+    font-weight: bold;
+}
+
+/* one focus ring, on the whole choice and for keyboards only */
+.ui.form .event-visibility label:has(input:focus-visible) {
+    outline: 2px solid rgb(0, 93, 129);
+    outline-offset: -2px;
+}
+
+.ui.form .event-visibility input[type="radio"] {
+    margin: 0;
+    accent-color: #ffb619;
+    outline: none;
+}
+
 /* subscription menu: buttons look like the other menu items, full width, without native background */
 #calendar_subscription .menu > button.item {
     width: 100%;

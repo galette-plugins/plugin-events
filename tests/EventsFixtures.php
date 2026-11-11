@@ -83,13 +83,16 @@ trait EventsFixtures
             'end_date'      => date('Y-m-d', strtotime('+11 days')),
             'creation_date' => date('Y-m-d'),
             'is_open'       => true,
+            'is_public'     => false,
             'id_group'      => null,
             'comment'       => '',
         ];
-        if (!$this->zdb->isPostgres()) {
-            $values['is_open'] = (int)$values['is_open'];
-        } else {
-            $values['is_open'] = $values['is_open'] ? 'true' : 'false';
+        foreach (['is_open', 'is_public'] as $flag) {
+            if (!$this->zdb->isPostgres()) {
+                $values[$flag] = (int)$values[$flag];
+            } else {
+                $values[$flag] = $values[$flag] ? 'true' : 'false';
+            }
         }
         $insert = $this->zdb->insert(EVENTS_PREFIX . Event::TABLE);
         $insert->values($values);
