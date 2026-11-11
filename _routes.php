@@ -41,6 +41,11 @@ $app->get(
     'events_event_edit'
 )->add(Authenticate::class);
 
+$app->get(
+    '/event/{id:\d+}/ics',
+    [EventsController::class, 'ics']
+)->setName('events_event_ics')->add(Authenticate::class);
+
 $app->post(
     '/event/add',
     [EventsController::class, 'doAdd']
