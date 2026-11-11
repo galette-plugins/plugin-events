@@ -322,6 +322,36 @@ class EventsController extends GaletteRoutingTestCase
     }
 
     /**
+     * Staff members choose who can see an event, group managers choose one of their groups
+     */
+    public function testFormVisibility(): void
+    {
+        $this->getMemberOne();
+        $member_two = $this->getMemberTwo();
+        $this->createGroup('Managed group', [$member_two]);
+        $event = $this->insertEvent('Public event', ['is_public' => true, 'begin_time' => '18:30', 'end_time' => '20:00']);
+
+        $this->logSuperAdmin();
+        $body = (string)$this->app->handle($this->createRequest('events_event_edit', ['id' => (string)$event]))->getBody();
+        $this->assertMatchesRegularExpression(
+            '@<input type="radio" name="visibility" id="visibility_public" value="public"[^>]*checked="checked"/>@',
+            $body
+        );
+        $this->assertDoesNotMatchRegularExpression('@id="visibility_(members|group)"[^>]*checked@', $body);
+        $this->assertStringContainsString('id="group_field" class="field displaynone"', $body);
+        $this->assertDoesNotMatchRegularExpression('@id="all_day"[^>]*checked@', $body);
+        $this->assertMatchesRegularExpression('@<strong id="event_period">[^<]+ 18:30 – [^<]+ 20:00</strong>@', $body);
+        $this->login->logout();
+
+        $this->logMember($this->dataAdherentTwo());
+        $body = (string)$this->app->handle($this->createRequest('events_event_add'))->getBody();
+        $this->assertStringNotContainsString('name="visibility"', $body);
+        $this->assertMatchesRegularExpression('@<select\s+name="group"\s+id="group"\s+required="required"@', $body);
+        //new events last all day
+        $this->assertMatchesRegularExpression('@id="all_day" value="1" checked="checked"@', $body);
+    }
+
+    /**
      * Calendar requires dates
      */
     public function testCalendarRequiresDates(): void

@@ -24,6 +24,55 @@ var _eventsActivities = function() {
     });
 };
 
+/* Event form: times are hidden for all day events, period is shown as it will be displayed */
+var _eventsWhen = function() {
+    var $when = $('#event_when');
+    if (!$when.length) {
+        return;
+    }
+    var $allDay = $('#all_day');
+    var value = function(id) {
+        return $.trim($('#' + id).val());
+    };
+    //same rules as Event::getPeriod(); dates are already in the displayed format
+    var update = function() {
+        var allDay = $allDay.is(':checked');
+        $when.find('.event-time').toggleClass('displaynone', allDay);
+        var beginDate = value('begin_date');
+        var endDate = value('end_date') || beginDate;
+        var beginTime = allDay ? '' : value('begin_time');
+        var endTime = allDay ? '' : value('end_time');
+        var begin = beginDate + (beginTime ? ' ' + beginTime : '');
+        var period;
+        if (beginDate === endDate) {
+            period = (!endTime || endTime === beginTime) ? begin : begin + ' – ' + endTime;
+        } else {
+            period = begin + ' – ' + endDate + (endTime ? ' ' + endTime : '');
+        }
+        $('#event_period').text(period);
+    };
+    $allDay.on('change', update);
+    $when.on('input change', 'input', update);
+    //dates picked in the calendar popup do not trigger any event on their field
+    $(document).on('click keyup', '.ui.popup', function() {
+        setTimeout(update);
+    });
+    update();
+};
+
+/* Event form: group is chosen only for events restricted to a group */
+var _eventsVisibility = function() {
+    var $choices = $('#event_visibility input[name="visibility"]');
+    $choices.on('change', function() {
+        var $checked = $choices.filter(':checked');
+        $('#group_field').toggleClass('displaynone', $checked.val() !== 'group');
+        $('#visibility_help')
+            .text($checked.data('help'))
+            .toggleClass('warning', $checked.val() === 'public')
+            .toggleClass('info', $checked.val() !== 'public');
+    });
+};
+
 /* Calendar: first subscription opens the calendar application at once, address changes are confirmed */
 var _eventsSubscription = function() {
     $('#feed_regenerate').on('submit', function(event) {
@@ -90,5 +139,7 @@ var _sendmail = function() {
 $(function() {
     _eventsActivities();
     _eventsBookingEvent();
+    _eventsWhen();
+    _eventsVisibility();
     _eventsSubscription();
 });

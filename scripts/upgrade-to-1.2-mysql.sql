@@ -66,6 +66,14 @@ ALTER TABLE galette_events_activitiesbookings
   ADD CONSTRAINT galette_events_activitiesbookings_id_booking_fkey FOREIGN KEY (id_booking)
     REFERENCES galette_events_bookings (id_booking) ON DELETE CASCADE ON UPDATE CASCADE;
 
+-- Events published on public pages
+ALTER TABLE galette_events_events
+  ADD is_public tinyint(1) NOT NULL default 0 AFTER is_open;
+
+-- Short presentation of events, for lists
+ALTER TABLE galette_events_events
+  ADD summary varchar(255) default NULL AFTER id_group;
+
 -- Personal calendar subscriptions
 CREATE TABLE galette_events_feeds (
   id_adh int unsigned NOT NULL,

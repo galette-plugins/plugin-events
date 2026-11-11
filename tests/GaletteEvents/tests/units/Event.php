@@ -345,6 +345,10 @@ class Event extends GaletteTestCase
 
         $this->assertFalse($event->check($this->getFormValues(['begin_time' => '25:00', 'end_time' => ''])));
         $this->assertSame(['- Wrong time format (HH:MM) for Begin time!'], $event->getErrors());
+        //all day switch drops typed times, even wrong ones
+        $this->assertTrue($event->check($this->getFormValues(['all_day' => '1', 'begin_time' => '25:00', 'end_time' => '20:00'])));
+        $this->assertNull($event->getBeginTime());
+        $this->assertNull($event->getEndTime());
         $this->expectLogEntry(\Analog\Analog::ERROR, 'Some errors has been threw attempting to edit/store an event');
     }
 
@@ -449,5 +453,117 @@ class Event extends GaletteTestCase
         $this->assertTrue($this->zdb->connection->inTransaction());
         $this->zdb->connection->rollBack();
         $this->assertSame(0, $this->zdb->execute($this->zdb->select(EVENTS_PREFIX . \GaletteEvents\Event::TABLE))->count());
+    }
+
+    /**
+     * Only events without group can be public
+     */
+    public function testPublic(): void
+    {
+        $this->logSuperAdmin();
+        $group = $this->createGroup('Group');
+        $event = new \GaletteEvents\Event($this->zdb, $this->login, $this->history);
+        $this->assertFalse($event->isPublic());
+
+        $this->assertTrue($event->check($this->getFormValues(['public' => '1'])));
+        $event->store();
+        $event = new \GaletteEvents\Event(
+            zdb: $this->zdb,
+            login: $this->login,
+            history: $this->history,
+            args: (int)$event->getId()
+        );
+        $this->assertTrue($event->isPublic());
+
+        $values = $this->getFormValues();
+        $this->assertTrue($event->check($values));
+        $event->store();
+        $event = new \GaletteEvents\Event(
+            zdb: $this->zdb,
+            login: $this->login,
+            history: $this->history,
+            args: (int)$event->getId()
+        );
+        $this->assertFalse($event->isPublic());
+
+        $this->assertFalse($event->check($this->getFormValues(['public' => '1', 'group' => (string)$group->getId()])));
+        $this->assertSame(['An event restricted to a group cannot be public'], $event->getErrors());
+        $this->expectLogEntry(\Analog\Analog::ERROR, 'Some errors has been threw attempting to edit/store an event');
+    }
+
+    /**
+     * Staff members choose who can see an event in one place
+     */
+    public function testVisibility(): void
+    {
+        $this->logSuperAdmin();
+        $group = $this->createGroup('Group');
+        $event = new \GaletteEvents\Event($this->zdb, $this->login, $this->history);
+
+        //a group chosen before switching to another choice is ignored
+        $group_id = (string)$group->getId();
+        $this->assertTrue($event->check($this->getFormValues(['visibility' => 'public', 'group' => $group_id])));
+        $this->assertTrue($event->isPublic());
+        $this->assertNull($event->getGroup());
+
+        $this->assertTrue($event->check($this->getFormValues(['visibility' => 'group', 'group' => $group_id, 'public' => '1'])));
+        $this->assertFalse($event->isPublic());
+        $this->assertSame($group->getId(), $event->getGroup());
+
+        $this->assertTrue($event->check($this->getFormValues(['visibility' => 'members', 'group' => $group_id, 'public' => '1'])));
+        $this->assertFalse($event->isPublic());
+        $this->assertNull($event->getGroup());
+
+        //a group must be chosen, the event would be shown to every member otherwise
+        $this->assertFalse($event->check($this->getFormValues(['visibility' => 'group', 'group' => '0'])));
+        $this->assertSame(['Please choose the group that can see the event'], $event->getErrors());
+        $this->expectLogEntry(\Analog\Analog::ERROR, 'Some errors has been threw attempting to edit/store an event');
+    }
+
+    /**
+     * Summary presents the event, or else the beginning of its comment
+     */
+    public function testSummary(): void
+    {
+        $this->logSuperAdmin();
+        $event = new \GaletteEvents\Event($this->zdb, $this->login, $this->history);
+        $this->assertSame('', $event->getSummary());
+        $this->assertSame('', $event->getShortDescription());
+
+        $comment = "Departure from the office at 7:30.\n\nFirst day: eighteen kilometres along the river, "
+            . 'second day: fifteen kilometres back through the woods, with a stop at the lookout for lunch.';
+        $this->assertTrue($event->check($this->getFormValues(['summary' => ' Two days of walking ', 'comment' => $comment])));
+        $event->store();
+        $event = new \GaletteEvents\Event(
+            zdb: $this->zdb,
+            login: $this->login,
+            history: $this->history,
+            args: (int)$event->getId()
+        );
+        $this->assertSame('Two days of walking', $event->getSummary());
+        $this->assertSame('Two days of walking', $event->getShortDescription());
+
+        //no summary: comment is cut between two words
+        $this->assertTrue($event->check($this->getFormValues(['summary' => '', 'comment' => $comment])));
+        $event->store();
+        $event = new \GaletteEvents\Event(
+            zdb: $this->zdb,
+            login: $this->login,
+            history: $this->history,
+            args: (int)$event->getId()
+        );
+        $this->assertSame('', $event->getSummary());
+        $this->assertSame(
+            'Departure from the office at 7:30. First day: eighteen kilometres along the river, '
+            . 'second day: fifteen kilometres back through the woods, with a stop at the…',
+            $event->getShortDescription()
+        );
+
+        $this->assertTrue($event->check($this->getFormValues(['comment' => 'Short comment'])));
+        $this->assertSame('Short comment', $event->getShortDescription());
+
+        $this->assertFalse($event->check($this->getFormValues(['summary' => str_repeat('é', 256)])));
+        $this->assertSame(['Summary cannot be longer than 255 characters'], $event->getErrors());
+        $this->expectLogEntry(\Analog\Analog::ERROR, 'Some errors has been threw attempting to edit/store an event');
     }
 }

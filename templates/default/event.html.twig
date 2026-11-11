@@ -35,52 +35,142 @@
                     type: 'color'
                 } %}
 
-                {% include "components/forms/date.html.twig" with {
-                    id: 'begin_date',
-                    value: event.getBeginDate()|date(_T("Y-m-d")),
-                    label: _T("Begin date", "events"),
-                } %}
-
-                {% include "components/forms/input.html.twig" with {
-                    id: 'begin_time',
-                    value: event.getBeginTime(),
-                    label: _T("Begin time", "events"),
-                    type: 'time',
-                    description: _T("Leave empty for an all day event.", "events")
-                } %}
-
-                {% include "components/forms/date.html.twig" with {
-                    id: 'end_date',
-                    value: event.getEndDate()|date(_T("Y-m-d")),
-                    label: _T("End date", "events"),
-                } %}
-
-                {% include "components/forms/input.html.twig" with {
-                    id: 'end_time',
-                    value: event.getEndTime(),
-                    label: _T("End time", "events"),
-                    type: 'time'
-                } %}
-
-                {% set group_list_values = {(0): _T("Select a group")} %}
-                {% for group in groups %}
-                    {% set group_list_values = group_list_values + {(group.getId()): group.getFullName()} %}
-                {% endfor %}
-
-                {% include "components/forms/select.html.twig" with {
-                    id: 'group',
-                    value: event.getGroup(),
-                    values: group_list_values,
-                    label: _T("Limit to group", "events"),
-                    title: _T("Restrict event to selected group (and its subgroups).", "events"),
-                    raw_labels: true
+                {% include "components/forms/textarea.html.twig" with {
+                    id: 'summary',
+                    value: event.getSummary(),
+                    label: _T("Summary", "events"),
+                    rows: 2,
+                    maxlength: constant('GaletteEvents\\Event::SUMMARY_LENGTH'),
+                    description: _T("Presents the event in lists and on public pages. When empty, the beginning of the comment is used.", "events")
                 } %}
 
                 {% include "components/forms/textarea.html.twig" with {
                     id: 'comment',
                     value: event.getComment(),
                     label: _T("Comment", "events"),
+                    description: _T("Shown in full in the event details.", "events")
                 } %}
+            </div>
+        </div>
+
+        <div class="ui styled fluid accordion field">
+            <div class="active title">
+                <i class="icon dropdown" aria-hidden="true"></i>
+                {{ _T("When", "events") }}
+            </div>
+            <div class="active content" id="event_when">
+                <div class="field">
+                    <div class="ui toggle checkbox">
+                        <input type="checkbox" name="all_day" id="all_day" value="1"{% if event.isAllDay() %} checked="checked"{% endif %}/>
+                        <label for="all_day">{{ _T("All day", "events") }}</label>
+                    </div>
+                </div>
+
+                <div class="two fields">
+                    {% include "components/forms/date.html.twig" with {
+                        id: 'begin_date',
+                        value: event.getBeginDate()|date(_T("Y-m-d")),
+                        label: _T("Begin date", "events"),
+                    } %}
+
+                    {% include "components/forms/input.html.twig" with {
+                        id: 'begin_time',
+                        value: event.getBeginTime(),
+                        label: _T("Begin time", "events"),
+                        type: 'time',
+                        component_class: 'field event-time'
+                    } %}
+                </div>
+
+                <div class="two fields">
+                    {% include "components/forms/date.html.twig" with {
+                        id: 'end_date',
+                        value: event.getEndDate()|date(_T("Y-m-d")),
+                        label: _T("End date", "events"),
+                    } %}
+
+                    {% include "components/forms/input.html.twig" with {
+                        id: 'end_time',
+                        value: event.getEndTime(),
+                        label: _T("End time", "events"),
+                        type: 'time',
+                        component_class: 'field event-time'
+                    } %}
+                </div>
+
+                <div class="ui small message" aria-live="polite">
+                    {{ _T("Displayed as:", "events") }}
+                    <strong id="event_period">{{ event.getPeriod() }}</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="ui styled fluid accordion field">
+            <div class="active title">
+                <i class="icon dropdown" aria-hidden="true"></i>
+                {{ _T("Who can see it", "events") }}
+            </div>
+            <div class="active content">
+                {% set group_list_values = {(0): _T("Select a group")} %}
+                {% for group in groups %}
+                    {% set group_list_values = group_list_values + {(group.getId()): group.getFullName()} %}
+                {% endfor %}
+    {% if login.isAdmin() or login.isStaff() %}
+                {% if event.isPublic() %}
+                    {% set visibility = 'public' %}
+                {% elseif event.getGroup() %}
+                    {% set visibility = 'group' %}
+                {% else %}
+                    {% set visibility = 'members' %}
+                {% endif %}
+                {% set visibilities = {
+                    'members': {
+                        label: _T("Every member", "events"),
+                        help: _T("Shown to every logged-in member, in the list and the calendar.", "events")
+                    },
+                    'group': {
+                        label: _T("A group", "events"),
+                        help: _T("Shown only to the members of the chosen group and of its subgroups.", "events")
+                    },
+                    'public': {
+                        label: _T("Public", "events"),
+                        help: _T("Shown to every member, and to anyone on public pages and in their calendar subscription.", "events")
+                    }
+                } %}
+                <div class="field">
+                    <div class="event-visibility" role="radiogroup" aria-label="{{ _T("Who can see it", "events") }}" id="event_visibility">
+        {% for key, choice in visibilities %}
+                        <label for="visibility_{{ key }}">
+                            <input type="radio" name="visibility" id="visibility_{{ key }}" value="{{ key }}" data-help="{{ choice.help }}"{% if key == visibility %} checked="checked"{% endif %}/>
+                            {{ choice.label }}
+                        </label>
+        {% endfor %}
+                    </div>
+                </div>
+
+                {% include "components/forms/select.html.twig" with {
+                    id: 'group',
+                    value: event.getGroup(),
+                    values: group_list_values,
+                    label: _T("Group", "events"),
+                    raw_labels: true,
+                    component_id: 'group_field',
+                    component_class: 'field' ~ (visibility != 'group' ? ' displaynone' : '')
+                } %}
+
+                {# visible: messages of a state are hidden in forms until the form gets that state #}
+                <div class="ui small visible {{ visibility == 'public' ? 'warning' : 'info' }} message" id="visibility_help" aria-live="polite">{{ visibilities[visibility].help }}</div>
+    {% else %}
+                {% include "components/forms/select.html.twig" with {
+                    id: 'group',
+                    value: event.getGroup(),
+                    values: group_list_values,
+                    label: _T("Limit to group", "events"),
+                    title: _T("Restrict event to selected group (and its subgroups).", "events"),
+                    raw_labels: true,
+                    required: true
+                } %}
+    {% endif %}
             </div>
         </div>
 
