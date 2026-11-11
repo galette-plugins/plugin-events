@@ -67,7 +67,7 @@ class CsvController extends \Galette\Controllers\CsvController
 
         //filters come from bookings list, or from its batch actions
         $session_var = $post['session_var'] ?? $get['session_var'] ?? $this->getFilterName('bookings');
-        if (!in_array($session_var, [$this->getFilterName('bookings'), 'plugin-events-bookings'], true)) {
+        if (!in_array($session_var, [$this->getFilterName('bookings'), 'plugin-events-bookings'], strict: true)) {
             $session_var = $this->getFilterName('bookings');
         }
         if ($id === null && ($this->session->$session_var ?? null) instanceof BookingsList) {
@@ -80,8 +80,14 @@ class CsvController extends \Galette\Controllers\CsvController
             $filters->event_filter = $id;
         }
 
-        $bookings = new Bookings($this->zdb, $this->login, $this->history, $this->preferences, $filters);
-        $bookings_list = $bookings->getList(true);
+        $bookings = new Bookings(
+            zdb: $this->zdb,
+            login: $this->login,
+            history: $this->history,
+            preferences: $this->preferences,
+            filters: $filters
+        );
+        $bookings_list = $bookings->getList(full: true);
 
         $labels = [
             _T('Event', 'events'),
@@ -101,7 +107,12 @@ class CsvController extends \Galette\Controllers\CsvController
         $event = null;
         if ($filters->event_filter !== null) {
             try {
-                $event = new Event($this->zdb, $this->login, $this->history, $filters->event_filter);
+                $event = new Event(
+                    zdb: $this->zdb,
+                    login: $this->login,
+                    history: $this->history,
+                    args: $filters->event_filter
+                );
             } catch (NotFoundException) {
                 return $this->redirectWithErrors(
                     response: $response,
@@ -186,11 +197,11 @@ class CsvController extends \Galette\Controllers\CsvController
         $fp = fopen($filepath, 'w');
         if ($fp) {
             $csv->export(
-                $list,
-                Csv::DEFAULT_SEPARATOR,
-                Csv::DEFAULT_QUOTE,
-                $labels,
-                $fp
+                rs: $list,
+                separator: Csv::DEFAULT_SEPARATOR,
+                quote: Csv::DEFAULT_QUOTE,
+                titles: $labels,
+                file: $fp
             );
             fclose($fp);
             $written[] = [

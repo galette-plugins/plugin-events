@@ -116,7 +116,7 @@ abstract class AbstractController extends AbstractPluginController
     protected function renderList(Response $response, string $template, Pagination $filters, array $params): Response
     {
         //assign pagination variables to the template and add pagination links
-        $filters->setViewPagination($this->routeparser, $this->view, false);
+        $filters->setViewPagination($this->routeparser, $this->view, restricted: false);
         $this->storeFilters($filters);
 
         $this->view->render(

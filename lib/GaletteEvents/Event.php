@@ -29,10 +29,6 @@ class Event
 
     public const string TABLE = 'events';
     public const string PK = 'id_event';
-
-    private Db $zdb;
-    private Login $login;
-    private History $history;
     /** @var array<string> */
     private array $errors = [];
 
@@ -63,11 +59,8 @@ class Event
      *                                                     a specific event, or null to just
      *                                                     instanciate object
      */
-    public function __construct(Db $zdb, Login $login, History $history, int|ArrayObject|null $args = null)
+    public function __construct(private Db $zdb, private Login $login, private History $history, int|ArrayObject|null $args = null)
     {
-        $this->zdb = $zdb;
-        $this->login = $login;
-        $this->history = $history;
         if (is_int($args)) {
             $this->load($args);
         } elseif ($args !== null) {
@@ -154,7 +147,7 @@ class Event
         } else {
             if (
                 empty($values['group'])
-                || !in_array((int)$values['group'], array_map('intval', $this->login->managed_groups), true)
+                || !in_array((int)$values['group'], array_map(intval(...), $this->login->managed_groups), strict: true)
             ) {
                 $this->errors[] = _T('Please select a group you own!', 'events');
             } else {
@@ -194,7 +187,13 @@ class Event
         foreach ($values['activities_ids'] ?? [] as $row => $activity_id) {
             $activity_id = (int)$activity_id;
             $status = (int)($values['activities_status'][$row] ?? Activity::YES);
-            if ($activity_id === $detached || !in_array($status, [Activity::NO, Activity::YES, Activity::REQUIRED], true)) {
+            if (
+                $activity_id === $detached || !in_array(
+                    $status,
+                    [Activity::NO, Activity::YES, Activity::REQUIRED],
+                    strict: true
+                )
+            ) {
                 continue;
             }
             //already linked activities stay, even if they have been deactivated since
@@ -231,7 +230,7 @@ class Event
         if (count($this->errors) > 0) {
             Analog::log(
                 'Some errors has been threw attempting to edit/store an event' . "\n"
-                . print_r($this->errors, true),
+                . print_r($this->errors, return: true),
                 Analog::ERROR
             );
             return false;
@@ -516,7 +515,7 @@ class Event
                 $now  = new \DateTime();
                 $now->setTime(0, 0);
                 return $date >= $now;
-            } catch (\Exception $e) {
+            } catch (\Exception) {
                 //no begin date, or invalid date...
                 return true;
             }

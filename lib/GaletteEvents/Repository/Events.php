@@ -59,7 +59,14 @@ class Events extends AbstractRepository
         Preferences $preferences,
         ?EventsList $filters = null
     ) {
-        parent::__construct($zdb, $login, $history, $preferences, 'Event', $filters ?? new EventsList());
+        parent::__construct(
+            zdb: $zdb,
+            login: $login,
+            history: $history,
+            preferences: $preferences,
+            entity: 'Event',
+            filters: $filters ?? new EventsList()
+        );
     }
 
     /**
@@ -81,14 +88,14 @@ class Events extends AbstractRepository
             $select = $this->zdb->select(EVENTS_PREFIX . Event::TABLE, 'e');
 
             $select->join(
-                ['b' => PREFIX_DB . EVENTS_PREFIX . Booking::TABLE],
-                'e.' . Event::PK . '=b.' . Event::PK,
-                [],
-                $select::JOIN_LEFT
+                name: ['b' => PREFIX_DB . EVENTS_PREFIX . Booking::TABLE],
+                on: 'e.' . Event::PK . '=b.' . Event::PK,
+                columns: [],
+                type: $select::JOIN_LEFT
             );
 
             if (!$this->login->isAdmin() && !$this->login->isStaff()) {
-                $managed = array_map('intval', $this->login->managed_groups);
+                $managed = array_map(intval(...), $this->login->managed_groups);
                 $groups = self::getVisibleGroups($this->login);
 
                 $visible = [new Predicate\IsNull('e.' . Group::PK)];
@@ -154,7 +161,7 @@ class Events extends AbstractRepository
 
             $events = [];
             foreach ($rows as $row) {
-                $event = new Event($this->zdb, $this->login, $this->history, $row);
+                $event = new Event(zdb: $this->zdb, login: $this->login, history: $this->history, args: $row);
                 if (!$this->filters->calendar_filter) {
                     $events[] = $event;
                 } else {
@@ -239,8 +246,8 @@ class Events extends AbstractRepository
     public static function getVisibleGroups(Login $login): array
     {
         return array_values(array_unique(array_merge(
-            array_map('intval', Groups::loadGroups((int)$login->id, false, false)),
-            array_map('intval', $login->managed_groups)
+            array_map(intval(...), Groups::loadGroups((int)$login->id, managed: false, as_group: false)),
+            array_map(intval(...), $login->managed_groups)
         )));
     }
 
@@ -255,7 +262,7 @@ class Events extends AbstractRepository
         return $login->isAdmin()
             || $login->isStaff()
             || $group === null
-            || in_array($group, self::getVisibleGroups($login), true);
+            || in_array($group, self::getVisibleGroups($login), strict: true);
     }
 
     /**

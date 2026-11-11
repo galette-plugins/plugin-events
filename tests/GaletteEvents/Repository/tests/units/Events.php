@@ -44,7 +44,12 @@ class Events extends GaletteTestCase
      */
     private function getListed(bool $bookable = false): array
     {
-        $events = new \GaletteEvents\Repository\Events($this->zdb, $this->login, $this->history, $this->preferences);
+        $events = new \GaletteEvents\Repository\Events(
+            zdb: $this->zdb,
+            login: $this->login,
+            history: $this->history,
+            preferences: $this->preferences
+        );
         $names = [];
         foreach ($events->getList($bookable) as $event) {
             $this->assertInstanceOf(\GaletteEvents\Event::class, $event);
@@ -65,9 +70,15 @@ class Events extends GaletteTestCase
         $filters->calendar_filter = true;
         $filters->start_date_filter = date(__('Y-m-d'), strtotime('-1 month'));
         $filters->end_date_filter = date(__('Y-m-d'), strtotime('+1 month'));
-        $events = new \GaletteEvents\Repository\Events($this->zdb, $this->login, $this->history, $this->preferences, $filters);
+        $events = new \GaletteEvents\Repository\Events(
+            zdb: $this->zdb,
+            login: $this->login,
+            history: $this->history,
+            preferences: $this->preferences,
+            filters: $filters
+        );
         $names = [];
-        foreach ($events->getList(false, true) as $event) {
+        foreach ($events->getList(bookable: false, fullcalendar: true) as $event) {
             $this->assertInstanceOf(\ArrayObject::class, $event);
             $names[] = $event['name'];
         }
@@ -104,7 +115,7 @@ class Events extends GaletteTestCase
 
         $this->logMember($this->dataAdherentOne());
         $this->assertSame(['own group', 'public', 'public far', 'public past'], $this->getListed());
-        $this->assertSame(['own group', 'public', 'public far'], $this->getListed(true));
+        $this->assertSame(['own group', 'public', 'public far'], $this->getListed(bookable: true));
         $this->assertSame(['own group', 'public', 'public closed', 'public past'], $this->getCalendar());
         $this->login->logout();
 
@@ -114,7 +125,7 @@ class Events extends GaletteTestCase
             ['managed', 'managed past closed', 'other group', 'public', 'public far'],
             $this->getListed()
         );
-        $this->assertSame(['managed', 'other group', 'public', 'public far'], $this->getListed(true));
+        $this->assertSame(['managed', 'other group', 'public', 'public far'], $this->getListed(bookable: true));
         $this->assertSame(
             ['managed', 'managed past closed', 'other group', 'public', 'public closed', 'public past'],
             $this->getCalendar()
@@ -127,7 +138,7 @@ class Events extends GaletteTestCase
             'public', 'public closed', 'public far', 'public past'
         ];
         $this->assertSame($all, $this->getListed());
-        $this->assertSame($all, $this->getListed(true));
+        $this->assertSame($all, $this->getListed(bookable: true));
         $this->assertSame(array_values(array_diff($all, ['public far'])), $this->getCalendar());
     }
 
@@ -148,7 +159,13 @@ class Events extends GaletteTestCase
         $filters = new EventsList();
         $filters->show = 2;
         $filters->orderby = \GaletteEvents\Repository\Events::ORDERBY_TOWN;
-        $events = new \GaletteEvents\Repository\Events($this->zdb, $this->login, $this->history, $this->preferences, $filters);
+        $events = new \GaletteEvents\Repository\Events(
+            zdb: $this->zdb,
+            login: $this->login,
+            history: $this->history,
+            preferences: $this->preferences,
+            filters: $filters
+        );
         $names = array_map(fn(\GaletteEvents\Event $event): string => $event->getName(), $events->getList());
         $this->assertSame(3, $events->getCount());
         //events list is ordered descending by default

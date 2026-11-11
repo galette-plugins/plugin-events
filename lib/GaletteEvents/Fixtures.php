@@ -110,7 +110,7 @@ class Fixtures implements FixturesProviderInterface
         $bookings = 0;
         foreach (self::EVENTS as $position => $data) {
             $event = $this->addEvent($context, $data);
-            $bookings += $this->addBookings($context, $event, $data, $position);
+            $bookings += $this->addBookings(context: $context, event: $event, data: $data, position: $position);
         }
 
         return sprintf('Created %d events and %d bookings', count(self::EVENTS), $bookings);
