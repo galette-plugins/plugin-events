@@ -120,6 +120,33 @@ var _eventsSubscription = function() {
     });
 };
 
+/* Public events: details open in a window, from the list or from the calendar */
+var _eventsPublicDetails = function() {
+    var $modal = $('#public_event');
+    if (!$modal.length) {
+        return;
+    }
+    var show = function(id) {
+        var $item = $('#public_event_' + id);
+        if (!$item.length) {
+            return;
+        }
+        $modal.find('.header').text($item.find('.public-event-open').text());
+        $modal.find('.content').empty().append($item.find('template.public-event-details')[0].content.cloneNode(true));
+        $modal.find('[data-action="ics"]').attr('href', $item.data('ics'));
+        $modal.modal('show');
+    };
+    $('#events_list').on('click', '.public-event', function(event) {
+        if (!$(event.target).closest('a').length) {
+            show(this.id.replace('public_event_', ''));
+        }
+    });
+    //sent by the calendar script
+    $(document).on('galette-events:show', function(event, id) {
+        show(id);
+    });
+};
+
 /* Booking form: choosing another event reloads the form with its activities */
 var _eventsBookingEvent = function() {
     $('#modifform #event').on('change', function() {
@@ -142,4 +169,5 @@ $(function() {
     _eventsWhen();
     _eventsVisibility();
     _eventsSubscription();
+    _eventsPublicDetails();
 });

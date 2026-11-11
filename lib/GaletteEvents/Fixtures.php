@@ -35,6 +35,8 @@ use RuntimeException;
  *     bookings: int,
  *     group?: int,
  *     closed?: bool,
+ *     public?: bool,
+ *     summary?: string,
  *     comment?: string,
  *     times?: array{0: string, 1?: string}
  * }
@@ -62,7 +64,8 @@ class Fixtures implements FixturesProviderInterface
             'activities' => [], 'bookings' => 4, 'group' => 1, 'times' => ['19:00']],
         ['name' => 'Forum des associations', 'town' => 'Lille', 'zip' => '59000',
             'address' => 'Grand Palais', 'begin' => 7, 'days' => 1, 'color' => '#1565c0',
-            'activities' => ['Covoiturage' => Activity::YES], 'bookings' => 8,
+            'activities' => ['Covoiturage' => Activity::YES], 'bookings' => 8, 'public' => true,
+            'summary' => 'Retrouvez-nous sur notre stand pour découvrir nos activités de l\'année.',
             'comment' => 'Venez tenir le stand avec nous !'],
         ['name' => 'Réunion du bureau', 'town' => 'Paris', 'zip' => '75011',
             'address' => 'Local associatif', 'begin' => 10, 'days' => 0, 'color' => '#455a64',
@@ -70,17 +73,19 @@ class Fixtures implements FixturesProviderInterface
         ['name' => 'Assemblée générale', 'town' => 'Paris', 'zip' => '75011',
             'address' => 'Salle des fêtes', 'begin' => 21, 'days' => 0, 'color' => '#c62828',
             'activities' => ['Repas' => Activity::YES], 'bookings' => 15,
-            'comment' => 'Ordre du jour envoyé par courriel.', 'times' => ['14:00', '17:30']],
+            'comment' => 'Ordre du jour envoyé par courriel.', 'times' => ['14:00', '17:30'], 'public' => true],
         ['name' => 'Sortie vélo en Camargue', 'town' => 'Arles', 'zip' => '13200',
             'address' => 'Place de la République', 'begin' => 45, 'days' => 2, 'color' => '#ef6c00',
             'activities' => [
                 'Hébergement' => Activity::REQUIRED,
                 'Repas' => Activity::YES,
                 'Covoiturage' => Activity::YES,
-            ], 'bookings' => 10],
+            ], 'bookings' => 10, 'public' => true,
+            'summary' => 'Trois jours à vélo entre étangs et salins, nuits en gîte. Environ 50 km par jour.'],
         ['name' => 'Fête de fin d\'année', 'town' => 'Nantes', 'zip' => '44000',
             'address' => 'Hangar à bananes', 'begin' => 80, 'days' => 0, 'color' => '#ad1457',
-            'activities' => ['Repas' => Activity::REQUIRED], 'bookings' => 14],
+            'activities' => ['Repas' => Activity::REQUIRED], 'bookings' => 14, 'public' => true,
+            'comment' => "Repas, musique et rétrospective de l'année en images.\n\nChacun apporte un dessert à partager."],
         ['name' => 'Week-end découverte à Strasbourg', 'town' => 'Strasbourg', 'zip' => '67000',
             'address' => 'Place Kléber', 'begin' => 120, 'days' => 1, 'color' => '#6a1b9a',
             'activities' => [
@@ -166,6 +171,7 @@ class Fixtures implements FixturesProviderInterface
             'begin_date' => $this->getDate($data['begin']),
             'end_date' => $this->getDate($data['begin'] + $data['days']),
             'color' => $data['color'],
+            'summary' => $data['summary'] ?? '',
             'comment' => $data['comment'] ?? '',
             'begin_time' => $data['times'][0] ?? '',
             'end_time' => $data['times'][1] ?? '',
@@ -174,6 +180,9 @@ class Fixtures implements FixturesProviderInterface
         ];
         if (!($data['closed'] ?? false)) {
             $values['open'] = '1';
+        }
+        if ($data['public'] ?? false) {
+            $values['public'] = '1';
         }
         if (isset($data['group'])) {
             $values['group'] = (string)$context->getGroupId($data['group']);

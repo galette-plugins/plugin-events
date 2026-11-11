@@ -1,0 +1,188 @@
+{#
+ # This file is part of Galette Events plugin (https://galette.eu).
+ # SPDX-FileCopyrightText: Copyright © 2018-2026 The Galette Team
+ # SPDX-License-Identifier: GPL-3.0-or-later
+ #}
+
+{% set is_public = not login.isLogged() %}
+{% extends is_public ? "public_page.html.twig" : "page.html.twig" %}
+
+{% block content %}
+    <div class="public-events-toolbar">
+    {% if has_calendar and events|length %}
+        <div class="ui buttons" id="events_views" role="group" aria-label="{{ _T("Display", "events") }}">
+            <button type="button" class="ui labeled icon active button" data-view="list" aria-pressed="true">
+                <i class="list icon" aria-hidden="true"></i>
+                {{ _T("List", "events") }}
+            </button>
+            <button type="button" class="ui labeled icon button" data-view="calendar" aria-pressed="false">
+                <i class="calendar alternate outline icon" aria-hidden="true"></i>
+                {{ _T("Calendar", "events") }}
+            </button>
+        </div>
+    {% endif %}
+        <div class="ui buttons">
+            <a href="{{ feed_urls.webcal }}" class="ui primary labeled icon button" title="{{ _T("Add these events to your calendar application: it will keep them up to date by itself.", "events") }}">
+                <i class="rss icon" aria-hidden="true"></i>
+                {{ _T("Subscribe", "events") }}
+            </a>
+            <div class="ui primary icon top right pointing dropdown button tooltip" title="{{ _T("More subscription options", "events") }}">
+                <i class="dropdown icon" aria-hidden="true"></i>
+                <span class="visually-hidden">{{ _T("More subscription options", "events") }}</span>
+                <div class="menu">
+                    <button
+                        type="button"
+                        class="ui item copy-to-clipboard"
+                        data-copy-target="#feed_url"
+                        data-copied="{{ _T("Copied to clipboard.") }}"
+                        data-copy-failed="{{ _T("Unable to copy, please select the text and copy it by hand.") }}"
+                        hidden
+                    >
+                        <i class="copy outline icon" aria-hidden="true"></i>
+                        {{ _T("Copy subscription address", "events") }}
+                    </button>
+                    <div class="divider"></div>
+                    <button type="button" class="ui item" data-subscription-help>
+                        <i class="question circle outline icon" aria-hidden="true"></i>
+                        {{ _T("How to subscribe?", "events") }}
+                    </button>
+                </div>
+            </div>
+        </div>
+        <input type="hidden" id="feed_url" value="{{ feed_urls.https }}"/>
+    </div>
+    {% include "@PluginGaletteEvents/subscription_help.html.twig" with {feed_urls: feed_urls, personal: false} only %}
+
+    {% if events|length == 0 %}
+        <div class="ui small message">
+            <div class="content">
+                <em>{{ _T("No upcoming event", "events") }}</em>
+            </div>
+        </div>
+    {% else %}
+        <div class="ui segment" id="events_list">
+        {% set current_month = '' %}
+        {% for item in events %}
+            {% set event = item.event %}
+            {% if item.month != current_month %}
+                {% if current_month != '' %}
+            </div>
+                {% endif %}
+                {% set current_month = item.month %}
+            <h2 class="ui small dividing header public-events-month">{{ item.month }}</h2>
+            <div class="ui relaxed items">
+            {% endif %}
+            {% set activities = event.getActivities()|filter(activity => activity.status != constant('GaletteEvents\\Activity::NO')) %}
+            {% set place = [event.getAddress(), (event.getZip() ~ ' ' ~ event.getTown())|trim, event.getCountry()]|filter(part => part is not empty)|join(', ') %}
+                <div class="item public-event" id="public_event_{{ event.getId() }}" data-ics="{{ url_for("events_public_event_ics", {"id": event.getId()}) }}">
+                    <div class="public-event-date" aria-hidden="true">
+                        <span class="weekday"{% if event.getColor() %} style="background-color: {{ event.getColor() }}; color: {{ event.getForegroundColor() }}"{% endif %}>{{ item.weekday }}</span>
+                        <span class="day">{{ item.day }}</span>
+                        <span class="month">{{ item.month_short }}</span>
+                    </div>
+                    <div class="content">
+                        <h3 class="header">
+                            <button type="button" class="public-event-open" aria-haspopup="dialog">{{ event.getName() }}</button>
+                        </h3>
+                        <div class="meta">
+                            <span>
+                                <i class="clock outline icon" aria-hidden="true"></i>
+                                {{ event.getPeriod() }}
+                            </span>
+                            <span>
+                                <i class="map marker alternate icon" aria-hidden="true"></i>
+                                {{ event.getTown() }}
+                            </span>
+                        </div>
+                {% if event.getShortDescription() is not empty %}
+                        <div class="description">
+                            <p>{{ event.getShortDescription() }}</p>
+                        </div>
+                {% endif %}
+                {% if activities|length %}
+                        <div class="extra">
+                    {% for activity in activities %}
+                            <span class="ui label">{{ activity.activity.getName() }}</span>
+                    {% endfor %}
+                        </div>
+                {% endif %}
+                    </div>
+                    {# full details, shown in the event window #}
+                    <template class="public-event-details">
+                        <div class="ui list">
+                            <div class="item">
+                                <i class="clock outline icon" aria-hidden="true"></i>
+                                <div class="content">{{ event.getPeriod() }}</div>
+                            </div>
+                            <div class="item">
+                                <i class="map marker alternate icon" aria-hidden="true"></i>
+                                <div class="content">
+                                    {{ place }}
+                                    &middot;
+                                    <a href="https://www.openstreetmap.org/search?query={{ place|url_encode }}" target="_blank" rel="noopener">{{ _T("See on a map", "events") }}</a>
+                                </div>
+                            </div>
+                        </div>
+                {% if event.getComment() is not empty %}
+                        <p>{{ event.getComment()|nl2br }}</p>
+                {% elseif event.getSummary() is not empty %}
+                        <p>{{ event.getSummary() }}</p>
+                {% endif %}
+                {% if activities|length %}
+                        <h4 class="ui header">{{ _T("Activities", "events") }}</h4>
+                        <div class="ui labels">
+                    {% for activity in activities %}
+                            <span class="ui label">
+                                {{ activity.activity.getName() }}
+                        {% if activity.status == constant('GaletteEvents\\Activity::REQUIRED') %}
+                                <span class="detail">{{ _T("Required", "events") }}</span>
+                        {% endif %}
+                            </span>
+                    {% endfor %}
+                        </div>
+                {% endif %}
+                    </template>
+                </div>
+        {% endfor %}
+            </div>
+        </div>
+        {% if has_calendar %}
+        {# calendar library manages the classes of its own element: view switch hides its container #}
+        <div id="events_calendar" class="displaynone">
+            <div id="calendar"></div>
+        </div>
+        {% endif %}
+
+        <div class="ui small modal" id="public_event">
+            <div class="header"></div>
+            <div class="content"></div>
+            <div class="actions">
+                <a href="#" class="ui labeled icon button" data-action="ics">
+                    <i class="calendar plus icon" aria-hidden="true"></i>
+                    {{ _T("Add to my calendar", "events") }}
+                </a>
+                <button type="button" class="ui labeled icon cancel button">
+                    <i class="times icon" aria-hidden="true"></i>
+                    {{ _T("Close") }}
+                </button>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block javascripts %}
+    {% if has_calendar and events|length %}
+        {% set calendar_options = {
+            'public': true,
+            'events': calendar_events,
+            'locale': i18n.getWebID(),
+            'buttons': {
+                'listMonth': {'text': _T("Monthly list", "events")},
+                'dayGridMonth': {'text': _T("Month calendar", "events")},
+                'today': {'text': _T("Today", "events")}
+            }
+        } %}
+    <script type="application/json" id="calendar_options">{{ calendar_options|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }}</script>
+    <script type="text/javascript" src="{{ url_for("plugin_res", {"plugin": module_id, "path": "js/calendar.bundle.js"}) }}"></script>
+    {% endif %}
+{% endblock %}

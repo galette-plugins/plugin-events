@@ -811,4 +811,72 @@ class EventsController extends GaletteRoutingTestCase
             $this->expectLogin($this->app->handle($this->createRequest($route, [], 'POST')));
         }
     }
+
+    /**
+     * Visitors get public events, and their calendar subscription, as public pages allow
+     */
+    public function testPublicEvents(): void
+    {
+        $public = $this->insertEvent(
+            'Public event',
+            ['is_public' => true, 'begin_date' => '2031-03-14', 'end_date' => '2031-03-14', 'comment' => "First line\nSecond <b>line</b>"]
+        );
+        $this->insertEvent('Summed up event', ['is_public' => true, 'summary' => 'Short <i>presentation</i>']);
+        $members = $this->insertEvent('Members event');
+        $this->setRawPreference('pref_bool_publicpages', value: true);
+        $this->setRawPreference('pref_events_publicpages_visibility_events', \Galette\Enums\PublicPageVisibility::Everyone->value);
+        //instance URL cannot be guessed without request host
+        $this->preferences->pref_galette_url = 'https://galette.test/';
+
+        $test_response = $this->app->handle($this->createRequest('events_public'));
+        $this->assertSame(200, $test_response->getStatusCode());
+        $body = (string)$test_response->getBody();
+        $this->assertStringContainsString('Public event', $body);
+        $this->assertStringNotContainsString('Members event', $body);
+        $this->assertStringContainsString('First line<br />' . "\n" . 'Second &lt;b&gt;line&lt;/b&gt;', $body);
+        //list shows the summary, or the beginning of the comment
+        $this->assertStringContainsString('<p>Short &lt;i&gt;presentation&lt;/i&gt;</p>', $body);
+        $this->assertStringContainsString('<p>First line Second &lt;b&gt;line&lt;/b&gt;</p>', $body);
+        //events are grouped by month
+        $this->assertStringContainsString('<h2 class="ui small dividing header public-events-month">March 2031</h2>', $body);
+        $this->assertStringContainsString(
+            'data-ics="' . $this->routeparser->urlFor('events_public_event_ics', ['id' => (string)$public]) . '"',
+            $body
+        );
+        $this->assertStringContainsString(
+            'href="webcal://galette.test' . $this->routeparser->urlFor('events_public_feed') . '"',
+            $body
+        );
+
+        $test_response = $this->app->handle(
+            $this->createRequest('events_public_event_ics', ['id' => (string)$public])
+        );
+        $this->assertSame(200, $test_response->getStatusCode());
+        $this->assertStringContainsString('SUMMARY:Public event', (string)$test_response->getBody());
+        //other events cannot be told from missing ones
+        foreach ([$members, 999999] as $id) {
+            $test_response = $this->app->handle(
+                $this->createRequest('events_public_event_ics', ['id' => (string)$id])
+            );
+            $this->assertSame(404, $test_response->getStatusCode());
+        }
+
+        $test_response = $this->app->handle($this->createRequest('events_public_feed'));
+        $this->assertSame(200, $test_response->getStatusCode());
+        $this->assertSame(['text/calendar; charset=utf-8'], $test_response->getHeader('Content-Type'));
+        $ics = (string)$test_response->getBody();
+        $this->assertStringContainsString('SUMMARY:Public event', $ics);
+        $this->assertStringNotContainsString('Members event', $ics);
+
+        //members only
+        $this->setRawPreference(
+            'pref_events_publicpages_visibility_events',
+            \Galette\Enums\PublicPageVisibility::UpToDateMembers->value
+        );
+        foreach (['events_public', 'events_public_feed', 'events_public_event_ics'] as $route) {
+            $test_response = $this->app->handle($this->createRequest($route, ['id' => (string)$public]));
+            $this->assertSame(['Location' => [$this->routeparser->urlFor('slash')]], $test_response->getHeaders());
+            $this->expectFlashData(['error_detected' => ['Unauthorized']]);
+        }
+    }
 }

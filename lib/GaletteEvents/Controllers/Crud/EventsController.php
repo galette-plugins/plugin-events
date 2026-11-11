@@ -180,8 +180,19 @@ class EventsController extends AbstractController
      */
     private function getFeedUrls(string $token): array
     {
-        $url = rtrim($this->preferences->getURL(), '/')
-            . $this->routeparser->urlFor('events_feed', ['token' => $token]);
+        return $this->getSubscriptionUrls($this->routeparser->urlFor('events_feed', ['token' => $token]));
+    }
+
+    /**
+     * Absolute subscription URLs, for browsers and calendar applications
+     *
+     * @param string $path Path of the subscription route
+     *
+     * @return array{https: string, webcal: string}
+     */
+    private function getSubscriptionUrls(string $path): array
+    {
+        $url = rtrim($this->preferences->getURL(), '/') . $path;
         return [
             'https'     => $url,
             'webcal'    => (string)preg_replace('#^https?://#', 'webcal://', $url),
@@ -280,13 +291,142 @@ class EventsController extends AbstractController
             (new \DateTimeImmutable('-' . self::FEED_PAST_MONTHS . ' months'))->format('Y-m-d')
         );
 
+        return $this->writeFeed($response, $list, 'private');
+    }
+
+    /**
+     * Write a calendar subscription
+     *
+     * @param array<Event> $events Events
+     * @param string       $cache  Cache-Control visibility, public or private
+     */
+    private function writeFeed(Response $response, array $events, string $cache): Response
+    {
         $ics = new Ics($this->preferences, $this->routeparser);
         $name = $this->preferences->pref_nom . ' – ' . _T('Events', 'events');
-        $response->getBody()->write($ics->getCalendar($list, $name)->serialize());
+        $response->getBody()->write($ics->getCalendar($events, $name)->serialize());
         return $response
             ->withHeader('Content-Type', Ics::CONTENT_TYPE)
             ->withHeader('Content-Disposition', 'inline; filename="events.ics"')
-            ->withHeader('Cache-Control', 'private, no-cache');
+            ->withHeader('Cache-Control', $cache . ', no-cache');
+    }
+
+    /**
+     * Public events page
+     */
+    public function publicList(Request $request, Response $response): Response
+    {
+        $events = new Events(
+            zdb: $this->zdb,
+            login: $this->login,
+            history: $this->history,
+            preferences: $this->preferences
+        );
+        $list = $events->getPublic(date('Y-m-d'));
+
+        $calendar_events = [];
+        foreach ($list as $event) {
+            $calendar_events[] = [
+                'id'                => (string)$event->getId(),
+                'title'             => $event->getName(),
+                'backgroundColor'   => $event->getColor(),
+                'borderColor'       => $event->getColor(),
+                'textColor'         => $event->getForegroundColor(),
+            ] + $event->getCalendarBounds();
+        }
+
+        $this->view->render(
+            $response,
+            $this->getTemplate('public_events'),
+            [
+                'page_title'        => _T('Events', 'events'),
+                'module_id'         => $this->getModuleId(),
+                'events'            => $this->getPublicItems($list),
+                'calendar_events'   => $calendar_events,
+                'has_calendar'      => file_exists(__DIR__ . '/../../../../webroot/js/calendar.bundle.js'),
+                'feed_urls'         => $this->getSubscriptionUrls($this->routeparser->urlFor('events_public_feed')),
+            ]
+        );
+        return $response;
+    }
+
+    /**
+     * Public events, with the parts of their begin date their list shows
+     *
+     * @param array<Event> $events Events
+     *
+     * @return list<array{event: Event, month: string, weekday: string, day: string, month_short: string}>
+     */
+    private function getPublicItems(array $events): array
+    {
+        $format = fn(string $pattern): \IntlDateFormatter => new \IntlDateFormatter(
+            locale: $this->i18n->getLongID(),
+            dateType: \IntlDateFormatter::FULL,
+            timeType: \IntlDateFormatter::NONE,
+            timezone: \date_default_timezone_get(),
+            calendar: \IntlDateFormatter::GREGORIAN,
+            pattern: $pattern
+        );
+        $formatters = [
+            'month'         => $format('LLLL y'),
+            'weekday'       => $format('EEE'),
+            'day'           => $format('d'),
+            'month_short'   => $format('LLL'),
+        ];
+
+        $items = [];
+        foreach ($events as $event) {
+            $date = new \DateTimeImmutable($event->getBeginDate());
+            $item = ['event' => $event];
+            foreach ($formatters as $key => $formatter) {
+                $item[$key] = (string)$formatter->format($date);
+            }
+            $items[] = $item;
+        }
+        return $items;
+    }
+
+    /**
+     * Download a public event as an iCalendar file
+     *
+     * @param int $id Event id
+     */
+    public function publicIcs(Request $request, Response $response, int $id): Response
+    {
+        try {
+            $event = new Event(zdb: $this->zdb, login: $this->login, history: $this->history, args: $id);
+        } catch (NotFoundException) {
+            return $response->withStatus(404);
+        }
+
+        //same answer as a missing event, not to disclose it exists
+        if (!$event->isPublic()) {
+            return $response->withStatus(404);
+        }
+
+        $ics = new Ics($this->preferences, $this->routeparser);
+        $response->getBody()->write($ics->getCalendar([$event])->serialize());
+        return $response
+            ->withHeader('Content-Type', Ics::CONTENT_TYPE)
+            ->withHeader('Content-Disposition', 'attachment; filename="' . Ics::getFilename($event) . '"');
+    }
+
+    /**
+     * Public events calendar subscription
+     */
+    public function publicFeed(Request $request, Response $response): Response
+    {
+        $events = new Events(
+            zdb: $this->zdb,
+            login: $this->login,
+            history: $this->history,
+            preferences: $this->preferences
+        );
+        return $this->writeFeed(
+            $response,
+            $events->getPublic((new \DateTimeImmutable('-' . self::FEED_PAST_MONTHS . ' months'))->format('Y-m-d')),
+            'public'
+        );
     }
 
     /**

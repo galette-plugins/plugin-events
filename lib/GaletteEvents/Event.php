@@ -615,6 +615,35 @@ class Event
     }
 
     /**
+     * Get event bounds, as calendar views expect them
+     *
+     * Events with a begin time but no end time end at the end of their
+     * last day when they last several days, and have no end otherwise.
+     *
+     * @param bool $exclusive All day events end the day after their last one
+     *
+     * @return array{start: string, end: ?string, allDay: bool}
+     */
+    public function getCalendarBounds(bool $exclusive = true): array
+    {
+        if ($this->isAllDay()) {
+            $end = new \DateTime($this->end_date);
+            if ($exclusive) {
+                $end->modify('+1 day');
+            }
+            return ['start' => $this->begin_date, 'end' => $end->format('Y-m-d'), 'allDay' => true];
+        }
+
+        $end = null;
+        if ($this->end_time !== null) {
+            $end = $this->end_date . 'T' . $this->end_time;
+        } elseif ($this->end_date !== $this->begin_date) {
+            $end = (new \DateTime($this->end_date))->modify('+1 day')->format('Y-m-d\\TH:i');
+        }
+        return ['start' => $this->begin_date . 'T' . $this->begin_time, 'end' => $end, 'allDay' => false];
+    }
+
+    /**
      * Get event period, for display
      *
      * What both ends share is not repeated: "2026-11-05 18:30 – 20:00",

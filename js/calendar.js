@@ -29,15 +29,23 @@ $(function() {
     buttons: options.buttons,
     headerToolbar: {
       left: 'title',
-      right: 'dayGridMonth,listDay,listWeek,listMonth prevYear,prev,today,next,nextYear'
+      right: options.public
+        ? 'dayGridMonth,listMonth prev,today,next'
+        : 'dayGridMonth,listDay,listWeek,listMonth prevYear,prev,today,next,nextYear'
     },
     height: 'auto',
     locales: allLocales,
     locale: options.locale,
-    weekNumbers: true,
-    events: options.dataurl,
-    selectable: true,
+    weekNumbers: !options.public,
+    //public events are given with the page, member ones are fetched
+    events: options.public ? options.events : options.dataurl,
+    selectable: !options.public,
     eventClick: function(info) {
+      if (options.public) {
+        //public events window is the one of their list
+        $(document).trigger('galette-events:show', [info.event.id]);
+        return;
+      }
       var infos = info.event.extendedProps;
       //description is built and escaped server side, other values must be displayed as text
       $modal.find('.header').text(infos.name + ' (' + infos.period + ')');
@@ -51,6 +59,9 @@ $(function() {
       $modal.modal('show');
     },
     eventMouseEnter: function(info) {
+      if (!info.event.extendedProps.description) {
+        return;
+      }
       $(info.el).popup({
         exclusive: true,
         hoverable: true,
@@ -60,5 +71,40 @@ $(function() {
     }
   });
 
-  calendar.render();
+  var $views = $('#events_views');
+  if (!$views.length) {
+    calendar.render();
+    return;
+  }
+
+  //public page: list or calendar, as last chosen
+  var rendered = false;
+  var showView = function(view) {
+    $views.find('[data-view]').each(function() {
+      var active = $(this).data('view') === view;
+      $(this).toggleClass('active', active).attr('aria-pressed', active ? 'true' : 'false');
+    });
+    $('#events_list').toggleClass('displaynone', view !== 'list');
+    $('#events_calendar').toggleClass('displaynone', view !== 'calendar');
+    //calendar cannot be sized while hidden, it follows its container size once rendered
+    if (view === 'calendar' && !rendered) {
+      calendar.render();
+      rendered = true;
+    }
+    try {
+      window.localStorage.setItem('galette-events-view', view);
+    } catch (e) {
+      //view is just not remembered
+    }
+  };
+  $views.on('click', '[data-view]', function() {
+    showView($(this).data('view'));
+  });
+  var saved = null;
+  try {
+    saved = window.localStorage.getItem('galette-events-view');
+  } catch (e) {
+    //no remembered view
+  }
+  showView(saved === 'calendar' ? 'calendar' : 'list');
 });
