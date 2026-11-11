@@ -25,6 +25,83 @@
     display: flex;
     align-items: flex-end;
 }
+/* public events: display switch and subscription above the list */
+.public-events-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: .5em 1em;
+    margin-bottom: 1em;
+}
+
+.public-events-toolbar #events_views {
+    margin-right: auto;
+}
+
+#events_list .public-events-month:first-child {
+    margin-top: 0;
+}
+
+/* whole item opens the event window, its name is the button for keyboards */
+#events_list .public-event {
+    cursor: pointer;
+    border-radius: .3em;
+    padding: .5em;
+}
+
+#events_list .public-event:hover {
+    background-color: rgba(0, 0, 0, .04);
+}
+
+#events_list .public-event-open {
+    background: none;
+    border: 0;
+    padding: 0;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+#events_list .public-event-open:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+}
+
+/* begin date, as a calendar sheet */
+.public-event-date {
+    flex: none;
+    width: 4em;
+    margin-right: 1.2em;
+    border: 1px solid rgba(34, 36, 38, .15);
+    border-radius: .3em;
+    overflow: hidden;
+    text-align: center;
+    align-self: flex-start;
+}
+
+.public-event-date span {
+    display: block;
+}
+
+.public-event-date .weekday {
+    background-color: #4b5563;
+    color: #ffffff;
+    font-size: .8em;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.public-event-date .day {
+    font-size: 1.6em;
+    font-weight: bold;
+    line-height: 1.3;
+}
+
+.public-event-date .month {
+    font-size: .8em;
+    padding-bottom: .2em;
+}
 
 /* event form: who can see the event, as one segmented choice */
 .event-visibility {
@@ -67,8 +144,9 @@
     outline: none;
 }
 
-/* subscription menu: buttons look like the other menu items, full width, without native background */
-#calendar_subscription .menu > button.item {
+/* subscription menus: buttons look like the other menu items, full width, without native background */
+#calendar_subscription .menu > button.item,
+.public-events-toolbar .menu > button.item {
     width: 100%;
     border: 0;
     background-color: transparent;

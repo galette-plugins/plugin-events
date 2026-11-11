@@ -163,25 +163,8 @@ class Events extends AbstractRepository
                     //required entries for fullcalendar
                     $row['title'] = $row['name'];
                     $row['can_edit'] = $event->canEdit($this->login);
-                    $row['allDay'] = $event->isAllDay();
-                    if ($event->isAllDay()) {
-                        $row['start'] = $row['begin_date'];
-                        $end_date = new \DateTime($event->getEndDate());
-                        if ($fullcalendar === true) {
-                            //all day events end is exclusive
-                            $end_date = $end_date->modify('+1 day');
-                        }
-                        $row['end'] = $end_date->format('Y-m-d');
-                    } else {
-                        $row['start'] = $event->getBeginDate() . 'T' . $event->getBeginTime();
-                        if ($event->getEndTime() !== null) {
-                            $row['end'] = $event->getEndDate() . 'T' . $event->getEndTime();
-                        } elseif ($event->getEndDate() !== $event->getBeginDate()) {
-                            //no end time: event lasts until the end of its last day
-                            $row['end'] = (new \DateTime($event->getEndDate()))->modify('+1 day')->format('Y-m-d\\TH:i');
-                        } else {
-                            $row['end'] = null;
-                        }
+                    foreach ($event->getCalendarBounds($fullcalendar) as $key => $value) {
+                        $row[$key] = $value;
                     }
                     if ($fullcalendar === true) {
                         $row['textColor'] = $event->getForegroundColor();
@@ -275,6 +258,27 @@ class Events extends AbstractRepository
         }
         $select->where->greaterThanOrEqualTo('e.end_date', $since);
         $select->group(['e.' . Event::PK]);
+        $select->order(['e.begin_date', 'e.' . Event::PK]);
+
+        $events = [];
+        foreach ($this->zdb->execute($select) as $row) {
+            $events[] = new Event(zdb: $this->zdb, login: $this->login, history: $this->history, args: $row);
+        }
+        return $events;
+    }
+
+    /**
+     * Get events published on public pages
+     *
+     * @param string $since Events ended before this date, as Y-m-d, are left out
+     *
+     * @return array<Event>
+     */
+    public function getPublic(string $since): array
+    {
+        $select = $this->zdb->select(EVENTS_PREFIX . Event::TABLE, 'e');
+        $select->where(new Predicate\Operator('e.is_public', '=', 1));
+        $select->where->greaterThanOrEqualTo('e.end_date', $since);
         $select->order(['e.begin_date', 'e.' . Event::PK]);
 
         $events = [];
