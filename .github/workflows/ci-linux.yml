@@ -342,3 +342,13 @@ jobs:
         run: |
           cd galette-core/galette/plugins/plugin-events
           ../../vendor/bin/phpunit --test-suffix=.php --bootstrap tests/TestsBootstrap.php --no-coverage --process-isolation tests/GaletteEvents/
+
+  e2e-tests:
+    name: E2E Playwright
+    permissions:
+      contents: read
+    uses: galette/.github/.github/workflows/plugin-e2e.yml@main
+    with:
+      # core develop requires plugins compatible with 1.4
+      galette-ref: master
+      check-url: /plugins/events/events/calendar
