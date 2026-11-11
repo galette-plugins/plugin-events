@@ -7,18 +7,22 @@ Ce plugin fournit :
 
 * gestion d'évènements,
 * association d'activités avec des évènements,
-* gestion des réservations,
-* un calendrier, avec les évènements pour les applications d'agenda,
-* une page publique listant les évènements que vous publiez.
+* booking management,
+* a calendar, with events for calendar applications,
+* a public page listing the events you publish.
 
 ## Installation
 
 Tout d'abord, téléchargez le plugin :
 
-* [Obtenir le dernier plugin Events !](https://github.com/galette-plugins/plugin-events/releases/latest)
-* [Obtenir la nightly du plugin Events !](https://github.com/galette-plugins/plugin-events/releases/tag/nightly)
+* [Obtenir le dernier plugin Events
+  !](https://github.com/galette-plugins/plugin-events/releases/latest)
+* [Obtenir la nightly du plugin Events
+  !](https://github.com/galette-plugins/plugin-events/releases/tag/nightly)
 
-Extrayez l'archive téléchargée dans le dossier `plugins` de Galette. Par exemple, sous linux (en remplaçant `{url}` et `{version}` par les valeurs adéquates) :
+Extrayez l'archive téléchargée dans le dossier `plugins` de Galette. Par
+exemple, sous linux (en remplaçant `{url}` et `{version}` par les valeurs
+adéquates) :
 
 ```bash
 $ cd /var/www/html/galette/plugins
@@ -28,152 +32,233 @@ $ tar xjvf galette-plugin-events-{version}.tar.bz2
 
 ## Initialisation de la base de données
 
-Pour fonctionner, ce plugin requiert des tables dans la base de données. Référez-vous [à l'interface de gestion des plugins de Galette](https://doc.galette.eu/en/master/plugins/index.html#plugins-managment).
+Pour fonctionner, ce plugin requiert des tables dans la base de données.
+Référez-vous [à l'interface de gestion des plugins de
+Galette](https://doc.galette.eu/en/master/plugins/index.html#plugins-managment).
 
 Et c'est terminé, le plugin Events est installé :)
 
 ## Utilisation du plugin
 
-Lorsque le plugin est installé, un groupe `Évènements` est ajouté au menu de Galette lorsqu'un utilisateur est connecté. Il y a plusieurs possibilités qui diffèrent en fonction du profil de l'utilisateur (simple adhérent, responsable de groupe, administrateur, ...).
+Lorsque le plugin est installé, un groupe `Évènements` est ajouté au menu de
+Galette lorsqu'un utilisateur est connecté. Il y a plusieurs possibilités qui
+diffèrent en fonction du profil de l'utilisateur (simple adhérent, responsable
+de groupe, administrateur, ...).
 
 ### Activités
 
-Vous pouvez définir autant d'activités que vous le souhaitez, et les associer à un évènement. Une activité peut être un voyage organisé, un repas, une sortie, un hébergement, ...
+Vous pouvez définir autant d'activités que vous le souhaitez, et les associer à
+un évènement. Une activité peut être un voyage organisé, un repas, une sortie,
+un hébergement, ...
 
 ![La liste des activités](images/list_activities.png)
 
-Une activité se compose d'un nom, d'un statut et éventuellement d'un commentaire.
+Una activité se compose d'un nom, d'un statut et éventuellement d'un
+commentaire.
 
 Pour ajouter une nouvelle activité, cliquez sur le lien « Nouvelle activité » :
 
-![Le formulaire d'une nouvelle activité](images/new_activity.png)
+![La forme d'une nouvelle activité](images/new_activity.png)
 
 ### Évènements
 
-Les évènements sont le cœur du plugin. Vous pouvez définir diverses informations, comme un nom, des dates de début et de fin, un lieu, ...
+Les évènements sont le cœur du plugin. Vous pouvez définir diverses
+informations, comme un nom, des dates de début et de fin, un lieu, ...
 
-![Le formulaire d'un nouvel évènement](images/new_event.png)
+![La forme d'un nouvel événement](images/new_event.png)
 
-Les nom, date de début et ville sont requis. Toutes les autres informations sont optionnelles.
+Les nom, date de début et ville sont requis. Toutes les autres informations sont
+optionnelles.
 
-Le **Résumé** présente l'évènement en quelques mots, dans les listes et sur les pages publiques ; s'il est vide, le début du commentaire est utilisé à la place. Le **Commentaire** est affiché en entier dans le détail de l'évènement.
+The **Summary** presents the event in a few words, in lists and on public pages;
+when it is empty, the beginning of the comment is used instead. The **Comment**
+is shown in full in the event details.
 
-La partie **Quand** définit les dates et heures de l'évènement. Cochez **Toute la journée** pour un évènement sans heures : les champs d'heure sont alors masqués, et les heures saisies auparavant sont ignorées. Sinon, les heures restent facultatives :
+The **When** part sets the dates and times of the event. Check **All day** for
+an event without times: time fields are then hidden, and times typed before are
+ignored. Otherwise, times are optional as well:
 
-* **Sans heure de début** : l'évènement dure toute la journée, de sa date de début à sa date de fin,
-* **Heure de début seule** : l'évènement est affiché à son heure de début, sans fin,
-* **Heures de début et de fin** : sur une même journée, l'heure de fin ne peut pas précéder l'heure de début.
+* **No begin time**: the event lasts all day long, from its begin date to its
+  end date,
+* **Begin time only**: the event is shown at its begin time, without end,
+* **Begin and end times**: on a single day, the end time cannot be before the
+  begin time.
 
-Une heure de fin sans heure de début est refusée. **Affiché ainsi** montre, pendant la saisie, la période telle qu'elle apparaîtra dans les listes, dans le calendrier et sur les pages publiques.
+An end time without begin time is refused. **Displayed as** shows, while you
+type, the period as it will appear in lists, in the calendar and on public
+pages.
 
-> **Note** — Les heures, le résumé et le choix « Qui peut le voir » sont apparus en version 2.4.0.
+> **Note** — Times, summary and the "Who can see it" choice appeared in version
+> 2.4.0.
 
-La partie **Qui peut le voir** définit qui a accès à l'évènement :
+The **Who can see it** part sets who has access to the event:
 
-![Qui peut voir un évènement](images/event_visibility.png)
+![Who can see an event](images/event_visibility.png)
 
-* **Tous les membres** : l'évènement est accessible à tous les adhérents,
-* **Un groupe** : seuls les membres et responsables du groupe choisi (et de ses sous-groupes) y auront accès,
-* **Public** : l'évènement est accessible à tous les adhérents, et il est aussi publié sur les pages publiques de Galette, voir [Évènements publics](#public-events).
+* **Every member**: the event is available for all members,
+* **A group**: only members and managers of the chosen group (and of its
+  subgroups) will have access,
+* **Public**: the event is available for all members, and is also published on
+  Galette public pages, see [Public events](#public-events).
 
 > **Note**
->
-> Les responsables de groupe n'ont pas ce choix : ils doivent choisir l'un des groupes qu'ils gèrent, et ne peuvent pas publier d'évènements.
+> 
+> Group managers do not get this choice: they must choose one of the groups they
+> own, and cannot publish events.
 
-Vous pouvez attacher une ou plusieurs activités à chaque évènement, et pour chacune d'entre elles si elle est disponible, non disponible ou encore obligatoire. Choisissez l'activité à ajouter et cliquez sur le bouton.
+Vous pouvez attacher une ou plusieurs activités à chaque évènement, et pour
+chacune d'entre elles si elle est disponible, non disponible ou encore
+obligatoire. Choisissez l'activité à ajouter et cliquez sur le bouton.
 
-![Les activités liées à un évènement](images/event_activities.png)
+![Les activités liées à un événement](images/event_activities.png)
 
 > **Attention**
->
-> Ajouter ou supprimer une activité d'un évènement rechargera la page et vous demandera d'enregistrer les informations requises. Néanmoins (et c'est précisé à chaque fois), l'évènement **ne sera pas enregistré** pendant cette opération.
->
+> 
+> Ajouter ou supprimer une activité d'un évènement rechargera la page et vous
+> demandera d'enregistrer les informations requises. Néanmoins (et c'est précisé
+> à chaque fois), l'évènement **ne sera pas enregistré** pendant cette
+> opération.
+> 
 > Assurez-vous de sauvegarder l'évènement :)
 
-Depuis la liste des évènements, vous pouvez modifier ou supprimer des entrées, accéder à la liste des réservations, exporter ces dernières en CSV, ou télécharger l'évènement pour les applications d'agenda. La colonne de date montre toute la période de l'évènement, avec ses heures s'il en a.
+From Events list, you can edit or remove entries, access to booking list, export
+bookings as CSV, or download the event for calendar applications. The date
+column shows the whole period of the event, with its times when it has some.
 
-![La liste des évènements](images/events_list.png)
+![La liste des événements](images/events_list.png)
 
-### Calendrier
+### Calendar
 
-L'entrée `Calendrier` du menu affiche les évènements que vous pouvez voir, par mois ou en listes quotidienne, hebdomadaire et mensuelle. Pour les adhérents, il montre aussi les évènements passés et fermés, que la liste des évènements laisse de côté. Cliquez sur un évènement pour en voir le détail :
+The `Calendar` entry of the menu displays the events you can see, by month or as
+daily, weekly and monthly lists. For members, it also shows past and closed
+events, that the events list leaves out. Click on an event to get its details:
 
-![Un évènement dans le calendrier](images/calendar_event.png)
+![An event in the calendar](images/calendar_event.png)
 
-De là, vous pouvez modifier l'évènement (si vous y êtes autorisé), ajouter une nouvelle réservation ou télécharger l'évènement.
+From there, you can edit the event (if you are allowed to), add a new booking,
+or download the event.
 
-### Applications d'agenda
+### Calendar applications
 
-Les évènements peuvent être ajoutés aux applications d'agenda, comme Thunderbird, Google Agenda, Outlook ou l'agenda de votre téléphone, grâce au format iCalendar (fichiers `.ics`).
+Events can be added to calendar applications, such as Thunderbird, Google
+Calendar, Outlook or the calendar of your phone, using the iCalendar format
+(`.ics` files).
 
-> **Note** — Ajouté en version 2.4.0.
+> **Note** — Added in version 2.4.0.
 
-#### Télécharger un évènement
+#### Download an event
 
-Utilisez l'icône de téléchargement de la liste des évènements, ou le bouton **Télécharger** du détail de l'évènement dans le calendrier. Vous obtenez un fichier `.ics` à ouvrir ou à importer dans votre application d'agenda. Il contient les dates et heures de l'évènement, son lieu, son commentaire, les activités proposées et un lien pour réserver.
+Use the download icon of the events list, or the **Download** button of the
+event details in the calendar. You get a `.ics` file to open or import in your
+calendar application. It contains the dates and times of the event, its
+location, its comment, the activities it offers, and a link to book it.
 
-Un évènement téléchargé est une copie : il ne changera pas dans votre application d'agenda si l'évènement est modifié dans Galette. Téléchargez-le à nouveau, ou abonnez-vous plutôt.
+A downloaded event is a copy: it will not change in your calendar application if
+the event is changed in Galette. Download it again, or subscribe instead.
 
-#### S'abonner aux évènements
+#### Subscribe to events
 
-Un abonnement tient votre application d'agenda à jour toute seule. Utilisez le bouton **S'abonner** de la page du calendrier : il ajoute l'abonnement dans votre application d'agenda par défaut. La première fois, il crée votre adresse d'abonnement personnelle.
+A subscription keeps your calendar application up to date by itself. Use the
+**Subscribe** button of the calendar page: it adds the subscription in your
+default calendar application. The first time, it creates your personal
+subscription address.
 
-La flèche à côté du bouton donne d'autres options :
+The arrow next to the button gives other options:
 
-![Options d'abonnement](images/calendar_subscription.png)
+![Subscription options](images/calendar_subscription.png)
 
-* **Copier mon adresse d'abonnement**, pour l'ajouter à la main comme abonnement (parfois appelé « agenda depuis Internet » ou « nouvel agenda depuis une URL ») dans votre application,
-* **Changer mon adresse d'abonnement…**, voir plus bas,
-* **Comment s'abonner ?** explique comment s'abonner depuis les applications d'agenda les plus courantes :
+* **Copy my subscription address**, to add it by hand as a calendar subscription
+  (sometimes named "calendar from the Internet", or "new calendar from URL") in
+  your application,
+* **Change my subscription address…**, see below,
+* **How to subscribe?** explains how to subscribe from the most common calendar
+  applications:
 
-![Comment s'abonner](images/subscription_help.png)
+![How to subscribe](images/subscription_help.png)
 
-L'abonnement contient les mêmes évènements que votre calendrier : les évènements qui ne sont pas restreints à un groupe, ceux de vos groupes et ceux que vous avez réservés, fermés compris. Les évènements terminés depuis plus d'un an sont laissés de côté. Les textes sont dans votre langue.
+The subscription contains the same events as your calendar: events that are not
+restricted to a group, the ones of your groups, and the ones you have booked,
+closed ones included. Events ended for more than a year are left out. Texts are
+in your language.
 
-Les applications d'agenda rafraîchissent les abonnements à leur propre rythme ; Galette demande toutes les heures, mais certaines applications rafraîchissent moins souvent (Google Agenda peut mettre jusqu'à un jour).
+Calendar applications refresh subscriptions on their own schedule; Galette asks
+for every hour, but some applications refresh less often (Google Calendar may
+take up to a day).
 
 > **Attention**
->
-> L'adresse d'abonnement est personnelle : toute personne qui la connaît peut voir vos évènements, sans connexion. Si elle a été divulguée, utilisez **Changer mon adresse d'abonnement…** : une fois confirmé, l'ancienne cesse aussitôt de fonctionner, et vous devrez vous abonner à nouveau avec la nouvelle.
+> 
+> The subscription address is personal: anyone who knows it can see your events,
+> without login. If it has been disclosed, use **Change my subscription
+> address…**: once you confirm, the previous one stops working at once, and you
+> will have to subscribe again with the new one.
 
-L'adresse cesse aussi de fonctionner lorsque le compte de l'adhérent est désactivé. Le super administrateur, qui n'est pas un adhérent, n'a pas d'abonnement.
+The address stops working as well when the member account is disabled. Super
+administrator, who is not a member, has no subscription.
 
-#### Heures et fuseau horaire
+#### Times and time zone
 
-Les heures sont transmises aux applications d'agenda en temps universel (UTC), converties depuis le fuseau horaire du serveur : chaque application les affiche ensuite dans son propre fuseau. Si les heures sont décalées dans les applications d'agenda, le fuseau horaire PHP du serveur (réglage `date.timezone`) n'est probablement pas celui de votre association ; demandez à votre hébergeur ou à votre administrateur de le corriger.
+Times are given to calendar applications in universal time (UTC), converted from
+the time zone of the server: each application then displays them in its own time
+zone. If times are shifted in calendar applications, the PHP time zone
+(`date.timezone` setting) of the server is probably not the one of your
+association; ask your host or administrator to fix it.
 
 ### Réservations
 
-Les réservations peuvent être enregistrées sur chaque évènement. Comme dit précédemment, les simples membres et responsables de groupes seront limités aux évènements liés aux groupes auxquels ils appartiennent, ou à ceux qui ne sont pas restreints à un groupe.
+Les réservations peuvent être enregistrées sur chaque évènement. Comme dit
+précédemment, les simples membres et responsables de groupes seront limités aux
+évènements liés aux groupes auxquels ils appartiennent, ou à ceux qui ne sont
+pas restreints à un groupe.
 
-Ajouter une nouvelle réservation se fait depuis l'entrée de menu « Nouvelle réservation » ou depuis la liste des réservations.
+Ajouter une nouvelle réservation se fait depuis l'entrée de menu « Nouvelle
+réservation » ou depuis la liste des réservations.
 
 ![Le formulaire de nouvelle réservation](images/new_booking.png)
 
-Les réservations sont closes dès que l'évènement est marqué comme fermé, ou si la date de début est dépassée. Les administrateurs et membres du bureau peuvent toujours ajouter de nouvelles réservations.
+Les réservations sont closes dès que l'évènement est marqué comme fermé, ou si
+la date de début est dépassée. Les administrateurs et membres du bureau peuvent
+toujours ajouter de nouvelles réservations.
 
-La liste des activités est récupérée depuis l'évènement ; celles qui sont obligatoires doivent bien sûr être cochées lors de la réservation.
+La liste des activités est récupérée depuis l'évènement ; celles qui sont
+obligatoires doivent bien sur être cochées lors de la réservation.
 
 ![La liste des réservations](images/bookings_list.png)
 
-Vous pouvez filtrer la liste des réservations par évènement, type ou statut de paiement. Vous pouvez envoyer des mailings aux membres qui ont réservé, en utilisant le mécanisme de mailing de Galette.
+Vous pouvez filtrer la liste des évènements par évènement, type ou statut de
+paiement. Vous pouvez envoyer des mailings aux membres qui ont réservé, en
+utilisant le mécanisme de mailing de Galette.
 
-### Évènements publics
+### Public events
 
-Les évènements peuvent être montrés aux personnes qui ne sont pas connectées, sur une page publique, avec un abonnement pour les applications d'agenda qui ne demande aucun compte.
+Events can be shown to people who are not logged in, on a public page, with a
+subscription for calendar applications that requires no account.
 
-> **Note** — Ajouté en version 2.4.0.
+> **Note** — Added in version 2.4.0.
 
-Pour publier un évènement, choisissez **Public** dans la partie **Qui peut le voir** de son formulaire. Seuls les évènements qui ne sont pas restreints à un groupe peuvent être publics : un évènement limité à certains membres ne peut pas être montré à tout le monde. Les responsables de groupe, qui doivent choisir l'un de leurs groupes, ne peuvent pas publier d'évènements.
+To publish an event, choose **Public** in the **Who can see it** part of its
+form. Only events that are not restricted to a group can be public: an event
+limited to some members cannot be shown to anyone. Group managers, who must
+choose one of their groups, cannot publish events.
 
-Lorsque les pages publiques sont activées, le menu des pages publiques reçoit une entrée `Évènements`, qui liste par mois les évènements publics à venir, avec leurs dates, ville, résumé et activités ; les réservations et les participants ne sont jamais montrés. Le bouton **Calendrier** les affiche plutôt dans un calendrier ; la page retient votre choix.
+When public pages are enabled, the public pages menu gets an `Events` entry,
+that lists upcoming public events by month, with their dates, town, summary and
+activities; bookings and attendees are never shown. The **Calendar** button
+displays them in a calendar instead; the page remembers your choice.
 
-![La page des évènements publics](images/public_events.png)
+![Public events page](images/public_events.png)
 
-Cliquez sur le nom d'un évènement pour en voir le détail : adresse complète avec un lien vers une carte, commentaire et activités. **Ajouter à mon agenda** télécharge l'évènement pour les applications d'agenda, sans aucun compte.
+Click on an event name to get its details: full address with a link to a map,
+comment, and activities. **Add to my calendar** downloads the event for calendar
+applications, without any account.
 
-![Le détail d'un évènement public](images/public_event_details.png)
+![Public event details](images/public_event_details.png)
 
-Le bouton **S'abonner** ajoute tous les évènements publics à une application d'agenda, et les tient à jour ; sa flèche permet de copier l'adresse d'abonnement, ou explique comment s'abonner. Cette adresse n'est pas personnelle : c'est la même pour tout le monde.
+The **Subscribe** button adds all public events to a calendar application, and
+keeps them up to date; its arrow lets you copy the subscription address, or
+explains how to subscribe. This address is not personal: it is the same for
+everyone.
 
-Qui peut voir cette page et son abonnement se règle avec les autres visibilités des pages publiques, depuis les préférences de Galette : le réglage **Évènements** suit la visibilité par défaut, sauf si vous le changez. Voir [qui peut voir les pages publiques](https://doc.galette.eu/en/master/usermanual/public_pages.html#who-can-see-them).
+Who can see this page and its subscription is set with the other public pages
+visibilities, from Galette settings: the **Events** setting follows the default
+visibility unless you change it. See [who can see public
+pages](https://doc.galette.eu/en/master/usermanual/public_pages.html#who-can-see-them).
