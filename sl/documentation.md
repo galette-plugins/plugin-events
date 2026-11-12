@@ -7,9 +7,9 @@ Ta vtičnik ponuja:
 
 * upravljanje dogodkov,
 * povezovanje dejavnosti z dogodki,
-* booking management,
-* a calendar, with events for calendar applications,
-* a public page listing the events you publish.
+* upravljanje rezervacij,
+* koledar z dogodki za aplikacije koledarja,
+* javna stran, na kateri so navedeni dogodki, ki jih objavite.
 
 ## Namestitev
 
@@ -65,41 +65,42 @@ začetni in končni datum, lokacija, ...
 
 Ime, datum začetka in kraj so obvezni. Vsi drugi podatki so popolnoma neobvezni.
 
-The **Summary** presents the event in a few words, in lists and on public pages;
-when it is empty, the beginning of the comment is used instead. The **Comment**
-is shown in full in the event details.
+**Povzetek** dogodek predstavi z nekaj besedami, v seznamih in na javnih
+straneh; če je prazen, se namesto njega uporabi začetek komentarja. **Komentar**
+je v podrobnostih dogodka prikazan v celoti.
 
-The **When** part sets the dates and times of the event. Check **All day** for
-an event without times: time fields are then hidden, and times typed before are
-ignored. Otherwise, times are optional as well:
+Razdelek **Kdaj** določa datume in ure dogodka. Za dogodek brez določenih ur
+označite možnost **Ves dan** – polja za vnos časa bodo skrita, predhodno vneseni
+podatki o času pa bodo prezrti. Sicer pa vnos časa tudi v drugih primerih ni
+obvezen:
 
-* **No begin time**: the event lasts all day long, from its begin date to its
-  end date,
-* **Begin time only**: the event is shown at its begin time, without end,
-* **Begin and end times**: on a single day, the end time cannot be before the
-  begin time.
+* **Brez začetnega časa**: dogodek traja ves dan, od začetnega do končnega
+  datuma,
+* **Samo začetni čas**: dogodek je prikazan ob svojem začetnem času, brez konca,
+* **Čas začetka in konca**: znotraj istega dne čas konca ne more biti pred časom
+  začetka.
 
-An end time without begin time is refused. **Displayed as** shows, while you
-type, the period as it will appear in lists, in the calendar and on public
-pages.
+Končni čas brez začetnega časa ni dovoljen. **Prikaz kot** med vnašanjem
+prikazuje časovno obdobje tako, kot bo vidno na seznamih, v koledarju in na
+javnih straneh.
 
-> **Note** — Times, summary and the "Who can see it" choice appeared in version
-> 2.4.0.
+> **Opomba** — Časi, povzetek in izbira »Kdo lahko vidi« so se pojavili v
+> različici 2.4.0.
 
-The **Who can see it** part sets who has access to the event:
+V razdelku **Kdo lahko to vidi** določite, kdo ima dostop do dogodka:
 
-![Who can see an event](images/event_visibility.png)
+![Kdo lahko vidi dogodek](images/event_visibility.png)
 
-* **Every member**: the event is available for all members,
-* **A group**: only members and managers of the chosen group (and of its
-  subgroups) will have access,
-* **Public**: the event is available for all members, and is also published on
-  Galette public pages, see [Public events](#public-events).
+* **Vsak član**: dogodek je na voljo vsem članom,
+* **Skupina**: dostop bodo imeli samo člani in upravitelji izbrane skupine (in
+  njenih podskupin),
+* **Javno**: dogodek je na voljo vsem članom in je objavljen tudi na javnih
+  straneh platforme Galette; glejte [Javni dogodki](#public-events).
 
 > **Opomba**
 > 
-> Group managers do not get this choice: they must choose one of the groups they
-> own, and cannot publish events.
+> Vodje skupin te izbire nimajo: izbrati morajo eno od skupin, ki jih
+> upravljajo, in ne morejo objavljati dogodkov.
 
 Vsakemu dogodku lahko dodate eno ali več dejavnosti in za vsako nastavite, ali
 je na voljo, ni na voljo ali je celo obvezna. Izberite dejavnost, ki jo želite
@@ -115,87 +116,91 @@ dodati, in kliknite gumb.
 > 
 > Poskrbite, da boste dogodek shranili :)
 
-From Events list, you can edit or remove entries, access to booking list, export
-bookings as CSV, or download the event for calendar applications. The date
-column shows the whole period of the event, with its times when it has some.
+Na seznamu dogodkov lahko urejate ali brišete vnose, dostopate do seznama
+rezervacij, izvozite rezervacije v formatu CSV ali prenesete dogodek za uporabo
+v koledarskih aplikacijah. Stolpec z datumom prikazuje celotno trajanje dogodka,
+vključno s časovnimi podatki, če so ti navedeni.
 
 ![Seznam dogodkov](images/events_list.png)
 
-### Calendar
+### Koledar
 
-The `Calendar` entry of the menu displays the events you can see, by month or as
-daily, weekly and monthly lists. For members, it also shows past and closed
-events, that the events list leaves out. Click on an event to get its details:
+Vnos `Koledar` v meniju prikazuje dogodke, ki so vam vidni – bodisi po mesecih
+bodisi v obliki dnevnih, tedenskih in mesečnih seznamov. Za člane so prikazani
+tudi pretekli in zaključeni dogodki, ki jih sicer seznam dogodkov ne vključuje.
+Kliknite na dogodek za ogled podrobnosti:
 
-![An event in the calendar](images/calendar_event.png)
+![Dogodek v koledarju](images/calendar_event.png)
 
-From there, you can edit the event (if you are allowed to), add a new booking,
-or download the event.
+Od tam lahko dogodek uredite (če imate za to dovoljenje), dodate novo
+rezervacijo ali dogodek prenesete.
 
-### Calendar applications
+### Koledarske aplikacije
 
-Events can be added to calendar applications, such as Thunderbird, Google
-Calendar, Outlook or the calendar of your phone, using the iCalendar format
-(`.ics` files).
+Dogodke lahko dodate v koledarske aplikacije, kot so Thunderbird, Google
+Koledar, Outlook ali koledar na vašem telefonu, z uporabo formata iCalendar
+(datoteke `.ics`).
 
-> **Note** — Added in version 2.4.0.
+> **Opomba** — Dodano v različici 2.4.0.
 
-#### Download an event
+#### Prenesi dogodek
 
-Use the download icon of the events list, or the **Download** button of the
-event details in the calendar. You get a `.ics` file to open or import in your
-calendar application. It contains the dates and times of the event, its
-location, its comment, the activities it offers, and a link to book it.
+Uporabite ikono za prenos na seznamu dogodkov ali gumb **Prenesi** v
+podrobnostih dogodka v koledarju. Prejeli boste datoteko `.ics`, ki jo lahko
+odprete ali uvozite v svojo koledarsko aplikacijo. Datoteka vsebuje datum in uro
+dogodka, lokacijo, komentar, ponujene dejavnosti ter povezavo za rezervacijo.
 
-A downloaded event is a copy: it will not change in your calendar application if
-the event is changed in Galette. Download it again, or subscribe instead.
+Prenesen dogodek je kopija: če se dogodek v sistemu Galette spremeni, se v vaši
+koledarski aplikaciji ne bo posodobil. Prenesite ga znova ali pa se raje
+naročite na koledar.
 
-#### Subscribe to events
+#### Naročite se na dogodke
 
-A subscription keeps your calendar application up to date by itself. Use the
-**Subscribe** button of the calendar page: it adds the subscription in your
-default calendar application. The first time, it creates your personal
-subscription address.
+Naročnina samodejno poskrbi, da je vaša koledarska aplikacija vedno
+posodobljena. Uporabite gumb **Naroči se** na strani koledarja; ta doda
+naročnino v vašo privzeto koledarsko aplikacijo. Ob prvi uporabi se ustvari vaš
+osebni naslov za naročnino.
 
-The arrow next to the button gives other options:
+Puščica ob gumbu ponuja druge možnosti:
 
-![Subscription options](images/calendar_subscription.png)
+![Možnosti naročnine](images/calendar_subscription.png)
 
-* **Copy my subscription address**, to add it by hand as a calendar subscription
-  (sometimes named "calendar from the Internet", or "new calendar from URL") in
-  your application,
-* **Change my subscription address…**, see below,
-* **How to subscribe?** explains how to subscribe from the most common calendar
-  applications:
+* **Kopiraj moj naslov za naročnino**, da ga ročno dodaš kot naročnino na
+  koledar (včasih imenovano »koledar iz interneta« ali »nov koledar iz URL-ja«)
+  v svojo aplikacijo,
+* **Sprememba naslova za naročnino…**, glejte spodaj,
+* **Kako se naročiti?** pojasnjuje, kako se naročiti prek najpogostejših
+  koledarskih aplikacij:
 
-![How to subscribe](images/subscription_help.png)
+![Kako se naročiti](images/subscription_help.png)
 
-The subscription contains the same events as your calendar: events that are not
-restricted to a group, the ones of your groups, and the ones you have booked,
-closed ones included. Events ended for more than a year are left out. Texts are
-in your language.
+Naročnina vključuje iste dogodke kot vaš koledar: dogodke, ki niso omejeni na
+določeno skupino, dogodke vaših skupin ter dogodke, ki ste jih rezervirali
+(vključno z zaključenimi). Dogodki, ki so se zaključili pred več kot enim letom,
+so izpuščeni. Besedila so v vašem jeziku.
 
-Calendar applications refresh subscriptions on their own schedule; Galette asks
-for every hour, but some applications refresh less often (Google Calendar may
-take up to a day).
+Koledarske aplikacije osvežujejo naročnine po lastnem urniku; Galette zahteva
+osvežitev vsako uro, nekatere aplikacije pa to počnejo redkeje (pri Google
+Koledarju lahko to traja tudi do en dan).
 
 > **Opozorilo**
 > 
-> The subscription address is personal: anyone who knows it can see your events,
-> without login. If it has been disclosed, use **Change my subscription
-> address…**: once you confirm, the previous one stops working at once, and you
-> will have to subscribe again with the new one.
+> Naslov za naročanje je oseben: vsakdo, ki ga pozna, lahko vidi vaše dogodke,
+> ne da bi se moral prijaviti. Če je prišlo do razkritja naslova, uporabite
+> možnost **Spremeni moj naslov za naročanje …**: takoj ko potrdite, prejšnji
+> naslov preneha delovati, vi pa se boste morali znova naročiti z uporabo novega
+> naslova.
 
-The address stops working as well when the member account is disabled. Super
-administrator, who is not a member, has no subscription.
+Ko je članski račun onemogočen, preneha delovati tudi naslov.
+Superadministrator, ki ni član, nima naročnine.
 
-#### Times and time zone
+#### Časi in časovni pas
 
-Times are given to calendar applications in universal time (UTC), converted from
-the time zone of the server: each application then displays them in its own time
-zone. If times are shifted in calendar applications, the PHP time zone
-(`date.timezone` setting) of the server is probably not the one of your
-association; ask your host or administrator to fix it.
+Časi se koledarskim aplikacijam posredujejo v univerzalnem času (UTC),
+preračunani iz časovnega pasu strežnika; vsaka aplikacija jih nato prikaže v
+svojem časovnem pasu. Če so časi v koledarskih aplikacijah zamaknjeni, časovni
+pas PHP na strežniku (nastavitev `date.timezone`) verjetno ne ustreza časovnemu
+pasu vašega društva; prosite ponudnika gostovanja ali skrbnika, da to popravi.
 
 ### Rezervacije
 
@@ -220,37 +225,40 @@ Seznam rezervacij lahko filtrirate po dogodku, vrsti plačila ali statusu
 plačila. Nato lahko rezerviranim članom pošljete pošto z uporabo standardnega
 poštnega mehanizma Galette.
 
-### Public events
+### Javni dogodki
 
-Events can be shown to people who are not logged in, on a public page, with a
-subscription for calendar applications that requires no account.
+Dogodke je mogoče prikazati osebam, ki niso prijavljene – na javni strani, prek
+naročnine na koledarske aplikacije, ki ne zahteva uporabniškega računa.
 
-> **Note** — Added in version 2.4.0.
+> **Opomba** — Dodano v različici 2.4.0.
 
-To publish an event, choose **Public** in the **Who can see it** part of its
-form. Only events that are not restricted to a group can be public: an event
-limited to some members cannot be shown to anyone. Group managers, who must
-choose one of their groups, cannot publish events.
+Če želite dogodek objaviti, v obrazcu v razdelku **Kdo ga lahko vidi** izberite
+možnost **Javno**. Javni so lahko le dogodki, ki niso omejeni na določeno
+skupino; dogodka, ki je omejen na določene člane, ni mogoče prikazati nikomur.
+Upravitelji skupin, ki morajo izbrati eno od svojih skupin, dogodkov ne morejo
+objaviti.
 
-When public pages are enabled, the public pages menu gets an `Events` entry,
-that lists upcoming public events by month, with their dates, town, summary and
-activities; bookings and attendees are never shown. The **Calendar** button
-displays them in a calendar instead; the page remembers your choice.
+Ko so omogočene javne strani, meni javnih strani vključuje postavko `Dogodki`,
+ki po mesecih prikazuje prihajajoče javne dogodke, vključno z datumi, krajem,
+povzetkom in dejavnostmi; podatki o rezervacijah in udeležencih niso nikoli
+prikazani. Gumb **Koledar** te dogodke prikaže v obliki koledarja, pri čemer si
+stran zapomni vašo izbiro.
 
-![Public events page](images/public_events.png)
+![Stran z javnimi dogodki](images/public_events.png)
 
-Click on an event name to get its details: full address with a link to a map,
-comment, and activities. **Add to my calendar** downloads the event for calendar
-applications, without any account.
+Kliknite na ime dogodka za ogled podrobnosti: polni naslov s povezavo do
+zemljevida, komentar in dejavnosti. Z izbiro **Dodaj v moj koledar** lahko
+dogodek prenesete v koledarske aplikacije, ne da bi za to potrebovali
+uporabniški račun.
 
-![Public event details](images/public_event_details.png)
+![Podrobnosti o javnem dogodku](images/public_event_details.png)
 
-The **Subscribe** button adds all public events to a calendar application, and
-keeps them up to date; its arrow lets you copy the subscription address, or
-explains how to subscribe. This address is not personal: it is the same for
-everyone.
+Gumb **Naroči se** doda vse javne dogodke v koledarsko aplikacijo in skrbi za
+njihovo posodabljanje; puščica ob njem omogoča kopiranje naslova za naročanje
+oziroma pojasnjuje postopek naročanja. Ta naslov ni oseben: za vse je enak.
 
-Who can see this page and its subscription is set with the other public pages
-visibilities, from Galette settings: the **Events** setting follows the default
-visibility unless you change it. See [who can see public
-pages](https://doc.galette.eu/en/master/usermanual/public_pages.html#who-can-see-them).
+Dostop do te strani in njene naročnine je določen v skladu z nastavitvami
+vidnosti za druge javne strani v razdelku z nastavitvami sistema Galette:
+nastavitev za **dogodke** (Events) privzeto sledi nastavitvi vidnosti, razen če
+jo spremenite. Glejte [kdo lahko vidi javne
+strani](https://doc.galette.eu/en/master/usermanual/public_pages.html#who-can-see-them).
