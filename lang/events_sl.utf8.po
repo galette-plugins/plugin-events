@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: translations@galette.eu\n"
 "POT-Creation-Date: 2026-11-12 00:28+0100\n"
-"PO-Revision-Date: 2026-11-12 09:04+0000\n"
+"PO-Revision-Date: 2026-11-13 09:51+0000\n"
 "Last-Translator: Jože Felicijan <felicijan@users.noreply.hosted.weblate.org>"
 "\n"
 "Language-Team: Slovenian <https://hosted.weblate.org/projects/galette/events-"
@@ -20,7 +20,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=4; plural=n%100==1 ? 0 : n%100==2 ? 1 : n%100==3 || "
 "n%100==4 ? 2 : 3;\n"
-"X-Generator: Weblate 2026.11.2.dev0\n"
+"X-Generator: Weblate 2026.12.dev0\n"
 
 #: ../lib/GaletteEvents/Activity.php:86 ../lib/GaletteEvents/Event.php:168
 msgid "Name is mandatory"
@@ -987,36 +987,40 @@ msgstr "Prilepite naslov za naročanje in koledarju določite ime."
 
 #: ../templates/default/subscription_help.html.twig:13
 msgid "Thunderbird"
-msgstr ""
+msgstr "Thunderbird"
 
 #: ../templates/default/subscription_help.html.twig:13
 msgid "Use “Open in my calendar application”."
-msgstr ""
+msgstr "Uporabite »Odpri v moji koledarski aplikaciji«."
 
 #: ../templates/default/subscription_help.html.twig:13
 msgid ""
 "Or choose File › New › Calendar › On the network and paste the subscription "
 "address."
 msgstr ""
+"Ali pa izberite Datoteka › Novo › Koledar › V omrežju in prilepite naslov "
+"naročnine."
 
 #: ../templates/default/subscription_help.html.twig:46
 msgid "How to subscribe"
-msgstr ""
+msgstr "Kako se vpisati"
 
 #: ../templates/default/subscription_help.html.twig:59
 msgid "Open in my calendar application"
-msgstr ""
+msgstr "Odpri v moji koledarski aplikaciji"
 
 #: ../templates/default/subscription_help.html.twig:66
 msgid "Get my subscription address"
-msgstr ""
+msgstr "Pridobi moj naslov za naročnino"
 
 #: ../templates/default/subscription_help.html.twig:89
 msgid "Subscription address"
-msgstr ""
+msgstr "Naslov za naročnino"
 
 #: ../templates/default/subscription_help.html.twig:99
 msgid ""
 "This address is personal: anyone who knows it can see your events. If it has "
 "been disclosed, change it."
 msgstr ""
+"Ta naslov je oseben: vsakdo, ki ga pozna, lahko vidi vaše dogodke. Če je "
+"postal znan drugim, ga spremenite."
