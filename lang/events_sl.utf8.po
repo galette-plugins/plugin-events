@@ -3,13 +3,15 @@
 # This file is distributed under the same license as the PACKAGE package.
 # Jože Felicijan <joze@felicijan.com>, 2026.
 # Johan Cwiklinski <trasher@x-tnd.be>, 2026.
+# Jože Felicijan <felicijan@users.noreply.hosted.weblate.org>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: translations@galette.eu\n"
 "POT-Creation-Date: 2026-11-12 00:28+0100\n"
-"PO-Revision-Date: 2026-10-08 20:44+0000\n"
-"Last-Translator: Jože Felicijan <joze@felicijan.com>\n"
+"PO-Revision-Date: 2026-11-12 09:04+0000\n"
+"Last-Translator: Jože Felicijan <felicijan@users.noreply.hosted.weblate.org>"
+"\n"
 "Language-Team: Slovenian <https://hosted.weblate.org/projects/galette/events-"
 "plugin/sl/>\n"
 "Language: sl\n"
@@ -18,7 +20,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=4; plural=n%100==1 ? 0 : n%100==2 ? 1 : n%100==3 || "
 "n%100==4 ? 2 : 3;\n"
-"X-Generator: Weblate 2026.10.1.dev0\n"
+"X-Generator: Weblate 2026.11.2.dev0\n"
 
 #: ../lib/GaletteEvents/Activity.php:86 ../lib/GaletteEvents/Event.php:168
 msgid "Name is mandatory"
@@ -200,6 +202,8 @@ msgid ""
 "Your subscription address has been changed: calendar applications subscribed "
 "to the previous one no longer get updates."
 msgstr ""
+"Naslov vaše naročnine se je spremenil: koledarske aplikacije, naročene na "
+"prejšnji naslov, ne prejemajo več posodobitev."
 
 #: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:306
 #: ../lib/GaletteEvents/Controllers/Crud/EventsController.php:342
@@ -290,7 +294,7 @@ msgstr "seznam rezervacij"
 
 #: ../lib/GaletteEvents/Event.php:126
 msgid "Please choose the group that can see the event"
-msgstr ""
+msgstr "Izberite skupino, ki lahko vidi dogodek"
 
 #: ../lib/GaletteEvents/Event.php:139
 msgid "Begin date is mandatory"
@@ -320,21 +324,17 @@ msgstr "Mesto je obvezno"
 #: ../lib/GaletteEvents/Event.php:214
 #, php-format
 msgid "Summary cannot be longer than %1$s characters"
-msgstr ""
+msgstr "Povzetek ne sme biti daljši od %1$s znakov"
 
 #: ../lib/GaletteEvents/Event.php:276
 msgid "An event restricted to a group cannot be public"
-msgstr ""
+msgstr "Dogodek, omejen na določeno skupino, ne more biti javen"
 
 #: ../lib/GaletteEvents/Event.php:312 ../templates/default/event.html.twig:78
-#, fuzzy
-#| msgid "Begin date"
 msgid "Begin time"
 msgstr "Začetni datum"
 
 #: ../lib/GaletteEvents/Event.php:313 ../templates/default/event.html.twig:94
-#, fuzzy
-#| msgid "End date"
 msgid "End time"
 msgstr "Končni datum"
 
@@ -342,15 +342,13 @@ msgstr "Končni datum"
 #: ../lib/GaletteEvents/Event.php:328
 #, php-format
 msgid "- Wrong time format (%1$s) for %2$s!"
-msgstr ""
+msgstr "- Napačen format časa (%1$s) za %2$s!"
 
 #: ../lib/GaletteEvents/Event.php:338
 msgid "End time requires a begin time"
-msgstr ""
+msgstr "Končni čas zahteva začetni čas"
 
 #: ../lib/GaletteEvents/Event.php:344
-#, fuzzy
-#| msgid "End date must be later or equal to begin date"
 msgid "End time must be later or equal to begin time"
 msgstr "Končni datum mora biti poznejši ali enak začetnemu datumu"
 
@@ -643,56 +641,62 @@ msgid ""
 "Add events you can see to your calendar application: it will keep them up to "
 "date by itself."
 msgstr ""
+"Dodajte dogodke, ki jih vidite, v svojo koledarsko aplikacijo; ta jih bo "
+"samodejno posodabljala."
 
 #: ../templates/default/calendar.html.twig:16
 #: ../templates/default/calendar.html.twig:21
 #: ../templates/default/public_events.html.twig:27
 msgid "Subscribe"
-msgstr ""
+msgstr "Naroči"
 
 #: ../templates/default/calendar.html.twig:24
 #: ../templates/default/calendar.html.twig:26
 #: ../templates/default/public_events.html.twig:29
 #: ../templates/default/public_events.html.twig:31
 msgid "More subscription options"
-msgstr ""
+msgstr "Več možnosti naročnine"
 
 #: ../templates/default/calendar.html.twig:38
 msgid "Copy my subscription address"
-msgstr ""
+msgstr "Kopiraj moj naslov za naročnino"
 
 #: ../templates/default/calendar.html.twig:42
 msgid "Change my subscription address…"
-msgstr ""
+msgstr "Spremeni naslov za naročnino …"
 
 #: ../templates/default/calendar.html.twig:48
 #: ../templates/default/public_events.html.twig:47
 msgid "How to subscribe?"
-msgstr ""
+msgstr "Kako se naročiti?"
 
 #: ../templates/default/calendar.html.twig:55
 msgid ""
 "Your subscription address is ready. If no calendar application has opened, "
 "copy the address from the menu next to the Subscribe button."
 msgstr ""
+"Naslov za naročanje je pripravljen. Če se ni odprla nobena koledarska "
+"aplikacija, kopirajte naslov iz menija poleg gumba »Naroči se«."
 
 #: ../templates/default/calendar.html.twig:64
 msgid "Change my subscription address"
-msgstr ""
+msgstr "Spremeni naslov za naročnino"
 
 #: ../templates/default/calendar.html.twig:65
 msgid ""
 "Calendar applications subscribed to the current address will no longer get "
 "updates. Change it?"
 msgstr ""
+"Koledarske aplikacije, naročene na trenutni naslov, ne bodo več prejemale "
+"posodobitev. Želite naslov spremeniti?"
 
 #: ../templates/default/calendar.html.twig:66
 msgid "Change the address"
-msgstr ""
+msgstr "Spremenite naslov"
 
 #: ../templates/default/calendar.html.twig:89
 msgid "Download"
-msgstr ""
+msgstr "Prenesi"
 
 #: ../templates/default/calendar.html.twig:106
 msgid "Daily list"
@@ -727,64 +731,64 @@ msgstr "Barva"
 
 #: ../templates/default/event.html.twig:40
 msgid "Summary"
-msgstr ""
+msgstr "Povzetek"
 
 #: ../templates/default/event.html.twig:40
 msgid ""
 "Presents the event in lists and on public pages. When empty, the beginning "
 "of the comment is used."
 msgstr ""
+"Dogodek prikaže na seznamih in javnih straneh. Če je polje prazno, se "
+"uporabi začetek komentarja."
 
 #: ../templates/default/event.html.twig:49
 msgid "Shown in full in the event details."
-msgstr ""
+msgstr "V celoti prikazano v podrobnostih dogodka."
 
 #: ../templates/default/event.html.twig:59
 msgid "When"
-msgstr ""
+msgstr "Ko"
 
 #: ../templates/default/event.html.twig:65
 msgid "All day"
-msgstr ""
+msgstr "Ves dan"
 
 #: ../templates/default/event.html.twig:102
 msgid "Displayed as:"
-msgstr ""
+msgstr "Prikazano kot:"
 
 #: ../templates/default/event.html.twig:111
 #: ../templates/default/event.html.twig:141
 msgid "Who can see it"
-msgstr ""
+msgstr "Kdo to lahko vidi"
 
 #: ../templates/default/event.html.twig:126
 msgid "Every member"
-msgstr ""
+msgstr "Vsak član"
 
 #: ../templates/default/event.html.twig:126
 msgid "Shown to every logged-in member, in the list and the calendar."
-msgstr ""
+msgstr "Prikazano vsakemu prijavljenemu članu, na seznamu in v koledarju."
 
 #: ../templates/default/event.html.twig:126
-#, fuzzy
-#| msgid "Group"
 msgid "A group"
 msgstr "Skupina"
 
 #: ../templates/default/event.html.twig:126
-#, fuzzy
-#| msgid "Restrict event to selected group (and its subgroups)."
 msgid "Shown only to the members of the chosen group and of its subgroups."
-msgstr "Omeji dogodek na izbrano skupino (in njene podskupine)."
+msgstr "Prikazano samo članom izbrane skupine in njenih podskupin."
 
 #: ../templates/default/event.html.twig:126
 msgid "Public"
-msgstr ""
+msgstr "Javno"
 
 #: ../templates/default/event.html.twig:126
 msgid ""
 "Shown to every member, and to anyone on public pages and in their calendar "
 "subscription."
 msgstr ""
+"Prikazano vsakemu članu ter vsem na javnih straneh in v njihovi naročnini na "
+"koledar."
 
 #: ../templates/default/event.html.twig:167
 msgid "Limit to group"
@@ -887,7 +891,7 @@ msgstr "%1$s: prikaži rezervacije"
 #: ../templates/default/events.html.twig:111
 #, php-format
 msgid "%1$s: download for calendar applications"
-msgstr ""
+msgstr "%1$s: prenos za koledarske aplikacije"
 
 #: ../templates/default/events.html.twig:160
 msgid "No event has been found"
@@ -895,11 +899,11 @@ msgstr "Ni najdenega dogodka"
 
 #: ../templates/default/public_events.html.twig:13
 msgid "Display"
-msgstr ""
+msgstr "Prikaz"
 
 #: ../templates/default/public_events.html.twig:16
 msgid "List"
-msgstr ""
+msgstr "Seznam"
 
 #: ../templates/default/public_events.html.twig:25
 #: ../templates/default/subscription_help.html.twig:52
@@ -907,80 +911,79 @@ msgid ""
 "Add these events to your calendar application: it will keep them up to date "
 "by itself."
 msgstr ""
+"Dodajte te dogodke v svojo koledarsko aplikacijo; ta jih bo samodejno "
+"posodabljala."
 
 #: ../templates/default/public_events.html.twig:42
 #: ../templates/default/subscription_help.html.twig:92
 msgid "Copy subscription address"
-msgstr ""
+msgstr "Kopiraj naslov naročnine"
 
 #: ../templates/default/public_events.html.twig:59
-#, fuzzy
-#| msgid "Upcoming events"
 msgid "No upcoming event"
-msgstr "Prihajajoči dogodki"
+msgstr "Ni prihajajočih dogodkov"
 
 #: ../templates/default/public_events.html.twig:122
 msgid "See on a map"
-msgstr ""
+msgstr "Poglej na zemljevidu"
 
 #: ../templates/default/public_events.html.twig:162
-#, fuzzy
-#| msgid "Month calendar"
 msgid "Add to my calendar"
-msgstr "Mesečni koledar"
+msgstr "Dodaj v moj koledar"
 
 #: ../templates/default/subscription_help.html.twig:13
-#, fuzzy
-#| msgid "Calendar"
 msgid "Google Calendar"
-msgstr "Koledar"
+msgstr "Google Koledar"
 
 #: ../templates/default/subscription_help.html.twig:13
 msgid "On a computer, open Google Calendar."
-msgstr ""
+msgstr "Na računalniku odprite Google Koledar."
 
 #: ../templates/default/subscription_help.html.twig:13
 msgid "Next to “Other calendars”, click + then “From URL”."
-msgstr ""
+msgstr "Poleg »Drugi koledarji« kliknite +, nato pa »Iz URL-ja«."
 
 #: ../templates/default/subscription_help.html.twig:13
 msgid "Paste the subscription address and confirm."
-msgstr ""
+msgstr "Prilepite naslov za naročnino in potrdite."
 
 #: ../templates/default/subscription_help.html.twig:13
 msgid "Google updates subscribed calendars every few hours."
-msgstr ""
+msgstr "Google posodablja naročene koledarje vsakih nekaj ur."
 
 #: ../templates/default/subscription_help.html.twig:13
-#, fuzzy
-#| msgid "Calendar"
 msgid "Apple Calendar"
-msgstr "Koledar"
+msgstr "Appleov koledar"
 
 #: ../templates/default/subscription_help.html.twig:13
 msgid ""
 "Use “Open in my calendar application”: Calendar offers to add the "
 "subscription."
 msgstr ""
+"Uporabite »Odpri v moji koledarski aplikaciji«: Koledar ponudi dodajanje "
+"naročnine."
 
 #: ../templates/default/subscription_help.html.twig:13
 msgid ""
 "Or, in Calendar, choose File › New Calendar Subscription and paste the "
 "subscription address."
 msgstr ""
+"Ali pa v aplikaciji Koledar izberite Datoteka › Nova naročnina na koledar in "
+"prilepite naslov naročnine."
 
 #: ../templates/default/subscription_help.html.twig:13
 msgid "Outlook"
-msgstr ""
+msgstr "Outlook"
 
 #: ../templates/default/subscription_help.html.twig:13
 msgid ""
 "In the Outlook calendar, choose “Add calendar” then “Subscribe from web”."
 msgstr ""
+"V koledarju Outlook izberite »Dodaj koledar«, nato pa »Naroči se s spleta«."
 
 #: ../templates/default/subscription_help.html.twig:13
 msgid "Paste the subscription address and give the calendar a name."
-msgstr ""
+msgstr "Prilepite naslov za naročanje in koledarju določite ime."
 
 #: ../templates/default/subscription_help.html.twig:13
 msgid "Thunderbird"
