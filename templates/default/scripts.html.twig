@@ -6,5 +6,5 @@
 
 {# plugin pages only #}
 {% if cur_route starts with 'events_' %}
-    <script type="text/javascript" src="{{ url_for("plugin_res", {"plugin": module_id, "path": "events.js"}) }}"></script>
+    <script nonce="{{ csp_nonce() }}" type="text/javascript" src="{{ url_for("plugin_res", {"plugin": module_id, "path": "events.js"}) }}"></script>
 {% endif %}

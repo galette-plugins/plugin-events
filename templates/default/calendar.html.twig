@@ -112,6 +112,6 @@
             'today': {'text': _T("Today", "events")}
         }
     } %}
-    <script type="application/json" id="calendar_options">{{ calendar_options|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }}</script>
-    <script type="text/javascript" src="{{ url_for("plugin_res", {"plugin": module_id, "path": "js/calendar.bundle.js"}) }}"></script>
+    <script nonce="{{ csp_nonce() }}" type="application/json" id="calendar_options">{{ calendar_options|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }}</script>
+    <script nonce="{{ csp_nonce() }}" type="text/javascript" src="{{ url_for("plugin_res", {"plugin": module_id, "path": "js/calendar.bundle.js"}) }}"></script>
 {% endblock %}

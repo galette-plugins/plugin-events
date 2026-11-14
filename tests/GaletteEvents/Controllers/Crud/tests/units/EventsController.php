@@ -537,7 +537,7 @@ class EventsController extends GaletteRoutingTestCase
         $this->assertStringContainsString('<div class="ui small modal" id="calendar_event">', $body);
 
         //options are given as JSON, that cannot close the script element
-        $this->assertSame(1, preg_match('#<script type="application/json" id="calendar_options">(.+?)</script>#s', $body, $matches));
+        $this->assertSame(1, preg_match('#<script [^>]*id="calendar_options">(.+?)</script>#s', $body, $matches));
         $options = json_decode($matches[1], associative: true);
         $this->assertSame($this->routeparser->urlFor('ajax-events_calendar'), $options['dataurl']);
         $this->assertSame('Daily list', $options['buttons']['listDay']['text']);
