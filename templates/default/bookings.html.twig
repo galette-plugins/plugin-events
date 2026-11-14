@@ -245,8 +245,8 @@
         } %}
     {% endif %}
 
-    {% if login.isAdmin() or login.isStaff() or login.isGroupManager() and (preferences.pref_bool_groupsmanagers_exports or preferences.pref_bool_groupsmanagers_mailings) %}
-        {% if login.isAdmin() or login.isStaff() or (login.isGroupManager() and preferences.pref_bool_groupsmanagers_mailings) %}
+    {% if can('mailing:send') or can('member:export') %}
+        {% if can('mailing:send') %}
             {% if preferences.pref_mail_method != constant('Galette\\Core\\GaletteMail::METHOD_DISABLED') %}
                 {% set batch_actions = [
                     {
@@ -258,7 +258,7 @@
             {% endif %}
         {% endif %}
 
-        {% if login.isAdmin() or login.isStaff() or login.isGroupManager() and preferences.pref_bool_groupsmanagers_exports %}
+        {% if can('member:export') %}
             {% set batch_actions = (batch_actions ?? [])|merge([
                 {
                     'name': 'csv__directdownload',

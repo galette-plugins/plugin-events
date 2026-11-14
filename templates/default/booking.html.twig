@@ -147,7 +147,7 @@
 
 {% block javascripts %}
     {% if login.isAdmin() or login.isStaff() or login.isGroupManager() %}
-    <script type="text/javascript">
+    <script nonce="{{ csp_nonce() }}" type="text/javascript">
         {% include "elements/js/choose_adh.js.twig" with {
             "js_chosen_id": "#member",
             "js_chosen_cache": false
