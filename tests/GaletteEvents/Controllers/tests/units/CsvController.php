@@ -32,7 +32,6 @@ class CsvController extends GaletteRoutingTestCase
     public function tearDown(): void
     {
         $this->login->logout();
-        $this->preferences->pref_bool_groupsmanagers_exports = true;
         $this->cleanEvents();
         parent::tearDown();
     }
@@ -77,16 +76,16 @@ class CsvController extends GaletteRoutingTestCase
     }
 
     /**
-     * Group managers export bookings as core preferences allow them to
+     * Group managers export bookings as their role allows them to
      */
-    public function testManagerExportsAsCoreAllows(): void
+    public function testManagerExportsAsRoleAllows(): void
     {
         $member_one = $this->getMemberOne();
         $member_two = $this->getMemberTwo();
         $managed = $this->createGroup('Managed group', [$member_two], [$member_one]);
         $event = $this->insertEvent('Managed event', ['id_group' => $managed->getId()]);
         $this->insertBooking($event, $member_one->id);
-        $this->preferences->pref_bool_groupsmanagers_exports = false;
+        $this->revokeFromRole(\Galette\Access\Roles::MANAGER, 'member:export');
 
         $this->logMember($this->dataAdherentTwo());
         foreach (['event_bookings_export' => ['id' => (string)$event], 'events_bookings_export' => []] as $route => $args) {
@@ -101,7 +100,7 @@ class CsvController extends GaletteRoutingTestCase
         }
         $this->login->logout();
 
-        //preference is for group managers only
+        //permission is revoked from group managers only
         $staff = $this->getStaffMember($member_one);
         $this->logMember($this->dataAdherentOne());
         $this->assertStringContainsString($member_one->email, $this->exportEvent($event));

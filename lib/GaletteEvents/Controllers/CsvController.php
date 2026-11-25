@@ -44,11 +44,7 @@ class CsvController extends \Galette\Controllers\CsvController
      */
     public function bookingsExport(Request $request, Response $response, ?int $id = null): Response
     {
-        if (
-            !$this->login->isAdmin()
-            && !$this->login->isStaff()
-            && !$this->preferences->pref_bool_groupsmanagers_exports
-        ) {
+        if (!$this->accessControl->can('member:export')) {
             Analog::log(
                 'Logged in member ' . $this->login->login
                 . ' has tried to export bookings without the right to do so.',

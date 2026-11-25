@@ -317,20 +317,11 @@ class BookingsController extends AbstractController
     /**
      * Can current logged-in user run a batch action on bookings
      *
-     * Group managers run exports and mailings as core preferences allow them to.
-     *
      * @param string $action Batch action
      */
     private function canBatch(string $action): bool
     {
-        if ($this->login->isAdmin() || $this->login->isStaff()) {
-            return true;
-        }
-
-        if ($action === 'mailing') {
-            return (bool)$this->preferences->pref_bool_groupsmanagers_mailings;
-        }
-        return (bool)$this->preferences->pref_bool_groupsmanagers_exports;
+        return $this->accessControl->can($action === 'mailing' ? 'mailing:send' : 'member:export');
     }
 
     // /CRUD - Read

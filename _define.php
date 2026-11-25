@@ -8,13 +8,14 @@
 
 declare(strict_types=1);
 
-/** @var \Galette\Core\Plugins $this */
-$this->register(
+use Galette\Core\Plugins\PluginDefinition;
+
+return new PluginDefinition(
     name: 'Galette Events',     //Name
     desc: 'Events management',  //Short description
     author: 'Johan Cwiklinski', //Author
     version: '2.3.1',           //Version
-    compver: '1.3.0',           //Galette compatible version
+    compver: '1.4.0',           //Galette compatible version
     route: 'events',            //routing name and translation domain
     date: '2026-11-10',         //Release date
     acls: [                     //Permissions needed

@@ -32,8 +32,6 @@ class BookingsController extends GaletteRoutingTestCase
     public function tearDown(): void
     {
         $this->login->logout();
-        $this->preferences->pref_bool_groupsmanagers_exports = true;
-        $this->preferences->pref_bool_groupsmanagers_mailings = false;
         $this->cleanEvents();
         parent::tearDown();
     }
@@ -456,9 +454,9 @@ class BookingsController extends GaletteRoutingTestCase
     }
 
     /**
-     * Group managers run exports and mailings as core preferences allow them to
+     * Group managers run exports and mailings as their role allows them to
      */
-    public function testManagerBatchAsCoreAllows(): void
+    public function testManagerBatchAsRoleAllows(): void
     {
         $member_one = $this->getMemberOne();
         $member_two = $this->getMemberTwo();
@@ -467,7 +465,7 @@ class BookingsController extends GaletteRoutingTestCase
             $this->insertEvent('Managed event', ['id_group' => $managed->getId()]),
             $member_one->id
         );
-        $this->preferences->pref_bool_groupsmanagers_exports = false;
+        $this->revokeFromRole(\Galette\Access\Roles::MANAGER, 'member:export');
 
         $this->logMember($this->dataAdherentTwo());
         $batch = function (string $action) use ($booking): \Psr\Http\Message\ResponseInterface {
@@ -490,8 +488,7 @@ class BookingsController extends GaletteRoutingTestCase
             $this->expectNoLogEntry();
         }
 
-        $this->preferences->pref_bool_groupsmanagers_exports = true;
-        $this->preferences->pref_bool_groupsmanagers_mailings = true;
+        $this->grantToRole(\Galette\Access\Roles::MANAGER, ['member:export', 'mailing:send']);
         $this->assertSame(
             [$this->routeparser->urlFor('mailing') . '?mailing_new=true'],
             $batch('mailing')->getHeader('Location')
